@@ -1,0 +1,4 @@
+#!/bin/sh
+echo "🔍 Running Flutter checks..."
+dart format .
+flutter analyze
