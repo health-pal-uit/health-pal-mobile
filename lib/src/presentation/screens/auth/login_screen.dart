@@ -2,6 +2,7 @@ import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -134,7 +135,7 @@ class LoginScreenState extends State<LoginScreen> {
                 children: [
                   Text("Don’t have an account?", style: AppTypography.caption),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () => context.push('/signup'),
                     child: Text("Sign up", style: AppTypography.captionLink),
                   ),
                 ],
