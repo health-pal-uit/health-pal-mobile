@@ -11,5 +11,7 @@ class AppTypography {
   static TextStyle get body =>
       TextStyle(fontSize: 16.sp, color: AppColors.textSecondary);
   static TextStyle get caption =>
-      TextStyle(fontSize: 12.sp, color: AppColors.textSecondary);
+      TextStyle(fontSize: 14.sp, color: AppColors.textSecondary);
+  static TextStyle get captionLink =>
+      TextStyle(fontSize: 14.sp, color: Colors.blue);
 }
