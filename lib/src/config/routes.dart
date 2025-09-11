@@ -1,4 +1,5 @@
 import 'package:da1/src/presentation/screens/auth/signup_screen.dart';
+import 'package:da1/src/presentation/screens/diet/food_search_screen.dart';
 import 'package:go_router/go_router.dart';
 import '../presentation/screens/home/home_screen.dart';
 import '../presentation/screens/auth/login_screen.dart';
@@ -20,6 +21,11 @@ class AppRoutes {
         path: '/signup',
         name: 'signup',
         builder: (context, state) => const SignUpScreen(),
+      ),
+      GoRoute(
+        path: '/foodSearch',
+        name: 'foodSearch',
+        builder: (context, state) => FoodSearchScreen(),
       ),
     ],
   );
