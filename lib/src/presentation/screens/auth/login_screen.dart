@@ -61,44 +61,91 @@ class LoginScreenState extends State<LoginScreen> {
                 ],
               ),
               const SizedBox(height: 40),
-              TextField(
-                focusNode: _emailFocusNode,
-                style: AppTypography.body,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor:
-                      _emailFocusNode.hasFocus
-                          ? AppColors.backgroundDark
-                          : AppColors.backgroundLight,
-                  prefixIcon: const Icon(Icons.email_outlined),
-                  hintText: "Enter your email",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  focusNode: _emailFocusNode,
+                  style: AppTypography.body,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor:
+                        _emailFocusNode.hasFocus
+                            ? AppColors.backgroundDark
+                            : AppColors.backgroundLight,
+                    prefixIcon: const Icon(Icons.email_outlined),
+                    hintText: "Enter your email",
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(
+                        color: Colors.blue,
+                        width: 2,
+                      ),
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              TextField(
-                focusNode: _passwordFocusNode,
-                obscureText: true,
-                style: AppTypography.body,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor:
-                      _passwordFocusNode.hasFocus
-                          ? AppColors.backgroundDark
-                          : AppColors.backgroundLight,
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: const Icon(
-                    Icons.visibility_off,
-                    color: AppColors.textSecondary,
-                  ),
-                  hintText: "Enter your password",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+              const SizedBox(height: 20),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  focusNode: _passwordFocusNode,
+                  obscureText: true,
+                  style: AppTypography.body,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor:
+                        _passwordFocusNode.hasFocus
+                            ? AppColors.backgroundDark
+                            : AppColors.backgroundLight,
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: const Icon(
+                      Icons.visibility_off,
+                      color: AppColors.textSecondary,
+                    ),
+                    hintText: "Enter your password",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: AppColors.textSecondary),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.blue, width: 2),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.red),
+                    ),
                   ),
                 ),
               ),
+
               const SizedBox(height: 10),
               Align(
                 alignment: Alignment.centerRight,
