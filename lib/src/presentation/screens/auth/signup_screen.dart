@@ -1,6 +1,8 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_signin_button/button_list.dart';
+import 'package:flutter_signin_button/button_view.dart';
 import 'package:go_router/go_router.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -70,59 +72,141 @@ class SignUpScreenState extends State<SignUpScreen> {
                     ],
                   ),
                   const SizedBox(height: 40),
-                  TextField(
-                    focusNode: _confirmPasswordFocusNode,
-                    obscureText: true,
-                    style: AppTypography.body,
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor:
-                          _confirmPasswordFocusNode.hasFocus
-                              ? AppColors.backgroundDark
-                              : AppColors.backgroundLight,
-                      prefixIcon: const Icon(Icons.person_2_outlined),
-                      hintText: "Enter your name",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
+                      focusNode: _passwordFocusNode,
+                      style: AppTypography.body,
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor:
+                            _passwordFocusNode.hasFocus
+                                ? AppColors.backgroundDark
+                                : AppColors.backgroundLight,
+                        prefixIcon: const Icon(Icons.email_outlined),
+                        hintText: "Enter your email",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.blue, width: 2),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.red),
+                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    focusNode: _emailFocusNode,
-                    style: AppTypography.body,
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor:
-                          _emailFocusNode.hasFocus
-                              ? AppColors.backgroundDark
-                              : AppColors.backgroundLight,
-                      prefixIcon: const Icon(Icons.email_outlined),
-                      hintText: "Enter your email",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                  const SizedBox(height: 20),
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
+                      focusNode: _passwordFocusNode,
+                      obscureText: true,
+                      style: AppTypography.body,
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor:
+                            _passwordFocusNode.hasFocus
+                                ? AppColors.backgroundDark
+                                : AppColors.backgroundLight,
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: const Icon(
+                          Icons.visibility_off,
+                          color: AppColors.textSecondary,
+                        ),
+                        hintText: "Enter your password",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.blue, width: 2),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.red),
+                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    focusNode: _passwordFocusNode,
-                    obscureText: true,
-                    style: AppTypography.body,
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor:
-                          _passwordFocusNode.hasFocus
-                              ? AppColors.backgroundDark
-                              : AppColors.backgroundLight,
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      suffixIcon: const Icon(
-                        Icons.visibility_off,
-                        color: AppColors.textSecondary,
-                      ),
-                      hintText: "Enter your password",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                  const SizedBox(height: 20),
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
+                      focusNode: _passwordFocusNode,
+                      obscureText: true,
+                      style: AppTypography.body,
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor:
+                            _passwordFocusNode.hasFocus
+                                ? AppColors.backgroundDark
+                                : AppColors.backgroundLight,
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: const Icon(
+                          Icons.visibility_off,
+                          color: AppColors.textSecondary,
+                        ),
+                        hintText: "Confirm your password",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.blue, width: 2),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.red),
+                        ),
                       ),
                     ),
                   ),
@@ -149,7 +233,7 @@ class SignUpScreenState extends State<SignUpScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -167,6 +251,30 @@ class SignUpScreenState extends State<SignUpScreen> {
                     ],
                   ),
                   const SizedBox(height: 10),
+                  Row(
+                    children: const [
+                      Expanded(child: Divider()),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Text("OR"),
+                      ),
+                      Expanded(child: Divider()),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  SignInButton(
+                    Buttons.Google,
+                    text: "Continue with Google",
+                    onPressed: () {},
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 8,
+                      horizontal: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 30),
                 ],
               ),
             ],
