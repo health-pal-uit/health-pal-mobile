@@ -2,15 +2,15 @@ import 'package:da1/src/presentation/widgets/custom_bottom_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class AdvisorScreen extends StatefulWidget {
+  const AdvisorScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<AdvisorScreen> createState() => _AdvisorScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
+class _AdvisorScreenState extends State<AdvisorScreen> {
+  int _selectedIndex = 1;
 
   void _onItemTapped(int index) {
     setState(() => _selectedIndex = index);
@@ -34,21 +34,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Home")),
-      body: Center(
-        child: Column(
-          children: [
-            ElevatedButton(
-              onPressed: () => context.go('/login'),
-              child: const Text("Go to Login"),
-            ),
-            ElevatedButton(
-              onPressed: () => context.go('/foodSearch'),
-              child: const Text("Go to Food"),
-            ),
-          ],
-        ),
-      ),
+      appBar: AppBar(title: const Text("Advisor")),
+      body: Center(),
       bottomNavigationBar: CustomBottomNav(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
