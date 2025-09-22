@@ -17,6 +17,7 @@ dependencies:
     flutter_signin_button: ^2.1.1
     flutter_screenutil: ^5.9.3
     font_awesome_flutter: ^10.9.1
+    syncfusion_flutter_gauges: ^31.1.19
 
 dev_dependencies:
     flutter_test:

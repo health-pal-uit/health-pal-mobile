@@ -29,7 +29,6 @@ class AppRoutes {
         builder: (context, state) => FoodSearchScreen(),
       ),
 
-      // Shell route: routes with bottom nav
       ShellRoute(
         builder: (context, state, child) {
           return Scaffold(
@@ -66,13 +65,12 @@ class AppRoutes {
     ],
   );
 
-  // --- Helpers ---
   static int _calculateSelectedIndex(GoRouterState state) {
     final location = state.uri.toString();
     if (location.startsWith('/advisor')) return 1;
     if (location.startsWith('/community')) return 2;
     if (location.startsWith('/profile')) return 3;
-    return 0; // default = home
+    return 0;
   }
 
   static void _onItemTapped(BuildContext context, int index) {

@@ -1,5 +1,9 @@
+import 'package:da1/src/config/theme/app_colors.dart';
+import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/presentation/widgets/charts/kcal_circular_progress.dart';
+import 'package:da1/src/presentation/widgets/charts/steps_progress.dart';
+import 'package:da1/src/presentation/widgets/charts/water_intake.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,19 +16,46 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Home")),
       body: Center(
-        child: Column(
-          children: [
-            ElevatedButton(
-              onPressed: () => context.go('/login'),
-              child: const Text("Go to Login"),
+        child: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height,
             ),
-            ElevatedButton(
-              onPressed: () => context.go('/foodSearch'),
-              child: const Text("Go to Food"),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('TODAY, 22 SEPTEMBER', style: AppTypography.body),
+                      Icon(
+                        Icons.notifications_none_outlined,
+                        color: AppColors.textPrimary,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                  KcalCircularProgressCard(
+                    consumed: 300,
+                    needed: 1500,
+                    exercise: 30,
+                  ),
+                  SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      WaterIntakeWidget(),
+                      StepsWidget(goal: 10000, steps: 6000),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ],
+          ),
         ),
       ),
     );
