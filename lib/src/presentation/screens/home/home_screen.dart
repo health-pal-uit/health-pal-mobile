@@ -3,7 +3,9 @@ import 'package:da1/src/config/theme/typography.dart';
 import 'package:da1/src/presentation/widgets/charts/kcal_circular_progress.dart';
 import 'package:da1/src/presentation/widgets/charts/steps_progress.dart';
 import 'package:da1/src/presentation/widgets/charts/water_intake.dart';
+import 'package:da1/src/presentation/widgets/home_items/workout_card.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -51,6 +53,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       WaterIntakeWidget(),
                       StepsWidget(goal: 10000, steps: 6000),
                     ],
+                  ),
+                  SizedBox(height: 20),
+                  WorkoutCard(
+                    title: 'Workouts',
+                    subtitle: 'Sweating is self-care',
+                    icon: Icons.fitness_center,
+                    color: AppColors.primary,
+                    onTap: () => context.push('/add-activity'),
                   ),
                 ],
               ),
