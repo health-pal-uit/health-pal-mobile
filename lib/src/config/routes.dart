@@ -1,4 +1,6 @@
 import 'package:da1/src/presentation/screens/advisor/advisor_screen.dart';
+import 'package:da1/src/presentation/screens/auth/onboarding/onboarding_gender_screen.dart';
+import 'package:da1/src/presentation/screens/auth/onboarding/onboarding_name_screen.dart';
 import 'package:da1/src/presentation/screens/auth/signup_screen.dart';
 import 'package:da1/src/presentation/screens/auth/welcome/welcome_scroll_screen.dart';
 import 'package:da1/src/presentation/screens/community/community_screen.dart';
@@ -18,6 +20,16 @@ class AppRoutes {
         path: '/welcome',
         name: 'welcome',
         builder: (context, state) => const WelcomeScrollScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding-name',
+        name: 'onboarding-name',
+        builder: (context, state) => const OnboardingNameScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding-gender',
+        name: 'onboarding-gender',
+        builder: (context, state) => const OnboardingGenderScreen(),
       ),
       GoRoute(
         path: '/login',
