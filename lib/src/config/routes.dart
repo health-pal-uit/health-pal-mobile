@@ -1,5 +1,6 @@
 import 'package:da1/src/presentation/screens/advisor/advisor_screen.dart';
 import 'package:da1/src/presentation/screens/auth/signup_screen.dart';
+import 'package:da1/src/presentation/screens/auth/welcome/welcome_scroll_screen.dart';
 import 'package:da1/src/presentation/screens/community/community_screen.dart';
 import 'package:da1/src/presentation/screens/home/diet/food_search_screen.dart';
 import 'package:da1/src/presentation/screens/profile/profile_screen.dart';
@@ -11,8 +12,13 @@ import 'package:go_router/go_router.dart';
 
 class AppRoutes {
   static final GoRouter router = GoRouter(
-    initialLocation: '/login',
+    initialLocation: '/welcome',
     routes: [
+      GoRoute(
+        path: '/welcome',
+        name: 'welcome',
+        builder: (context, state) => const WelcomeScrollScreen(),
+      ),
       GoRoute(
         path: '/login',
         name: 'login',

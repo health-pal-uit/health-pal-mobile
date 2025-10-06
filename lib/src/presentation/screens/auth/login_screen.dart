@@ -44,12 +44,13 @@ class LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 30),
+              IconButton(
+                alignment: Alignment.topRight,
+                icon: const Icon(Icons.close),
+                onPressed: () => context.go('/welcome'),
+              ),
               Row(
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () => Navigator.pop(context),
-                  ),
                   Expanded(
                     child: Text(
                       "Sign In",
@@ -57,7 +58,6 @@ class LoginScreenState extends State<LoginScreen> {
                       textAlign: TextAlign.center,
                     ),
                   ),
-                  const SizedBox(width: 48),
                 ],
               ),
               const SizedBox(height: 40),

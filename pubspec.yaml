@@ -27,3 +27,7 @@ dev_dependencies:
 
 flutter:
     uses-material-design: true
+    assets:
+        - assets/images/welcome1.jpeg
+        - assets/images/welcome2.jpeg
+        - assets/images/welcome3.jpeg
