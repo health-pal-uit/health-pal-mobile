@@ -1,3 +1,4 @@
+import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class CustomBottomNav extends StatelessWidget {
@@ -17,7 +18,7 @@ class CustomBottomNav extends StatelessWidget {
       currentIndex: currentIndex,
       onTap: onTap,
       backgroundColor: Colors.white,
-      selectedItemColor: const Color(0xFF007C91),
+      selectedItemColor: AppColors.primary,
       unselectedItemColor: Colors.grey,
       items: const [
         BottomNavigationBarItem(

@@ -5,6 +5,7 @@ import 'package:da1/src/presentation/screens/auth/signup_screen.dart';
 import 'package:da1/src/presentation/screens/auth/welcome/welcome_scroll_screen.dart';
 import 'package:da1/src/presentation/screens/community/community_screen.dart';
 import 'package:da1/src/presentation/screens/home/diet/food_search_screen.dart';
+import 'package:da1/src/presentation/screens/home/step/steps_screen.dart';
 import 'package:da1/src/presentation/screens/profile/profile_screen.dart';
 import 'package:da1/src/presentation/screens/home/home_screen.dart';
 import 'package:da1/src/presentation/screens/auth/login_screen.dart';
@@ -46,7 +47,11 @@ class AppRoutes {
         name: 'foodSearch',
         builder: (context, state) => FoodSearchScreen(),
       ),
-
+      GoRoute(
+        path: '/steps',
+        name: 'steps',
+        builder: (context, state) => StepsScreen(),
+      ),
       ShellRoute(
         builder: (context, state, child) {
           return Scaffold(
