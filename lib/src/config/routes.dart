@@ -4,6 +4,7 @@ import 'package:da1/src/presentation/screens/auth/onboarding/onboarding_name_scr
 import 'package:da1/src/presentation/screens/auth/signup_screen.dart';
 import 'package:da1/src/presentation/screens/auth/welcome/welcome_scroll_screen.dart';
 import 'package:da1/src/presentation/screens/community/community_screen.dart';
+import 'package:da1/src/presentation/screens/community/personal_profile_screen.dart';
 import 'package:da1/src/presentation/screens/home/diet/food_search_screen.dart';
 import 'package:da1/src/presentation/screens/home/exercise/add_activity_screen.dart';
 import 'package:da1/src/presentation/screens/home/step/steps_screen.dart';
@@ -83,6 +84,11 @@ class AppRoutes {
             path: '/community',
             name: 'community',
             builder: (context, state) => CommunityScreen(),
+          ),
+          GoRoute(
+            path: '/personal-profile',
+            name: 'personal-profile',
+            builder: (context, state) => PersonalProfileScreen(),
           ),
           GoRoute(
             path: '/profile',

@@ -1,6 +1,7 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -63,7 +64,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Duy Nguyen', style: AppTypography.body),
+                          GestureDetector(
+                            onTap: () => context.push('/personal-profile'),
+                            child: Text(
+                              'Duy Nguyen',
+                              style: AppTypography.body,
+                            ),
+                          ),
                           const SizedBox(height: 5),
                           Text(
                             'duyhuu1109@gmail.com',
