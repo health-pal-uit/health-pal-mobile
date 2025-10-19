@@ -62,6 +62,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: AppColors.primary,
                     onTap: () => context.push('/add-activity'),
                   ),
+                  WorkoutCard(
+                    title: 'Activity',
+                    subtitle: 'Sweating is self-care',
+                    icon: Icons.fitness_center,
+                    color: AppColors.primary,
+                    onTap: () => context.push('/activity-analytics'),
+                  ),
                 ],
               ),
             ),

@@ -6,6 +6,7 @@ import 'package:da1/src/presentation/screens/auth/welcome/welcome_scroll_screen.
 import 'package:da1/src/presentation/screens/community/community_screen.dart';
 import 'package:da1/src/presentation/screens/community/personal_profile_screen.dart';
 import 'package:da1/src/presentation/screens/home/diet/food_search_screen.dart';
+import 'package:da1/src/presentation/screens/home/exercise/activity_analytics_screen.dart';
 import 'package:da1/src/presentation/screens/home/exercise/add_activity_screen.dart';
 import 'package:da1/src/presentation/screens/home/step/steps_screen.dart';
 import 'package:da1/src/presentation/screens/profile/profile_screen.dart';
@@ -58,6 +59,11 @@ class AppRoutes {
         path: '/add-activity',
         name: 'add-activity',
         builder: (context, state) => AddActivityScreen(),
+      ),
+      GoRoute(
+        path: '/activity-analytics',
+        name: 'activity-analytics',
+        builder: (context, state) => ActivityAnalyticsScreen(),
       ),
       ShellRoute(
         builder: (context, state, child) {

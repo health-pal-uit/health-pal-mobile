@@ -82,13 +82,9 @@ class _ProfileHeader extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          SizedBox(
-            width: 20,
-            height: 40,
-            child: const Icon(
-              LucideIcons.chevronLeft,
-              color: Color(0xFF221F1F),
-            ),
+          IconButton(
+            icon: const Icon(LucideIcons.chevronLeft, color: Colors.black),
+            onPressed: () => Navigator.pop(context),
           ),
           Text('Profile', style: AppTypography.headline),
           const SizedBox(width: 40),
