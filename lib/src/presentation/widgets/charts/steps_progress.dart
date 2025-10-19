@@ -28,7 +28,7 @@ class StepsWidget extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           SizedBox(
-            width: 150,
+            width: 130,
             height: 140,
             child: Stack(
               alignment: Alignment.center,

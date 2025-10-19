@@ -10,6 +10,7 @@ dependencies:
     flutter:
         sdk: flutter
     cupertino_icons: ^1.0.8
+    lucide_icons_flutter: ^3.1.4
     flutter_bloc: ^8.1.2
     dio: ^5.3.3
     equatable: ^2.0.5
