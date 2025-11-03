@@ -7,97 +7,189 @@ class PostCard extends StatelessWidget {
     required this.name,
     required this.timeAgo,
     required this.postText,
-    required this.imageUrl,
+    this.imageUrl,
+    this.hashtags = const [],
     required this.likes,
     required this.comments,
+    this.showFollowButton = false,
+    this.onFollow,
   });
 
   final String avatarUrl;
   final String name;
   final String timeAgo;
   final String postText;
-  final String imageUrl;
-  final String likes;
-  final String comments;
+  final String? imageUrl;
+  final List<String> hashtags;
+  final int likes;
+  final int comments;
+  final bool showFollowButton;
+  final VoidCallback? onFollow;
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 23,
-                backgroundImage: NetworkImage(avatarUrl),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Text(
-                    timeAgo,
-                    style: const TextStyle(
-                      color: Color(0xFF717182),
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-              const Spacer(),
-              const Icon(Icons.more_horiz),
-            ],
-          ),
+          _buildHeader(),
           const SizedBox(height: 12),
-          Text(postText, style: const TextStyle(fontSize: 16, height: 1.4)),
+          Text(postText, style: const TextStyle(fontSize: 16, height: 1.5)),
+          if (imageUrl != null) ...[const SizedBox(height: 12), _buildImage()],
+          if (hashtags.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _buildHashtags(),
+          ],
           const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Image.network(
-              imageUrl,
-              fit: BoxFit.cover,
-              width: double.infinity,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _postActionButton(icon: Icons.favorite_border, text: likes),
-              const SizedBox(width: 16),
-              _postActionButton(
-                icon: Icons.chat_bubble_outline,
-                text: comments,
-              ),
-              const Spacer(),
-              const Icon(Icons.share_outlined, color: Color(0xFF717182)),
-            ],
-          ),
+          _buildActions(),
         ],
       ),
     );
   }
 
-  Widget _postActionButton({required IconData icon, required String text}) {
+  Widget _buildHeader() {
+    return Row(
+      children: [
+        CircleAvatar(radius: 23, backgroundImage: NetworkImage(avatarUrl)),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              Text(
+                timeAgo,
+                style: const TextStyle(color: Color(0xFF717182), fontSize: 14),
+              ),
+            ],
+          ),
+        ),
+        if (showFollowButton)
+          _buildFollowButton()
+        else
+          const Icon(Icons.more_horiz, color: Color(0xFF717182)),
+      ],
+    );
+  }
+
+  Widget _buildFollowButton() {
+    return GestureDetector(
+      onTap: onFollow,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        decoration: BoxDecoration(
+          border: Border.all(color: const Color(0xFFFA9500)),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const Text(
+          'Follow',
+          style: TextStyle(
+            color: Color(0xFFFA9500),
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImage() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: Image.network(
+        imageUrl!,
+        width: double.infinity,
+        height: 180,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            height: 180,
+            color: Colors.grey[200],
+            child: const Center(
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            height: 180,
+            color: Colors.grey[200],
+            child: const Icon(Icons.broken_image, color: Colors.grey),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildHashtags() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 6,
+      children:
+          hashtags.map((tag) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0x19FA9500),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: const Color(0xFFFA9500).withValues(alpha: 0.3),
+                  width: 0.5,
+                ),
+              ),
+              child: Text(
+                tag,
+                style: const TextStyle(
+                  color: Color(0xFFFA9500),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            );
+          }).toList(),
+    );
+  }
+
+  Widget _buildActions() {
+    return Row(
+      children: [
+        _actionItem(Icons.favorite_border, likes.toString()),
+        const SizedBox(width: 24),
+        _actionItem(Icons.chat_bubble_outline, comments.toString()),
+        const Spacer(),
+        const Icon(Icons.share_outlined, color: Color(0xFF717182), size: 22),
+      ],
+    );
+  }
+
+  Widget _actionItem(IconData icon, String count) {
     return Row(
       children: [
         Icon(icon, color: const Color(0xFF717182), size: 22),
-        const SizedBox(width: 4),
+        const SizedBox(width: 6),
         Text(
-          text,
+          count,
           style: const TextStyle(color: Color(0xFF717182), fontSize: 16),
         ),
       ],

@@ -44,8 +44,8 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
                           "Just completed my first 10K! Feeling amazing! 🎉",
                       imageUrl:
                           "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTPxlFqDpOqgXOukpsHthkQyB0L4FP7J6Adjw&s",
-                      likes: "156",
-                      comments: "23",
+                      likes: 156,
+                      comments: 23,
                     ),
                     const SizedBox(height: 16),
                     PostCard(
@@ -57,8 +57,8 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
                           "Meal prep Sunday! Keeping it healthy and colorful 🥗",
                       imageUrl:
                           "https://blog.nasm.org/hubfs/food-restriction-header.jpg",
-                      likes: "89",
-                      comments: "12",
+                      likes: 89,
+                      comments: 12,
                     ),
                     const SizedBox(height: 24),
                   ],
