@@ -1,6 +1,8 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/presentation/bloc/auth/auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:go_router/go_router.dart';
 
@@ -12,6 +14,11 @@ class LoginScreen extends StatefulWidget {
 }
 
 class LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isPasswordObscured = true;
+
   final FocusNode _emailFocusNode = FocusNode();
   final FocusNode _passwordFocusNode = FocusNode();
 
@@ -28,40 +35,91 @@ class LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
     _emailFocusNode.dispose();
     _passwordFocusNode.dispose();
     super.dispose();
   }
 
+  void _onSignInPressed(BuildContext context, bool isLoading) {
+    if (isLoading) return;
+
+    if (_formKey.currentState!.validate()) {
+      context.read<AuthBloc>().add(
+        SignInRequested(
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildHeader(context),
-              const SizedBox(height: 40),
-              _buildEmailField(),
-              const SizedBox(height: 20),
-              _buildPasswordField(),
-              const SizedBox(height: 10),
-              _buildForgotPasswordButton(),
-              const SizedBox(height: 20),
-              _buildSignInButton(context),
-              const SizedBox(height: 20),
-              _buildSignUpLink(context),
-              const SizedBox(height: 10),
-              _buildDivider(),
-              const SizedBox(height: 20),
-              _buildGoogleSignInButton(),
-              const SizedBox(height: 40),
-            ],
-          ),
-        ),
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthFailure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+          );
+        }
+        if (state is Authenticated) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Login Successful! Welcome, ${state.user.email}"),
+              backgroundColor: Colors.green,
+            ),
+          );
+          context.go('/');
+        }
+      },
+      child: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          final isLoading = state is AuthLoading;
+
+          return Scaffold(
+            resizeToAvoidBottomInset: true,
+            body: Stack(
+              children: [
+                SafeArea(
+                  child: Form(
+                    key: _formKey,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildHeader(context),
+                          const SizedBox(height: 40),
+                          _buildEmailField(),
+                          const SizedBox(height: 20),
+                          _buildPasswordField(),
+                          const SizedBox(height: 10),
+                          _buildForgotPasswordButton(),
+                          const SizedBox(height: 20),
+                          _buildSignInButton(context, isLoading),
+                          const SizedBox(height: 20),
+                          _buildSignUpLink(context),
+                          const SizedBox(height: 10),
+                          _buildDivider(),
+                          const SizedBox(height: 20),
+                          _buildGoogleSignInButton(),
+                          const SizedBox(height: 40),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                if (isLoading)
+                  Container(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    child: const Center(child: CircularProgressIndicator()),
+                  ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -106,9 +164,11 @@ class LoginScreenState extends State<LoginScreen> {
           ),
         ],
       ),
-      child: TextField(
+      child: TextFormField(
+        controller: _emailController,
         focusNode: _emailFocusNode,
         style: AppTypography.body,
+        keyboardType: TextInputType.emailAddress,
         decoration: InputDecoration(
           filled: true,
           fillColor:
@@ -126,6 +186,15 @@ class LoginScreenState extends State<LoginScreen> {
             borderSide: const BorderSide(color: Colors.blue, width: 2),
           ),
         ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter your email';
+          }
+          if (!value.contains('@')) {
+            return 'Please enter a valid email';
+          }
+          return null;
+        },
       ),
     );
   }
@@ -142,9 +211,10 @@ class LoginScreenState extends State<LoginScreen> {
           ),
         ],
       ),
-      child: TextField(
+      child: TextFormField(
+        controller: _passwordController,
         focusNode: _passwordFocusNode,
-        obscureText: true,
+        obscureText: _isPasswordObscured,
         style: AppTypography.body,
         decoration: InputDecoration(
           filled: true,
@@ -153,9 +223,16 @@ class LoginScreenState extends State<LoginScreen> {
                   ? AppColors.backgroundDark
                   : AppColors.backgroundLight,
           prefixIcon: const Icon(Icons.lock_outline),
-          suffixIcon: const Icon(
-            Icons.visibility_off,
-            color: AppColors.textSecondary,
+          suffixIcon: IconButton(
+            icon: Icon(
+              _isPasswordObscured ? Icons.visibility_off : Icons.visibility,
+              color: AppColors.textSecondary,
+            ),
+            onPressed: () {
+              setState(() {
+                _isPasswordObscured = !_isPasswordObscured;
+              });
+            },
           ),
           hintText: "Enter your password",
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -172,6 +249,12 @@ class LoginScreenState extends State<LoginScreen> {
             borderSide: BorderSide(color: Colors.red),
           ),
         ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter your password';
+          }
+          return null;
+        },
       ),
     );
   }
@@ -186,17 +269,17 @@ class LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildSignInButton(BuildContext context) {
+  Widget _buildSignInButton(BuildContext context, bool isLoading) {
     return ElevatedButton(
-      onPressed: () => context.go('/'),
+      onPressed: () => _onSignInPressed(context, isLoading),
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.primary,
+        backgroundColor: isLoading ? Colors.grey : AppColors.primary,
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
       ),
-      child: const Text(
-        "Sign In",
-        style: TextStyle(
+      child: Text(
+        isLoading ? "Signing In..." : "Sign In",
+        style: const TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.bold,
           color: Colors.white,

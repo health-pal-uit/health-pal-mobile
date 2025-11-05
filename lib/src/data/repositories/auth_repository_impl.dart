@@ -5,6 +5,7 @@ import 'package:da1/src/data/repositories/auth_repository.dart';
 import 'package:da1/src/domain/entities/user.dart';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
@@ -25,15 +26,25 @@ class AuthRepositoryImpl implements AuthRepository {
         email: email,
         password: password,
       );
-      // Lưu token
+
       await localDataSource.saveToken(loginResponse.accessToken);
-      // Trả về User Entity cho lớp domain
-      return Right(loginResponse.user.toEntity());
+
+      Map<String, dynamic> decodedToken = JwtDecoder.decode(
+        loginResponse.accessToken,
+      );
+
+      final String userId = decodedToken['sub'];
+      final String userEmail = decodedToken['email'];
+
+      final user = User(id: userId, email: userEmail);
+
+      return Right(user);
     } on DioException catch (e) {
-      // Xử lý lỗi API (401, 404, 500...)
       return Left(ServerFailure(e.message ?? 'Lỗi không xác định'));
+    } on FormatException catch (e) {
+      return Left(ServerFailure('Lỗi giải mã token: ${e.message}'));
     } catch (e) {
-      return Left(ServerFailure('Đã xảy ra lỗi'));
+      return Left(ServerFailure('Đã xảy ra lỗi: ${e.toString()}'));
     }
   }
 
@@ -68,9 +79,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, void>> logout() async {
     try {
-      // (Quan trọng) Gọi API logout trước (nếu API này hủy token phía server)
       await remoteDataSource.logout();
-      // Xóa token ở local
       await localDataSource.deleteToken();
       return const Right(null);
     } on DioException catch (e) {

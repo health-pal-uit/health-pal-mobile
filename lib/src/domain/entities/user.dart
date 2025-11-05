@@ -10,3 +10,13 @@ class User extends Equatable {
   @override
   List<Object?> get props => [id, email, fullName];
 }
+
+class LoginResponseModel {
+  final String accessToken;
+
+  LoginResponseModel({required this.accessToken});
+
+  factory LoginResponseModel.fromJson(Map<String, dynamic> json) {
+    return LoginResponseModel(accessToken: json['data']['token']);
+  }
+}
