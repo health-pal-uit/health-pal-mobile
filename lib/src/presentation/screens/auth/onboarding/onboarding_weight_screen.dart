@@ -1,89 +1,51 @@
 import 'package:da1/src/config/theme/app_colors.dart';
+import 'package:da1/src/config/theme/typography.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
-enum Gender { male, female }
-
-class OnboardingGenderScreen extends StatefulWidget {
-  const OnboardingGenderScreen({super.key});
+class OnboardingWeightScreen extends StatefulWidget {
+  const OnboardingWeightScreen({super.key});
 
   @override
-  State<OnboardingGenderScreen> createState() => _OnboardingGenderScreenState();
+  State<OnboardingWeightScreen> createState() => _OnboardingWeightScreenState();
 }
 
-class _OnboardingGenderScreenState extends State<OnboardingGenderScreen> {
-  Gender? _selectedGender;
+class _OnboardingWeightScreenState extends State<OnboardingWeightScreen> {
+  final TextEditingController _weightController = TextEditingController();
+  final FocusNode _weightFocusNode = FocusNode();
+  bool _isButtonEnabled = false;
 
-  void _goNext() {
-    if (_selectedGender != null) {
-      Navigator.pushNamed(
-        context,
-        '/onboarding-age',
-        arguments: _selectedGender == Gender.male ? 'Male' : 'Female',
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please select a gender to continue."),
-          duration: Duration(seconds: 1),
-        ),
-      );
+  @override
+  void initState() {
+    super.initState();
+    _weightFocusNode.addListener(() {
+      setState(() {});
+    });
+    _weightController.addListener(_updateButtonState);
+  }
+
+  @override
+  void dispose() {
+    _weightFocusNode.dispose();
+    _weightController.removeListener(_updateButtonState);
+    _weightController.dispose();
+    super.dispose();
+  }
+
+  void _updateButtonState() {
+    final isEnabled = _weightController.text.trim().isNotEmpty;
+    if (_isButtonEnabled != isEnabled) {
+      setState(() {
+        _isButtonEnabled = isEnabled;
+      });
     }
   }
 
-  Widget _buildGenderButton(
-    BuildContext context,
-    Gender gender,
-    IconData icon,
-    String label,
-  ) {
-    final bool isSelected = _selectedGender == gender;
-
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-        child: ElevatedButton(
-          onPressed: () {
-            setState(() {
-              _selectedGender = gender;
-            });
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor:
-                isSelected ? AppColors.primary : Colors.grey.shade100,
-            foregroundColor: isSelected ? Colors.white : Colors.black87,
-            elevation: isSelected ? 4 : 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(
-                color: isSelected ? AppColors.primary : Colors.grey.shade300,
-                width: 2,
-              ),
-            ),
-            padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 10),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 60,
-                color: isSelected ? Colors.white : AppColors.primary,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: isSelected ? Colors.white : Colors.black87,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+  void _goNext() {
+    if (_isButtonEnabled) {
+      context.go('/onboarding-complete');
+    }
   }
 
   @override
@@ -111,14 +73,16 @@ class _OnboardingGenderScreenState extends State<OnboardingGenderScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
-                  5,
+                  3,
                   (index) => Container(
                     width: screenWidth * 0.1,
                     height: 4,
                     margin: const EdgeInsets.symmetric(horizontal: 4),
                     decoration: BoxDecoration(
                       color:
-                          index == 1 ? AppColors.primary : Colors.grey.shade300,
+                          index <= 1
+                              ? const Color(0xFFFA9500)
+                              : Colors.grey.shade300,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -126,35 +90,60 @@ class _OnboardingGenderScreenState extends State<OnboardingGenderScreen> {
               ),
               const SizedBox(height: 40),
               const Text(
-                "What is your gender?",
+                "What is your weight?",
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
                   color: Colors.black87,
                 ),
               ),
-              const SizedBox(height: 30),
-              Row(
-                children: [
-                  _buildGenderButton(
-                    context,
-                    Gender.male,
-                    Icons.male_rounded,
-                    "Male",
+              const SizedBox(height: 20),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  controller: _weightController,
+                  focusNode: _weightFocusNode,
+                  style: AppTypography.body,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor:
+                        _weightFocusNode.hasFocus
+                            ? AppColors.backgroundDark
+                            : AppColors.backgroundLight,
+                    hintText: "Enter your weight",
+                    suffixText: "kg",
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(
+                        color: Colors.blue,
+                        width: 2,
+                      ),
+                    ),
                   ),
-                  _buildGenderButton(
-                    context,
-                    Gender.female,
-                    Icons.female_rounded,
-                    "Female",
-                  ),
-                ],
+                ),
               ),
               const Spacer(),
               Row(
                 children: [
                   ElevatedButton(
-                    onPressed: () => context.go('/onboarding-name'),
+                    onPressed: () => context.go('/onboarding-height'),
                     style: ElevatedButton.styleFrom(
                       shape: const CircleBorder(),
                       backgroundColor: const Color(0xFFFFE5C2),
@@ -170,10 +159,10 @@ class _OnboardingGenderScreenState extends State<OnboardingGenderScreen> {
                   Expanded(
                     flex: 30,
                     child: ElevatedButton(
-                      onPressed: _goNext,
+                      onPressed: _isButtonEnabled ? _goNext : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
-                            _selectedGender != null
+                            _isButtonEnabled
                                 ? AppColors.primary
                                 : Colors.grey.shade400,
                         shape: RoundedRectangleBorder(

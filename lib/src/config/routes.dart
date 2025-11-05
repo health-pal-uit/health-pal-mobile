@@ -1,6 +1,8 @@
 import 'package:da1/src/presentation/screens/advisor/advisor_screen.dart';
-import 'package:da1/src/presentation/screens/auth/onboarding/onboarding_gender_screen.dart';
-import 'package:da1/src/presentation/screens/auth/onboarding/onboarding_name_screen.dart';
+import 'package:da1/src/presentation/screens/auth/email_verification_screen.dart';
+import 'package:da1/src/presentation/screens/auth/onboarding/onboarding_complete_screen.dart';
+import 'package:da1/src/presentation/screens/auth/onboarding/onboarding_weight_screen.dart';
+import 'package:da1/src/presentation/screens/auth/onboarding/onboarding_height_screen.dart';
 import 'package:da1/src/presentation/screens/auth/signup_screen.dart';
 import 'package:da1/src/presentation/screens/auth/welcome/welcome_scroll_screen.dart';
 import 'package:da1/src/presentation/screens/community/community_screen.dart';
@@ -26,14 +28,19 @@ class AppRoutes {
         builder: (context, state) => const WelcomeScrollScreen(),
       ),
       GoRoute(
-        path: '/onboarding-name',
-        name: 'onboarding-name',
-        builder: (context, state) => const OnboardingNameScreen(),
+        path: '/onboarding-height',
+        name: 'onboarding-height',
+        builder: (context, state) => const OnboardingHeightScreen(),
       ),
       GoRoute(
-        path: '/onboarding-gender',
-        name: 'onboarding-gender',
-        builder: (context, state) => const OnboardingGenderScreen(),
+        path: '/onboarding-weight',
+        name: 'onboarding-weight',
+        builder: (context, state) => const OnboardingWeightScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding-complete',
+        name: 'onboarding-complete',
+        builder: (context, state) => const OnboardingCompleteScreen(),
       ),
       GoRoute(
         path: '/login',
@@ -44,6 +51,14 @@ class AppRoutes {
         path: '/signup',
         name: 'signup',
         builder: (context, state) => const SignUpScreen(),
+      ),
+      GoRoute(
+        path: '/email-verification',
+        name: 'email-verification',
+        builder: (context, state) {
+          final email = state.extra as String;
+          return EmailVerificationScreen(email: email);
+        },
       ),
       GoRoute(
         path: '/foodSearch',
