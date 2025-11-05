@@ -1,22 +1,50 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
-class OnboardingNameScreen extends StatefulWidget {
-  const OnboardingNameScreen({super.key});
+class OnboardingHeightScreen extends StatefulWidget {
+  const OnboardingHeightScreen({super.key});
 
   @override
-  State<OnboardingNameScreen> createState() => _OnboardingNameScreenState();
+  State<OnboardingHeightScreen> createState() => _OnboardingHeightScreenState();
 }
 
-class _OnboardingNameScreenState extends State<OnboardingNameScreen> {
-  final TextEditingController _nameController = TextEditingController();
-  final FocusNode _nameFocusNode = FocusNode();
+class _OnboardingHeightScreenState extends State<OnboardingHeightScreen> {
+  final TextEditingController _heightController = TextEditingController();
+  final FocusNode _heightFocusNode = FocusNode();
+  bool _isButtonEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _heightFocusNode.addListener(() {
+      setState(() {});
+    });
+    _heightController.addListener(_updateButtonState);
+  }
+
+  @override
+  void dispose() {
+    _heightFocusNode.dispose();
+    _heightController.removeListener(_updateButtonState);
+    _heightController.dispose();
+    super.dispose();
+  }
+
+  void _updateButtonState() {
+    final isEnabled = _heightController.text.trim().isNotEmpty;
+    if (_isButtonEnabled != isEnabled) {
+      setState(() {
+        _isButtonEnabled = isEnabled;
+      });
+    }
+  }
 
   void _goNext() {
-    if (_nameController.text.trim().isNotEmpty) {
-      context.go('/onboarding-gender');
+    if (_isButtonEnabled) {
+      context.go('/onboarding-weight');
     }
   }
 
@@ -45,14 +73,14 @@ class _OnboardingNameScreenState extends State<OnboardingNameScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
-                  5,
+                  3,
                   (index) => Container(
                     width: screenWidth * 0.1,
                     height: 4,
                     margin: const EdgeInsets.symmetric(horizontal: 4),
                     decoration: BoxDecoration(
                       color:
-                          index == 0
+                          index <= 0
                               ? const Color(0xFFFA9500)
                               : Colors.grey.shade300,
                       borderRadius: BorderRadius.circular(4),
@@ -62,7 +90,7 @@ class _OnboardingNameScreenState extends State<OnboardingNameScreen> {
               ),
               const SizedBox(height: 40),
               const Text(
-                "What can we call you?",
+                "What is your height?",
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -82,16 +110,19 @@ class _OnboardingNameScreenState extends State<OnboardingNameScreen> {
                   ],
                 ),
                 child: TextField(
-                  controller: _nameController,
-                  focusNode: _nameFocusNode,
+                  controller: _heightController,
+                  focusNode: _heightFocusNode,
                   style: AppTypography.body,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: InputDecoration(
                     filled: true,
                     fillColor:
-                        _nameFocusNode.hasFocus
+                        _heightFocusNode.hasFocus
                             ? AppColors.backgroundDark
                             : AppColors.backgroundLight,
-                    hintText: "Enter your nickname",
+                    hintText: "Enter your height",
+                    suffixText: "cm",
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: const BorderSide(
