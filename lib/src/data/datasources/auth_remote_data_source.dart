@@ -1,3 +1,4 @@
+import 'package:da1/src/config/api_config.dart';
 import 'package:da1/src/data/models/user_model.dart';
 import 'package:dio/dio.dart';
 
@@ -24,7 +25,6 @@ abstract class AuthRemoteDataSource {
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final Dio dio;
-  final String baseUrl = "http://10.0.2.2:3001";
 
   AuthRemoteDataSourceImpl({required this.dio});
 
@@ -33,12 +33,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String email,
     required String password,
   }) async {
-    // Dựa trên login.dto.ts, backend mong nhận { email, password }
     final response = await dio.post(
-      '$baseUrl/auth/login',
+      ApiConfig.login,
       data: {'email': email, 'password': password},
     );
-    // Parse JSON response thành Model
     return LoginResponseModel.fromJson(response.data);
   }
 
@@ -53,7 +51,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String birthday,
   }) async {
     await dio.post(
-      '$baseUrl/auth/signup',
+      ApiConfig.signup,
       data: {
         'username': username,
         'password': password,
@@ -68,14 +66,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<void> logout() async {
-    // GET /auth/logout
-    // Endpoint này có thể cần gửi kèm Access Token (xem mục 5)
-    await dio.get('$baseUrl/auth/logout');
+    await dio.get(ApiConfig.logout);
   }
 
   @override
   Future<bool> checkVerification(String email) async {
-    final response = await dio.get('$baseUrl/auth/check-verification/$email');
+    final response = await dio.get(
+      ApiConfig.checkVerification.replaceFirst('{email}', email),
+    );
     return response.data['data']['isVerified'];
   }
 }

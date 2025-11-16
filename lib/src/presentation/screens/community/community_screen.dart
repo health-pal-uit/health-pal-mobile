@@ -9,7 +9,7 @@ final List<Map<String, dynamic>> mockPosts = [
     "timeAgo": "2h ago",
     "postText":
         "Just completed my 30-day yoga challenge! Feeling more flexible and centered than ever.",
-    "imageUrl": "assets/images/welcome1.jpeg",
+    "imageUrl": "https://blog.nasm.org/hubfs/food-restriction-header.jpg",
     "hashtags": ["#Yoga", "#Fitness", "#Wellness"],
     "likes": 234,
     "comments": 42,
@@ -21,7 +21,7 @@ final List<Map<String, dynamic>> mockPosts = [
     "timeAgo": "5h ago",
     "postText":
         "Meal prep Sunday! High protein, balanced macros, and delicious.",
-    "imageUrl": "https://placehold.co/600x400/green/white?text=Meal+Prep",
+    "imageUrl": "https://blog.nasm.org/hubfs/food-restriction-header.jpg",
     "hashtags": ["#Nutrition", "#MealPrep"],
     "likes": 189,
     "comments": 28,

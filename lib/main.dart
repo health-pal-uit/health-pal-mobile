@@ -1,4 +1,5 @@
 import 'package:da1/src/app.dart';
+import 'package:da1/src/config/api_config.dart';
 import 'package:da1/src/data/repositories/auth_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,7 +17,12 @@ void main() {
   SystemChrome.setPreferredOrientations(<DeviceOrientation>[
     DeviceOrientation.portraitUp,
   ]);
-  final Dio dio = Dio();
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: ApiConfig.baseUrl,
+      connectTimeout: const Duration(seconds: 5),
+    ),
+  );
   final FlutterSecureStorage secureStorage = const FlutterSecureStorage();
   final AuthLocalDataSource localDataSource = AuthLocalDataSourceImpl(
     storage: secureStorage,
