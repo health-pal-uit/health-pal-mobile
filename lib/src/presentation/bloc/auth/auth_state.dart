@@ -18,6 +18,8 @@ class Authenticated extends AuthState {
   List<Object> get props => [user];
 }
 
+class VerificationSuccess extends AuthState {}
+
 class Unauthenticated extends AuthState {}
 
 class AuthFailure extends AuthState {

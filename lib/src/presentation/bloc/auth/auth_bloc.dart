@@ -53,10 +53,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<CheckVerificationStatus>((event, emit) async {
       final result = await authRepository.checkVerification(event.email);
 
-      result.fold((failure) {}, (isVerified) {
+      result.fold((failure) {}, (isVerified) async {
         if (isVerified) {
-          emit(Unauthenticated());
-        } else {}
+          emit(VerificationSuccess());
+        }
       });
     });
   }

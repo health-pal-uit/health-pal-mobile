@@ -80,11 +80,10 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
-        if (state is Authenticated) {
+        if (state is VerificationSuccess) {
           _pollTimer.cancel();
           _resendTimer.cancel();
-
-          context.go('/onboarding-height');
+          context.go('/login');
         }
 
         if (state is AuthFailure) {
