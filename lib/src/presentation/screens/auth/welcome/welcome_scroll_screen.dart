@@ -43,7 +43,7 @@ class _WelcomeScrollScreenState extends State<WelcomeScrollScreen> {
           children: [
             const SizedBox(height: 16),
             Text(
-              "HealthMate",
+              "Health Pal",
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w700,

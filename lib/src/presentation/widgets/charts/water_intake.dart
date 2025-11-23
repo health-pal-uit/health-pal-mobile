@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 class WaterIntakeWidget extends StatefulWidget {
   const WaterIntakeWidget({super.key});
@@ -29,7 +28,7 @@ class _WaterIntakeWidgetState extends State<WaterIntakeWidget> {
     double liters = _glasses * 0.25;
 
     return GestureDetector(
-      onTap: () => context.push('/steps'),
+      onTap: null,
       child: Container(
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
