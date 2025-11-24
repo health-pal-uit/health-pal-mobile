@@ -1,4 +1,5 @@
 import 'package:da1/src/config/theme/app_colors.dart';
+import 'package:da1/src/presentation/widgets/add_action_bottom_list.dart';
 import 'package:flutter/material.dart';
 
 class CustomBottomNav extends StatelessWidget {
@@ -76,7 +77,14 @@ class CustomBottomNav extends StatelessWidget {
           ),
 
           GestureDetector(
-            onTap: () => onTap(4),
+            onTap: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => const AddActionBottomSheet(),
+              );
+            },
             child: Container(
               height: 55,
               width: 55,
