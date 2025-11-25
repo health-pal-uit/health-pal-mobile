@@ -53,20 +53,12 @@ class AuthRepositoryImpl implements AuthRepository {
     required String username,
     required String password,
     required String email,
-    required String phone,
-    required String fullname,
-    required bool gender,
-    required String birthday,
   }) async {
     try {
       await remoteDataSource.signUp(
         username: username,
         password: password,
         email: email,
-        phone: phone,
-        fullname: fullname,
-        gender: gender,
-        birthday: birthday,
       );
       return const Right(null);
     } on DioException catch (e) {

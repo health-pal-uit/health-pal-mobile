@@ -7,10 +7,6 @@ abstract class AuthRepository {
     required String username,
     required String password,
     required String email,
-    required String phone,
-    required String fullname,
-    required bool gender,
-    required String birthday,
   });
 
   Future<Either<Failure, User>> login({

@@ -6,7 +6,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_signin_button/button_list.dart';
 import 'package:flutter_signin_button/button_view.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -17,100 +16,47 @@ class SignUpScreen extends StatefulWidget {
 
 class SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _fullnameController = TextEditingController();
+
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _birthDateController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
 
-  final _fullnameFocusNode = FocusNode();
   final _usernameFocusNode = FocusNode();
-  final _phoneFocusNode = FocusNode();
-  final _genderFocusNode = FocusNode();
-  final _birthDateFocusNode = FocusNode();
+  final _emailFocusNode = FocusNode();
+  final _passwordFocusNode = FocusNode();
 
-  final FocusNode _emailFocusNode = FocusNode();
-  final FocusNode _passwordFocusNode = FocusNode();
-  final FocusNode _confirmPasswordFocusNode = FocusNode();
-
-  bool? _gender;
-  DateTime? _selectedDate;
   bool _isPasswordObscured = true;
 
   @override
   void initState() {
     super.initState();
     void listener() => setState(() {});
-    _fullnameFocusNode.addListener(listener);
     _usernameFocusNode.addListener(listener);
     _emailFocusNode.addListener(listener);
-    _phoneFocusNode.addListener(listener);
-    _genderFocusNode.addListener(listener);
-    _birthDateFocusNode.addListener(listener);
     _passwordFocusNode.addListener(listener);
-    _confirmPasswordFocusNode.addListener(listener);
   }
 
   @override
   void dispose() {
-    _fullnameController.dispose();
     _usernameController.dispose();
     _emailController.dispose();
-    _phoneController.dispose();
-    _birthDateController.dispose();
     _passwordController.dispose();
-    _confirmPasswordController.dispose();
 
-    _fullnameFocusNode.dispose();
     _usernameFocusNode.dispose();
     _emailFocusNode.dispose();
-    _phoneFocusNode.dispose();
-    _genderFocusNode.dispose();
-    _birthDateFocusNode.dispose();
     _passwordFocusNode.dispose();
-    _confirmPasswordFocusNode.dispose();
     super.dispose();
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate ?? DateTime(2005),
-      firstDate: DateTime(1920),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-        _birthDateController.text = DateFormat('dd/MM/yyyy').format(picked);
-      });
-    }
   }
 
   void _onSignUpPressed(BuildContext context, bool isLoading) {
     if (isLoading) return;
 
-    if (_formKey.currentState!.validate() &&
-        _gender != null &&
-        _selectedDate != null) {
+    if (_formKey.currentState!.validate()) {
       context.read<AuthBloc>().add(
         SignUpRequested(
           username: _usernameController.text.trim(),
           password: _passwordController.text.trim(),
           email: _emailController.text.trim(),
-          phone: _phoneController.text.trim(),
-          fullname: _fullnameController.text.trim(),
-          gender: _gender!,
-          birthday: DateFormat('dd/MM/yyyy').format(_selectedDate!),
-        ),
-      );
-    } else if (_gender == null || _selectedDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Vui lòng điền đầy đủ giới tính và ngày sinh'),
-          backgroundColor: Colors.red,
         ),
       );
     }
@@ -189,46 +135,7 @@ class SignUpScreenState extends State<SignUpScreen> {
                               ),
                               const SizedBox(height: 30),
 
-                              Container(
-                                decoration: _fieldBoxDecoration(),
-                                child: TextFormField(
-                                  controller: _fullnameController,
-                                  focusNode: _fullnameFocusNode,
-                                  style: AppTypography.body,
-                                  decoration: _fieldInputDecoration(
-                                    hintText: "Enter your full name",
-                                    icon: Icons.person_outline,
-                                    hasFocus: _fullnameFocusNode.hasFocus,
-                                  ),
-                                  validator:
-                                      (value) =>
-                                          value!.isEmpty
-                                              ? "Full name is required"
-                                              : null,
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-
-                              Container(
-                                decoration: _fieldBoxDecoration(),
-                                child: TextFormField(
-                                  controller: _usernameController,
-                                  focusNode: _usernameFocusNode,
-                                  style: AppTypography.body,
-                                  decoration: _fieldInputDecoration(
-                                    hintText: "Enter your username",
-                                    icon: Icons.account_circle_outlined,
-                                    hasFocus: _usernameFocusNode.hasFocus,
-                                  ),
-                                  validator:
-                                      (value) =>
-                                          value!.isEmpty
-                                              ? "Username is required"
-                                              : null,
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-
+                              // --- FIELD 1: EMAIL ---
                               Container(
                                 decoration: _fieldBoxDecoration(),
                                 child: TextFormField(
@@ -250,84 +157,28 @@ class SignUpScreenState extends State<SignUpScreen> {
                               ),
                               const SizedBox(height: 20),
 
+                              // --- FIELD 2: USERNAME ---
                               Container(
                                 decoration: _fieldBoxDecoration(),
                                 child: TextFormField(
-                                  controller: _phoneController,
-                                  focusNode: _phoneFocusNode,
+                                  controller: _usernameController,
+                                  focusNode: _usernameFocusNode,
                                   style: AppTypography.body,
-                                  keyboardType: TextInputType.phone,
                                   decoration: _fieldInputDecoration(
-                                    hintText: "Enter your phone number",
-                                    icon: Icons.phone_outlined,
-                                    hasFocus: _phoneFocusNode.hasFocus,
+                                    hintText: "Enter your username",
+                                    icon: Icons.account_circle_outlined,
+                                    hasFocus: _usernameFocusNode.hasFocus,
                                   ),
                                   validator:
                                       (value) =>
                                           value!.isEmpty
-                                              ? "Phone is required"
+                                              ? "Username is required"
                                               : null,
                                 ),
                               ),
                               const SizedBox(height: 20),
 
-                              Container(
-                                decoration: _fieldBoxDecoration(),
-                                child: DropdownButtonFormField<bool>(
-                                  initialValue: _gender,
-                                  focusNode: _genderFocusNode,
-                                  style: AppTypography.body,
-                                  decoration: _fieldInputDecoration(
-                                    hintText: "Select your gender",
-                                    icon: Icons.wc_outlined,
-                                    hasFocus: _genderFocusNode.hasFocus,
-                                  ),
-                                  items: const [
-                                    DropdownMenuItem(
-                                      value: true,
-                                      child: Text("Male"),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: false,
-                                      child: Text("Female"),
-                                    ),
-                                  ],
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _gender = value;
-                                    });
-                                  },
-                                  validator:
-                                      (value) =>
-                                          value == null
-                                              ? "Gender is required"
-                                              : null,
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-
-                              Container(
-                                decoration: _fieldBoxDecoration(),
-                                child: TextFormField(
-                                  controller: _birthDateController,
-                                  focusNode: _birthDateFocusNode,
-                                  style: AppTypography.body,
-                                  readOnly: true,
-                                  onTap: () => _selectDate(context),
-                                  decoration: _fieldInputDecoration(
-                                    hintText: "Select your birth date",
-                                    icon: Icons.calendar_today_outlined,
-                                    hasFocus: _birthDateFocusNode.hasFocus,
-                                  ),
-                                  validator:
-                                      (value) =>
-                                          value!.isEmpty
-                                              ? "Birth date is required"
-                                              : null,
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-
+                              // --- FIELD 3: PASSWORD ---
                               Container(
                                 decoration: _fieldBoxDecoration(),
                                 child: TextFormField(
@@ -361,36 +212,10 @@ class SignUpScreenState extends State<SignUpScreen> {
                                               : null,
                                 ),
                               ),
-                              const SizedBox(height: 20),
-
-                              Container(
-                                decoration: _fieldBoxDecoration(),
-                                child: TextFormField(
-                                  controller: _confirmPasswordController,
-                                  focusNode: _confirmPasswordFocusNode, // Sửa
-                                  obscureText: true,
-                                  style: AppTypography.body,
-                                  decoration: _fieldInputDecoration(
-                                    hintText: "Confirm your password",
-                                    icon: Icons.lock_outline,
-                                    hasFocus:
-                                        _confirmPasswordFocusNode
-                                            .hasFocus, // Sửa
-                                  ),
-                                  validator: (value) {
-                                    if (value!.isEmpty) {
-                                      return "Please confirm password";
-                                    }
-                                    if (value != _passwordController.text) {
-                                      return "Passwords do not match";
-                                    }
-                                    return null;
-                                  },
-                                ),
-                              ),
                             ],
                           ),
 
+                          // --- BUTTONS ---
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
@@ -471,7 +296,6 @@ class SignUpScreenState extends State<SignUpScreen> {
                       ),
                     ),
                   ),
-
                   if (isLoading)
                     Container(
                       color: Colors.black.withValues(alpha: 0.5),
