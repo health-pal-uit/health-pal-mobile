@@ -165,6 +165,7 @@ class LoginScreenState extends State<LoginScreen> {
         ],
       ),
       child: TextFormField(
+        key: const Key('email_field'),
         controller: _emailController,
         focusNode: _emailFocusNode,
         style: AppTypography.body,
@@ -212,6 +213,7 @@ class LoginScreenState extends State<LoginScreen> {
         ],
       ),
       child: TextFormField(
+        key: const Key('password_field'),
         controller: _passwordController,
         focusNode: _passwordFocusNode,
         obscureText: _isPasswordObscured,
@@ -271,6 +273,7 @@ class LoginScreenState extends State<LoginScreen> {
 
   Widget _buildSignInButton(BuildContext context, bool isLoading) {
     return ElevatedButton(
+      key: const Key('login_btn'),
       onPressed: () => _onSignInPressed(context, isLoading),
       style: ElevatedButton.styleFrom(
         backgroundColor: isLoading ? Colors.grey : AppColors.primary,
