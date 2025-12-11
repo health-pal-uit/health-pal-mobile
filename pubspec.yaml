@@ -24,6 +24,8 @@ dependencies:
     dartz: ^0.10.1
     intl: ^0.20.2
     jwt_decoder: ^2.0.1
+    url_launcher: ^6.3.1
+    app_links: ^6.3.4
 
 dev_dependencies:
     flutter_test:

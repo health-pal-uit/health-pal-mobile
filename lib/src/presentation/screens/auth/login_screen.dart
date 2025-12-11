@@ -321,7 +321,9 @@ class LoginScreenState extends State<LoginScreen> {
     return SignInButton(
       Buttons.Google,
       text: "Sign in with Google",
-      onPressed: () {},
+      onPressed: () {
+        context.read<AuthBloc>().add(GoogleSignInRequested());
+      },
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
     );
