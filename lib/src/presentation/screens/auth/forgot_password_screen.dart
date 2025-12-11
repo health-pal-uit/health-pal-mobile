@@ -1,5 +1,6 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/core/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -37,22 +38,36 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         _isLoading = true;
       });
 
-      // TODO: Implement forgot password API call
-      await Future.delayed(const Duration(seconds: 2));
+      try {
+        await AuthService.forgotPassword(_emailController.text.trim());
 
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Password reset link sent to your email'),
-            backgroundColor: Colors.green,
-          ),
-        );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Password reset link sent to your email'),
+              backgroundColor: Colors.green,
+            ),
+          );
 
-        context.pop();
+          context.pop();
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to send reset link: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
   }

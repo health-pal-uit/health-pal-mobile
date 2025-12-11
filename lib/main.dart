@@ -1,5 +1,6 @@
 import 'package:da1/src/app.dart';
 import 'package:da1/src/config/api_config.dart';
+import 'package:da1/src/config/env.dart';
 import 'package:da1/src/data/repositories/auth_repository.dart';
 import 'package:da1/src/core/services/deep_link_service.dart';
 import 'package:flutter/material.dart';
@@ -10,15 +11,19 @@ import 'package:da1/src/data/repositories/auth_repository_impl.dart';
 import 'package:da1/src/data/datasources/auth_local_data_source.dart';
 import 'package:da1/src/data/datasources/auth_remote_data_source.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:da1/src/domain/entities/user.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 
 final deepLinkService = DeepLinkService();
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await dotenv.load(fileName: ".env");
+  await Supabase.initialize(url: Env.supabaseUrl, anonKey: Env.supabaseAnonKey);
   SystemChrome.setPreferredOrientations(<DeviceOrientation>[
     DeviceOrientation.portraitUp,
   ]);
