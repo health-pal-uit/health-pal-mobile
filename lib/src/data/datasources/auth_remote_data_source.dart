@@ -17,6 +17,15 @@ abstract class AuthRemoteDataSource {
   Future<void> logout();
 
   Future<bool> checkVerification(String email);
+
+  Future<void> forgotPassword(String email);
+
+  Future<void> resetPassword({
+    required String token,
+    required String newPassword,
+  });
+
+  Future<void> verifyResetToken(String token);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -59,5 +68,26 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       ApiConfig.checkVerification.replaceFirst('{email}', email),
     );
     return response.data['data']['isVerified'];
+  }
+
+  @override
+  Future<void> forgotPassword(String email) async {
+    await dio.post('/auth/forgot-password', data: {'email': email});
+  }
+
+  @override
+  Future<void> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
+    await dio.post(
+      '/auth/reset-password',
+      data: {'token': token, 'newPassword': newPassword},
+    );
+  }
+
+  @override
+  Future<void> verifyResetToken(String token) async {
+    await dio.get('/auth/verify-reset-token/$token');
   }
 }

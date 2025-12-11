@@ -1,5 +1,8 @@
 import 'package:da1/src/presentation/screens/advisor/advisor_screen.dart';
 import 'package:da1/src/presentation/screens/auth/email_verification_screen.dart';
+import 'package:da1/src/presentation/screens/auth/forgot_password_screen.dart';
+import 'package:da1/src/presentation/screens/auth/password_reset_waiting_screen.dart';
+import 'package:da1/src/presentation/screens/auth/reset_password_screen.dart';
 import 'package:da1/src/presentation/screens/auth/onboarding/onboarding_complete_screen.dart';
 import 'package:da1/src/presentation/screens/auth/onboarding/onboarding_weight_screen.dart';
 import 'package:da1/src/presentation/screens/auth/onboarding/onboarding_height_screen.dart';
@@ -51,6 +54,24 @@ class AppRoutes {
         path: '/signup',
         name: 'signup',
         builder: (context, state) => const SignUpScreen(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        name: 'forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/password-reset-waiting',
+        name: 'password-reset-waiting',
+        builder: (context, state) {
+          final email = state.extra as String;
+          return PasswordResetWaitingScreen(email: email);
+        },
+      ),
+      GoRoute(
+        path: '/reset-password',
+        name: 'reset-password',
+        builder: (context, state) => const ResetPasswordScreen(),
       ),
       GoRoute(
         path: '/email-verification',

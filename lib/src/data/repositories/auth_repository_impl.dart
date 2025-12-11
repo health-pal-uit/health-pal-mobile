@@ -6,6 +6,8 @@ import 'package:da1/src/domain/entities/user.dart';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:da1/src/config/api_config.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
@@ -99,9 +101,44 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, User>> loginWithGoogle() {
-    // TODO: Triển khai logic loginWithGoogle ở đây
-    // Ví dụ: gọi hàm mở trình duyệt, lắng nghe deep link, trả về Right(User) hoặc Left(Failure)
-    throw UnimplementedError('Hàm loginWithGoogle chưa được triển khai');
+  Future<Either<Failure, User>> loginWithGoogle() async {
+    try {
+      const redirectUrl = 'da1://login-callback/';
+      final authUrl = Uri.parse(
+        '${ApiConfig.baseUrl}auth/google/login?redirectUrl=$redirectUrl',
+      );
+      final launched = await launchUrl(
+        authUrl,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!launched) {
+        return Left(ServerFailure('Could not launch browser'));
+      }
+
+      return Left(ServerFailure('GOOGLE_AUTH_PENDING'));
+    } catch (e) {
+      return Left(
+        ServerFailure('Failed to start Google sign-in: ${e.toString()}'),
+      );
+    }
+  }
+
+  Future<Either<Failure, User>> processGoogleToken(String token) async {
+    try {
+      await localDataSource.saveToken(token);
+
+      Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
+      final String userId = decodedToken['sub'];
+      final String userEmail = decodedToken['email'];
+
+      final user = User(id: userId, email: userEmail);
+
+      return Right(user);
+    } on FormatException catch (e) {
+      return Left(ServerFailure('Lỗi giải mã token: ${e.message}'));
+    } catch (e) {
+      return Left(ServerFailure('Đã xảy ra lỗi: ${e.toString()}'));
+    }
   }
 }

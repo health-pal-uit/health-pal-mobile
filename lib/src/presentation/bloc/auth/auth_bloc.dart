@@ -46,6 +46,33 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(Unauthenticated());
     });
 
+    on<GoogleSignInRequested>((event, emit) async {
+      emit(AuthLoading());
+
+      final result = await authRepository.loginWithGoogle();
+
+      result.fold(
+        (failure) {
+          if (failure.message == 'GOOGLE_AUTH_PENDING') {
+            emit(Unauthenticated());
+          } else {
+            emit(AuthFailure(failure.message));
+          }
+        },
+        (user) {
+          emit(Authenticated(user));
+        },
+      );
+    });
+
+    on<GoogleSignInSuccess>((event, emit) {
+      emit(Authenticated(event.user));
+    });
+
+    on<GoogleSignInFailed>((event, emit) {
+      emit(AuthFailure(event.error));
+    });
+
     on<CheckVerificationStatus>((event, emit) async {
       final result = await authRepository.checkVerification(event.email);
 

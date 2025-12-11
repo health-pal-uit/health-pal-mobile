@@ -1,6 +1,9 @@
 import 'package:da1/src/app.dart';
 import 'package:da1/src/config/api_config.dart';
+import 'package:da1/src/config/env.dart';
+import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/data/repositories/auth_repository.dart';
+import 'package:da1/src/core/services/deep_link_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,11 +12,20 @@ import 'package:da1/src/data/repositories/auth_repository_impl.dart';
 import 'package:da1/src/data/datasources/auth_local_data_source.dart';
 import 'package:da1/src/data/datasources/auth_remote_data_source.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:da1/src/domain/entities/user.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 
-void main() {
+final deepLinkService = DeepLinkService();
+String? _pendingResetPasswordDeepLink;
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await dotenv.load(fileName: ".env");
+  await Supabase.initialize(url: Env.supabaseUrl, anonKey: Env.supabaseAnonKey);
   SystemChrome.setPreferredOrientations(<DeviceOrientation>[
     DeviceOrientation.portraitUp,
   ]);
@@ -36,6 +48,36 @@ void main() {
   );
 
   final AuthBloc authBloc = AuthBloc(authRepository: authRepository);
+
+  deepLinkService.initDeepLinks(
+    onTokenReceived: (String token) async {
+      try {
+        await localDataSource.saveToken(token);
+
+        Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
+        final String userId = decodedToken['sub'];
+        final String userEmail = decodedToken['email'];
+
+        final user = User(id: userId, email: userEmail);
+
+        authBloc.add(GoogleSignInSuccess(user));
+      } catch (e) {
+        authBloc.add(GoogleSignInFailed('Failed to process token: $e'));
+      }
+    },
+    onError: (String error) {
+      authBloc.add(GoogleSignInFailed(error));
+    },
+    onPasswordResetLink: (Uri uri) {
+      _pendingResetPasswordDeepLink = '/reset-password';
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_pendingResetPasswordDeepLink != null) {
+          AppRoutes.router.go(_pendingResetPasswordDeepLink!);
+          _pendingResetPasswordDeepLink = null;
+        }
+      });
+    },
+  );
 
   runApp(
     BlocProvider<AuthBloc>(create: (context) => authBloc, child: const App()),
