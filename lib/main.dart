@@ -29,16 +29,30 @@ void main() async {
   SystemChrome.setPreferredOrientations(<DeviceOrientation>[
     DeviceOrientation.portraitUp,
   ]);
+
+  final FlutterSecureStorage secureStorage = const FlutterSecureStorage();
+  final AuthLocalDataSource localDataSource = AuthLocalDataSourceImpl(
+    storage: secureStorage,
+  );
+
   final dio = Dio(
     BaseOptions(
       baseUrl: ApiConfig.baseUrl,
       connectTimeout: const Duration(seconds: 5),
     ),
   );
-  final FlutterSecureStorage secureStorage = const FlutterSecureStorage();
-  final AuthLocalDataSource localDataSource = AuthLocalDataSourceImpl(
-    storage: secureStorage,
+  dio.interceptors.add(
+    InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        final token = await localDataSource.getToken();
+        if (token != null) {
+          options.headers['Authorization'] = 'Bearer $token';
+        }
+        return handler.next(options);
+      },
+    ),
   );
+
   final AuthRemoteDataSource remoteDataSource = AuthRemoteDataSourceImpl(
     dio: dio,
   );

@@ -73,6 +73,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthFailure(event.error));
     });
 
+    on<LoadCurrentUser>((event, emit) async {
+      final result = await authRepository.getCurrentUser();
+      
+      result.fold(
+        (failure) {
+          emit(AuthFailure(failure.message));
+        },
+        (user) {
+          emit(Authenticated(user));
+        },
+      );
+    });
+
     on<CheckVerificationStatus>((event, emit) async {
       final result = await authRepository.checkVerification(event.email);
 

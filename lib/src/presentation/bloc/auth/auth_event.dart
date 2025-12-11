@@ -48,6 +48,8 @@ class GoogleSignInFailed extends AuthEvent {
   List<Object> get props => [error];
 }
 
+class LoadCurrentUser extends AuthEvent {}
+
 class CheckVerificationStatus extends AuthEvent {
   final String email;
 

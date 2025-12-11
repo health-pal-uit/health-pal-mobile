@@ -26,6 +26,8 @@ abstract class AuthRemoteDataSource {
   });
 
   Future<void> verifyResetToken(String token);
+  
+  Future<UserModel> getCurrentUser();
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -89,5 +91,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> verifyResetToken(String token) async {
     await dio.get('/auth/verify-reset-token/$token');
+  }
+
+  @override
+  Future<UserModel> getCurrentUser() async {
+    final response = await dio.get(ApiConfig.getProfile);
+    return UserModel.fromJson(response.data['data']);
   }
 }

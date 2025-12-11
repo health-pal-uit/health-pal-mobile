@@ -94,10 +94,15 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, User>> getCurrentUser() {
-    // TODO: Triển khai logic getCurrentUser ở đây
-    // Ví dụ: kiểm tra token, gọi API /me, trả về Right(User) hoặc Left(Failure)
-    throw UnimplementedError('Hàm getCurrentUser chưa được triển khai');
+  Future<Either<Failure, User>> getCurrentUser() async {
+    try {
+      final userModel = await remoteDataSource.getCurrentUser();
+      return Right(userModel.toEntity());
+    } on DioException catch (e) {
+      return Left(ServerFailure(e.message ?? 'Lỗi không xác định'));
+    } catch (e) {
+      return Left(ServerFailure('Đã xảy ra lỗi: ${e.toString()}'));
+    }
   }
 
   @override

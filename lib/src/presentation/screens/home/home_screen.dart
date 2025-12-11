@@ -12,8 +12,19 @@ import 'package:da1/src/domain/entities/user.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<AuthBloc>().add(LoadCurrentUser());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +82,7 @@ class HomeScreen extends StatelessWidget {
           style: AppTypography.body.copyWith(color: AppColors.textSecondary),
         ),
         Text(
-          user?.fullName ?? user?.email ?? 'User',
+          user?.username ?? user?.fullName ?? 'User',
           style: AppTypography.headline,
         ),
       ],
