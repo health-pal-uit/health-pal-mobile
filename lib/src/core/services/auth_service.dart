@@ -8,8 +8,32 @@ class AuthService {
   static Future<void> forgotPassword(String email) async {
     await _supabase.auth.resetPasswordForEmail(
       email,
-      redirectTo: "da1://auth/reset-password",
+      redirectTo: "da1://reset-callback/",
     );
+  }
+
+  /// Sign up user with email and password
+  static Future<AuthResponse> signUp({
+    required String email,
+    required String password,
+  }) async {
+    return await _supabase.auth.signUp(email: email, password: password);
+  }
+
+  /// Sign in user with email and password
+  static Future<AuthResponse> signIn({
+    required String email,
+    required String password,
+  }) async {
+    return await _supabase.auth.signInWithPassword(
+      email: email,
+      password: password,
+    );
+  }
+
+  /// Sign out current user
+  static Future<void> signOut() async {
+    await _supabase.auth.signOut();
   }
 
   /// Reset password with new password

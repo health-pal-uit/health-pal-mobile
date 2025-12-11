@@ -46,14 +46,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             _isLoading = false;
           });
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Password reset link sent to your email'),
-              backgroundColor: Colors.green,
-            ),
+          context.go(
+            '/password-reset-waiting',
+            extra: _emailController.text.trim(),
           );
-
-          context.pop();
         }
       } catch (e) {
         if (mounted) {

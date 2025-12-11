@@ -8,11 +8,11 @@ class DeepLinkService {
   Future<void> initDeepLinks({
     required Function(String token) onTokenReceived,
     required Function(String error) onError,
+    Function(Uri uri)? onPasswordResetLink,
   }) async {
-    // Handle deep links when app is already running
     _linkSubscription = _appLinks.uriLinkStream.listen(
       (Uri uri) {
-        _handleDeepLink(uri, onTokenReceived, onError);
+        _handleDeepLink(uri, onTokenReceived, onError, onPasswordResetLink);
       },
       onError: (error) {
         onError(error.toString());
@@ -23,7 +23,12 @@ class DeepLinkService {
     try {
       final initialUri = await _appLinks.getInitialLink();
       if (initialUri != null) {
-        _handleDeepLink(initialUri, onTokenReceived, onError);
+        _handleDeepLink(
+          initialUri,
+          onTokenReceived,
+          onError,
+          onPasswordResetLink,
+        );
       }
     } catch (e) {
       onError(e.toString());
@@ -34,6 +39,7 @@ class DeepLinkService {
     Uri uri,
     Function(String token) onTokenReceived,
     Function(String error) onError,
+    Function(Uri uri)? onPasswordResetLink,
   ) {
     // Check if this is the OAuth callback
     if (uri.scheme == 'da1' && uri.host == 'auth' && uri.path == '/callback') {
@@ -42,6 +48,12 @@ class DeepLinkService {
         onTokenReceived(token);
       } else {
         onError('No token received from Google');
+      }
+    }
+    // Check if this is the password reset link
+    else if (uri.scheme == 'da1' && uri.host == 'reset-callback') {
+      if (onPasswordResetLink != null) {
+        onPasswordResetLink(uri);
       }
     }
   }

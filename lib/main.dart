@@ -1,6 +1,7 @@
 import 'package:da1/src/app.dart';
 import 'package:da1/src/config/api_config.dart';
 import 'package:da1/src/config/env.dart';
+import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/data/repositories/auth_repository.dart';
 import 'package:da1/src/core/services/deep_link_service.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +19,7 @@ import 'package:da1/src/domain/entities/user.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 
 final deepLinkService = DeepLinkService();
+String? _pendingResetPasswordDeepLink;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -65,6 +67,15 @@ void main() async {
     },
     onError: (String error) {
       authBloc.add(GoogleSignInFailed(error));
+    },
+    onPasswordResetLink: (Uri uri) {
+      _pendingResetPasswordDeepLink = '/reset-password';
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_pendingResetPasswordDeepLink != null) {
+          AppRoutes.router.go(_pendingResetPasswordDeepLink!);
+          _pendingResetPasswordDeepLink = null;
+        }
+      });
     },
   );
 
