@@ -1,6 +1,8 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/presentation/bloc/auth/auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -168,7 +170,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       _item(LucideIcons.circleAlert, "About Health Pal"),
                     ],
                   ),
-                  _item(Icons.logout, "Logout"),
+                  GestureDetector(
+                    onTap: () {
+                      context.read<AuthBloc>().add(SignOutRequested());
+                      context.go('/login');
+                    },
+                    child: _item(Icons.logout, "Logout"),
+                  ),
                 ],
               ),
             ),

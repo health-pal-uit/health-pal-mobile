@@ -103,7 +103,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, User>> loginWithGoogle() async {
     try {
-      const redirectUrl = 'da1://auth/callback';
+      const redirectUrl = 'da1://login-callback/';
       final authUrl = Uri.parse(
         '${ApiConfig.baseUrl}auth/google/login?redirectUrl=$redirectUrl',
       );

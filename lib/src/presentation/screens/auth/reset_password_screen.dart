@@ -55,7 +55,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             _isLoading = false;
           });
 
-          // Show success dialog
           showDialog(
             context: context,
             barrierDismissible: false,
@@ -151,7 +150,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Back button
               IconButton(
                 icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
                 onPressed: () => context.pop(),
@@ -160,7 +158,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               ),
               const SizedBox(height: 32),
 
-              // Icon
               Container(
                 width: 80,
                 height: 80,
@@ -176,14 +173,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Title
               Text(
                 'Create New Password',
                 style: AppTypography.headline.copyWith(fontSize: 28),
               ),
               const SizedBox(height: 8),
 
-              // Subtitle
               Text(
                 'Your new password must be different from previously used passwords.',
                 style: AppTypography.body.copyWith(
@@ -257,24 +252,24 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             ),
                           ),
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a password';
-                          }
-                          if (value.length < 8) {
-                            return 'Password must be at least 8 characters';
-                          }
-                          if (!RegExp(r'[A-Z]').hasMatch(value)) {
-                            return 'Must contain at least one uppercase letter';
-                          }
-                          if (!RegExp(r'[a-z]').hasMatch(value)) {
-                            return 'Must contain at least one lowercase letter';
-                          }
-                          if (!RegExp(r'[0-9]').hasMatch(value)) {
-                            return 'Must contain at least one number';
-                          }
-                          return null;
-                        },
+                        // validator: (value) {
+                        //   if (value == null || value.isEmpty) {
+                        //     return 'Please enter a password';
+                        //   }
+                        //   if (value.length < 8) {
+                        //     return 'Password must be at least 8 characters';
+                        //   }
+                        //   if (!RegExp(r'[A-Z]').hasMatch(value)) {
+                        //     return 'Must contain at least one uppercase letter';
+                        //   }
+                        //   if (!RegExp(r'[a-z]').hasMatch(value)) {
+                        //     return 'Must contain at least one lowercase letter';
+                        //   }
+                        //   if (!RegExp(r'[0-9]').hasMatch(value)) {
+                        //     return 'Must contain at least one number';
+                        //   }
+                        //   return null;
+                        // },
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -353,7 +348,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     ),
                     const SizedBox(height: 32),
 
-                    // Reset Password Button
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
