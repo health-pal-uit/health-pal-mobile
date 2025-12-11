@@ -42,7 +42,7 @@ class DeepLinkService {
     Function(Uri uri)? onPasswordResetLink,
   ) {
     // Check if this is the OAuth callback
-    if (uri.scheme == 'da1' && uri.host == 'auth' && uri.path == '/callback') {
+    if (uri.scheme == 'da1' && uri.host == 'login-callback') {
       final token = uri.queryParameters['token'];
       if (token != null && token.isNotEmpty) {
         onTokenReceived(token);
