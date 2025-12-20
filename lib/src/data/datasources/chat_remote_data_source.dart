@@ -5,7 +5,7 @@ import 'package:dio/dio.dart';
 abstract class ChatRemoteDataSource {
   Future<ChatResponse> sendMessage({
     required String message,
-    List<ChatHistoryItem>? history,
+    required List<ChatHistoryItem> history,
   });
 }
 
@@ -17,10 +17,9 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
   @override
   Future<ChatResponse> sendMessage({
     required String message,
-    List<ChatHistoryItem>? history,
+    required List<ChatHistoryItem> history,
   }) async {
     final request = ChatRequest(message: message, history: history);
-
     final response = await dio.post(ApiConfig.chatAI, data: request.toJson());
 
     return ChatResponse.fromJson(response.data);

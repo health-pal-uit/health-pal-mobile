@@ -87,7 +87,7 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
     try {
       final response = await _chatDataSource.sendMessage(
         message: userMessage,
-        history: _apiHistory.isNotEmpty ? _apiHistory : null,
+        history: _apiHistory,
       );
 
       if (!mounted) return;
