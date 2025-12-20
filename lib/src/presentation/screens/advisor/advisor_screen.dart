@@ -215,7 +215,23 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
             Expanded(
               child:
                   _chatService.messages.isEmpty
-                      ? const EmptyStateWidget()
+                      ? EmptyStateWidget(
+                        onSuggestionTap: (suggestion) {
+                          final userMessage = ChatMessage(
+                            id:
+                                DateTime.now().millisecondsSinceEpoch
+                                    .toString(),
+                            text: suggestion,
+                            sender: MessageSender.user,
+                            timestamp: DateTime.now(),
+                          );
+
+                          _chatService.addMessage(userMessage);
+                          setState(() {});
+                          _scrollToBottom();
+                          _getAIResponse(suggestion);
+                        },
+                      )
                       : ListView.builder(
                         controller: _scrollController,
                         padding: const EdgeInsets.all(16),
