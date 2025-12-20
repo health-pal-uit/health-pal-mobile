@@ -75,7 +75,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     on<LoadCurrentUser>((event, emit) async {
       final result = await authRepository.getCurrentUser();
-      
+
       result.fold(
         (failure) {
           emit(AuthFailure(failure.message));

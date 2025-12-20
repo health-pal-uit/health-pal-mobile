@@ -1,11 +1,16 @@
 import 'dart:async';
-import 'dart:math';
+import 'package:da1/src/config/api_config.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
+import 'package:da1/src/data/datasources/auth_local_data_source.dart';
 import 'package:flutter/material.dart';
 import 'package:da1/src/domain/entities/chat_message.dart';
 import 'package:da1/src/presentation/screens/advisor/widgets/chat_message_widget.dart';
 import 'package:da1/src/presentation/screens/advisor/widgets/empty_state_widget.dart';
 import 'package:da1/src/presentation/screens/advisor/widgets/typing_indicator.dart';
+import 'package:da1/src/data/datasources/chat_remote_data_source.dart';
+import 'package:da1/src/data/models/chat_model.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AdvisorScreen extends StatefulWidget {
   const AdvisorScreen({super.key});
@@ -19,14 +24,8 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
   final TextEditingController _inputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _isTyping = false;
-
-  final List<String> _aiResponses = [
-    "That's a great question! Based on your situation, I'd recommend starting with small, manageable steps. Would you like me to break this down further?",
-    "I understand your concern. Let me help you think through this systematically. Here are a few key points to consider...",
-    "Interesting! Here's what I think: this approach could work well if you focus on consistency and patience. What specific aspect would you like to explore more?",
-    "Thank you for sharing that. From an advisory perspective, I'd suggest prioritizing your goals first. Would you like some specific strategies?",
-    "That makes sense. Here's my take: combining both approaches might give you the best results. Let me explain why...",
-  ];
+  late final ChatRemoteDataSource _chatDataSource;
+  List<ChatHistoryItem> _apiHistory = [];
 
   @override
   void initState() {
@@ -34,6 +33,31 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
     _inputController.addListener(() {
       setState(() {});
     });
+
+    final secureStorage = const FlutterSecureStorage();
+    final localDataSource = AuthLocalDataSourceImpl(storage: secureStorage);
+
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: ApiConfig.baseUrl,
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+      ),
+    );
+
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final token = await localDataSource.getToken();
+          if (token != null) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+          return handler.next(options);
+        },
+      ),
+    );
+
+    _chatDataSource = ChatRemoteDataSourceImpl(dio: dio);
   }
 
   @override
@@ -55,22 +79,24 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
     }
   }
 
-  void _simulateAIResponse(String userMessage) {
+  Future<void> _getAIResponse(String userMessage) async {
     setState(() {
       _isTyping = true;
     });
 
-    final random = Random();
-    final delay = 1000 + random.nextInt(1000);
+    try {
+      final response = await _chatDataSource.sendMessage(
+        message: userMessage,
+        history: _apiHistory.isNotEmpty ? _apiHistory : null,
+      );
 
-    Timer(Duration(milliseconds: delay), () {
       if (!mounted) return;
 
-      final randomResponse = _aiResponses[random.nextInt(_aiResponses.length)];
+      _apiHistory = response.history;
 
       final aiMessage = ChatMessage(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
-        text: randomResponse,
+        text: response.reply,
         sender: MessageSender.ai,
         timestamp: DateTime.now(),
       );
@@ -81,7 +107,20 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
       });
 
       _scrollToBottom();
-    });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isTyping = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to get response: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void _handleSend() {
@@ -102,7 +141,7 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
     _inputController.clear();
     _scrollToBottom();
 
-    _simulateAIResponse(text);
+    _getAIResponse(text);
   }
 
   @override
@@ -112,7 +151,6 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
             Container(
               width: double.infinity,
               decoration: BoxDecoration(
@@ -140,7 +178,6 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
               ),
             ),
 
-            // Messages Area
             Expanded(
               child:
                   _messages.isEmpty
@@ -159,7 +196,6 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
                       ),
             ),
 
-            // Input Area
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,

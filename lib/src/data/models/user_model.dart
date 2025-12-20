@@ -22,9 +22,10 @@ class UserModel extends User {
       fullName: json['fullname'],
       phone: json['phone'],
       gender: json['gender'],
-      birthDate: json['birth_date'] != null
-          ? DateTime.parse(json['birth_date'])
-          : null,
+      birthDate:
+          json['birth_date'] != null
+              ? DateTime.parse(json['birth_date'])
+              : null,
       avatarUrl: json['avatar_url'],
       isVerified: json['isVerified'],
       role: json['role']?['name'],
@@ -32,17 +33,17 @@ class UserModel extends User {
   }
 
   User toEntity() => User(
-        id: id,
-        username: username,
-        email: email,
-        fullName: fullName,
-        phone: phone,
-        gender: gender,
-        birthDate: birthDate,
-        avatarUrl: avatarUrl,
-        isVerified: isVerified,
-        role: role,
-      );
+    id: id,
+    username: username,
+    email: email,
+    fullName: fullName,
+    phone: phone,
+    gender: gender,
+    birthDate: birthDate,
+    avatarUrl: avatarUrl,
+    isVerified: isVerified,
+    role: role,
+  );
 }
 
 class LoginResponseModel {

@@ -26,7 +26,7 @@ abstract class AuthRemoteDataSource {
   });
 
   Future<void> verifyResetToken(String token);
-  
+
   Future<UserModel> getCurrentUser();
 }
 

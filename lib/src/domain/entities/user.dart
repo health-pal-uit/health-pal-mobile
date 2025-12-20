@@ -27,17 +27,17 @@ class User extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        username,
-        email,
-        fullName,
-        phone,
-        gender,
-        birthDate,
-        avatarUrl,
-        isVerified,
-        role,
-      ];
+    id,
+    username,
+    email,
+    fullName,
+    phone,
+    gender,
+    birthDate,
+    avatarUrl,
+    isVerified,
+    role,
+  ];
 }
 
 class LoginResponseModel {

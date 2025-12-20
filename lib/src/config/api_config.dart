@@ -12,4 +12,7 @@ class ApiConfig {
 
   // Admin endpoints
   static const String getAllUsers = "/admin/users";
+
+  // Chat endpoints
+  static const String chatAI = "/chat-ai";
 }
