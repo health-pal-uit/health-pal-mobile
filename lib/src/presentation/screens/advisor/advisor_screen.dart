@@ -6,6 +6,7 @@ import 'package:da1/src/data/datasources/auth_local_data_source.dart';
 import 'package:flutter/material.dart';
 import 'package:da1/src/domain/entities/chat_message.dart';
 import 'package:da1/src/presentation/screens/advisor/widgets/chat_message_widget.dart';
+import 'package:da1/src/presentation/screens/advisor/widgets/clear_chat_dialog.dart';
 import 'package:da1/src/presentation/screens/advisor/widgets/empty_state_widget.dart';
 import 'package:da1/src/presentation/screens/advisor/widgets/typing_indicator.dart';
 import 'package:da1/src/data/datasources/chat_remote_data_source.dart';
@@ -58,7 +59,6 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
 
     _chatDataSource = ChatRemoteDataSourceImpl(dio: dio);
 
-    // Scroll to bottom after loading persisted messages
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_chatService.messages.isNotEmpty) {
         _scrollToBottom();
@@ -164,22 +164,50 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
                 border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'AI Advisor',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'AI Advisor',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Ask anything, get instant advice',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Ask anything, get instant advice',
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                  ),
+                  if (_chatService.messages.isNotEmpty)
+                    IconButton(
+                      icon: const Icon(Icons.add),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder:
+                              (context) => ClearChatDialog(
+                                onConfirm: () {
+                                  setState(() {
+                                    _chatService.clearChat();
+                                  });
+                                },
+                              ),
+                        );
+                      },
+                      tooltip: 'New Session',
+                    ),
                 ],
               ),
             ),
@@ -240,10 +268,6 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
                         onSubmitted: (_) => _handleSend(),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.mic, color: Colors.grey[400]),
-                    onPressed: () {},
                   ),
                   const SizedBox(width: 4),
                   Container(
