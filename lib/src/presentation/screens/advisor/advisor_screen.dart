@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:da1/src/config/api_config.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
+import 'package:da1/src/core/services/chat_service.dart';
 import 'package:da1/src/data/datasources/auth_local_data_source.dart';
 import 'package:flutter/material.dart';
 import 'package:da1/src/domain/entities/chat_message.dart';
@@ -8,7 +9,6 @@ import 'package:da1/src/presentation/screens/advisor/widgets/chat_message_widget
 import 'package:da1/src/presentation/screens/advisor/widgets/empty_state_widget.dart';
 import 'package:da1/src/presentation/screens/advisor/widgets/typing_indicator.dart';
 import 'package:da1/src/data/datasources/chat_remote_data_source.dart';
-import 'package:da1/src/data/models/chat_model.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -20,12 +20,11 @@ class AdvisorScreen extends StatefulWidget {
 }
 
 class _AdvisorScreenState extends State<AdvisorScreen> {
-  final List<ChatMessage> _messages = [];
+  final _chatService = ChatService();
   final TextEditingController _inputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _isTyping = false;
   late final ChatRemoteDataSource _chatDataSource;
-  List<ChatHistoryItem> _apiHistory = [];
 
   @override
   void initState() {
@@ -58,6 +57,13 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
     );
 
     _chatDataSource = ChatRemoteDataSourceImpl(dio: dio);
+
+    // Scroll to bottom after loading persisted messages
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_chatService.messages.isNotEmpty) {
+        _scrollToBottom();
+      }
+    });
   }
 
   @override
@@ -87,12 +93,12 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
     try {
       final response = await _chatDataSource.sendMessage(
         message: userMessage,
-        history: _apiHistory,
+        history: _chatService.apiHistory,
       );
 
       if (!mounted) return;
 
-      _apiHistory = response.history;
+      _chatService.updateApiHistory(response.history);
 
       final aiMessage = ChatMessage(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -101,8 +107,9 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
         timestamp: DateTime.now(),
       );
 
+      _chatService.addMessage(aiMessage);
+
       setState(() {
-        _messages.add(aiMessage);
         _isTyping = false;
       });
 
@@ -134,9 +141,8 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
       timestamp: DateTime.now(),
     );
 
-    setState(() {
-      _messages.add(userMessage);
-    });
+    _chatService.addMessage(userMessage);
+    setState(() {});
 
     _inputController.clear();
     _scrollToBottom();
@@ -180,15 +186,18 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
 
             Expanded(
               child:
-                  _messages.isEmpty
+                  _chatService.messages.isEmpty
                       ? const EmptyStateWidget()
                       : ListView.builder(
                         controller: _scrollController,
                         padding: const EdgeInsets.all(16),
-                        itemCount: _messages.length + (_isTyping ? 1 : 0),
+                        itemCount:
+                            _chatService.messages.length + (_isTyping ? 1 : 0),
                         itemBuilder: (context, index) {
-                          if (index < _messages.length) {
-                            return ChatMessageWidget(message: _messages[index]);
+                          if (index < _chatService.messages.length) {
+                            return ChatMessageWidget(
+                              message: _chatService.messages[index],
+                            );
                           } else {
                             return const TypingIndicator();
                           }
