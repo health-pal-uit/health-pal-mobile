@@ -401,18 +401,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
   Future<void> _handleLike(PostModel post) async {
     if (_postDataSource == null) return;
 
-    // Don't allow liking if already liked
-    if (post.isLikedByUser) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('You have already liked this post'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
-      return;
-    }
+    final isCurrentlyLiked = post.isLikedByUser;
 
     try {
       // Optimistically update UI
@@ -427,20 +416,30 @@ class _CommunityScreenState extends State<CommunityScreen> {
             createdAt: post.createdAt,
             deletedAt: post.deletedAt,
             user: post.user,
-            likeCount: post.likeCount + 1,
-            isLikedByUser: true,
+            likeCount:
+                isCurrentlyLiked ? post.likeCount - 1 : post.likeCount + 1,
+            isLikedByUser: !isCurrentlyLiked,
           );
         }
       });
 
-      await _postDataSource!.likePost(post.id);
+      // Call appropriate API
+      if (isCurrentlyLiked) {
+        await _postDataSource!.unlikePost(post.id);
+      } else {
+        await _postDataSource!.likePost(post.id);
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Post liked successfully'),
+          SnackBar(
+            content: Text(
+              isCurrentlyLiked
+                  ? 'Post unliked successfully'
+                  : 'Post liked successfully',
+            ),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 1),
+            duration: const Duration(seconds: 1),
           ),
         );
       }
@@ -458,7 +457,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
             deletedAt: post.deletedAt,
             user: post.user,
             likeCount: post.likeCount,
-            isLikedByUser: false,
+            isLikedByUser: isCurrentlyLiked,
           );
         }
       });

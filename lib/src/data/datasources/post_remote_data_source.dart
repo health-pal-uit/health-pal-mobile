@@ -6,6 +6,7 @@ abstract class PostRemoteDataSource {
   Future<PostsResponse> getPosts({required int page, required int limit});
   Future<void> reportPost(String postId);
   Future<void> likePost(String postId);
+  Future<void> unlikePost(String postId);
 }
 
 class PostRemoteDataSourceImpl implements PostRemoteDataSource {
@@ -92,6 +93,33 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
           throw Exception('Post not found');
         } else {
           throw Exception('Failed to like post ($statusCode): $message');
+        }
+      } else {
+        throw Exception('Network error: ${e.message}');
+      }
+    } catch (e) {
+      throw Exception('Unexpected error: $e');
+    }
+  }
+
+  @override
+  Future<void> unlikePost(String postId) async {
+    try {
+      final endpoint = ApiConfig.unlikePost(postId);
+      await dio.delete(endpoint);
+    } on DioException catch (e) {
+      if (e.response != null) {
+        final statusCode = e.response?.statusCode;
+        final message = e.response?.statusMessage;
+
+        if (statusCode == 401) {
+          throw Exception('Unauthorized: Please login again');
+        } else if (statusCode == 400) {
+          throw Exception('You have not liked this post');
+        } else if (statusCode == 404) {
+          throw Exception('Post not found');
+        } else {
+          throw Exception('Failed to unlike post ($statusCode): $message');
         }
       } else {
         throw Exception('Network error: ${e.message}');
