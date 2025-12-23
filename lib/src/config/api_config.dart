@@ -21,4 +21,5 @@ class ApiConfig {
   static String reportPost(String postId) => "/posts/report/$postId";
   static String likePost(String postId) => "/posts/$postId/like";
   static String unlikePost(String postId) => "/posts/$postId/unlike";
+  static String getComments(String postId) => "/posts/$postId/comments";
 }

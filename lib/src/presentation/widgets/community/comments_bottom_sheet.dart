@@ -1,6 +1,11 @@
+import 'package:da1/src/config/api_config.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
+import 'package:da1/src/data/datasources/post_remote_data_source.dart';
+import 'package:da1/src/data/models/comment_model.dart';
 import 'package:da1/src/data/models/post_model.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class CommentsBottomSheet extends StatefulWidget {
   final PostModel post;
@@ -22,6 +27,73 @@ class CommentsBottomSheet extends StatefulWidget {
 
 class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
   final _commentController = TextEditingController();
+  final _storage = const FlutterSecureStorage();
+  PostRemoteDataSource? _postDataSource;
+
+  List<CommentModel> _comments = [];
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeAndLoadComments();
+  }
+
+  Future<void> _initializeAndLoadComments() async {
+    final token = await _storage.read(key: 'auth_token');
+
+    if (token == null || token.isEmpty) {
+      setState(() {
+        _errorMessage = 'No authentication token found';
+        _isLoading = false;
+      });
+      return;
+    }
+
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: ApiConfig.baseUrl,
+        connectTimeout: const Duration(seconds: 5),
+        receiveTimeout: const Duration(seconds: 3),
+      ),
+    );
+
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          options.headers['Authorization'] = 'Bearer $token';
+          return handler.next(options);
+        },
+      ),
+    );
+
+    _postDataSource = PostRemoteDataSourceImpl(dio: dio);
+    await _loadComments();
+  }
+
+  Future<void> _loadComments() async {
+    if (_postDataSource == null) return;
+
+    try {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
+      final response = await _postDataSource!.getComments(widget.post.id);
+
+      setState(() {
+        _comments = response.data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -75,29 +147,105 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
   }
 
   Widget _buildCommentsList(ScrollController scrollController) {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, color: Colors.grey[400], size: 48),
+            const SizedBox(height: 12),
+            Text(
+              'Failed to load comments',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[700],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Text(
+                _errorMessage!.replaceAll('Exception: ', ''),
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadComments,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+              ),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_comments.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.chat_bubble_outline, color: Colors.grey[400], size: 64),
+            const SizedBox(height: 16),
+            Text(
+              'No comments yet',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Be the first to comment!',
+              style: TextStyle(color: Colors.grey[500], fontSize: 14),
+            ),
+          ],
+        ),
+      );
+    }
+
     return ListView.builder(
       controller: scrollController,
       padding: const EdgeInsets.all(16),
-      itemCount: 5, // Placeholder
-      itemBuilder:
-          (context, index) => _buildCommentItem(
-            'User ${index + 1}',
-            'This is a sample comment ${index + 1}',
-            '${index + 1}h ago',
-          ),
+      itemCount: _comments.length,
+      itemBuilder: (context, index) {
+        final comment = _comments[index];
+        return _buildCommentItem(
+          comment.user.getAvatarUrl(),
+          comment.user.getDisplayName(),
+          comment.content,
+          comment.getTimeAgo(),
+        );
+      },
     );
   }
 
-  Widget _buildCommentItem(String username, String comment, String timeAgo) {
+  Widget _buildCommentItem(
+    String avatarUrl,
+    String username,
+    String comment,
+    String timeAgo,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             radius: 18,
+            backgroundImage: NetworkImage(avatarUrl),
             backgroundColor: Colors.grey,
-            child: Icon(Icons.person, color: Colors.white, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
