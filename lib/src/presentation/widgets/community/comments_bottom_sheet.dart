@@ -321,12 +321,44 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     );
   }
 
-  void _sendComment() {
+  Future<void> _sendComment() async {
     final comment = _commentController.text.trim();
     if (comment.isEmpty) return;
+    if (_postDataSource == null) return;
 
-    // TODO: Implement send comment API
+    try {
+      // Clear input and show loading
+      final commentText = comment;
+      _commentController.clear();
+      FocusScope.of(context).unfocus();
 
-    _commentController.clear();
+      // Call API to add comment
+      await _postDataSource!.addComment(widget.post.id, commentText);
+
+      // Reload comments to show the new one
+      await _loadComments();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Comment added successfully'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (e) {
+      // Restore comment text on error
+      _commentController.text = comment;
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

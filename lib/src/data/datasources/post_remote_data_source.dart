@@ -9,6 +9,7 @@ abstract class PostRemoteDataSource {
   Future<void> likePost(String postId);
   Future<void> unlikePost(String postId);
   Future<CommentsResponse> getComments(String postId);
+  Future<CommentModel> addComment(String postId, String content);
 }
 
 class PostRemoteDataSourceImpl implements PostRemoteDataSource {
@@ -148,6 +149,34 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
           throw Exception('Post not found');
         } else {
           throw Exception('Failed to fetch comments ($statusCode): $message');
+        }
+      } else {
+        throw Exception('Network error: ${e.message}');
+      }
+    } catch (e) {
+      throw Exception('Unexpected error: $e');
+    }
+  }
+
+  @override
+  Future<CommentModel> addComment(String postId, String content) async {
+    try {
+      final endpoint = ApiConfig.addComment(postId);
+      final response = await dio.post(endpoint, data: {'content': content});
+      return CommentModel.fromJson(response.data['data']);
+    } on DioException catch (e) {
+      if (e.response != null) {
+        final statusCode = e.response?.statusCode;
+        final message = e.response?.statusMessage;
+
+        if (statusCode == 401) {
+          throw Exception('Unauthorized: Please login again');
+        } else if (statusCode == 400) {
+          throw Exception('Invalid comment content');
+        } else if (statusCode == 404) {
+          throw Exception('Post not found');
+        } else {
+          throw Exception('Failed to add comment ($statusCode): $message');
         }
       } else {
         throw Exception('Network error: ${e.message}');
