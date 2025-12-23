@@ -19,6 +19,7 @@ class ApiConfig {
   // Post endpoints
   static const String getPosts = "/posts";
   static const String createPost = "/posts";
+  static String getUserPosts(String userId) => "/posts/user/$userId";
   static String reportPost(String postId) => "/posts/report/$postId";
   static String likePost(String postId) => "/posts/$postId/like";
   static String unlikePost(String postId) => "/posts/$postId/unlike";
