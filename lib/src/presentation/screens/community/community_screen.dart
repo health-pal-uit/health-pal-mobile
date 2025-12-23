@@ -1,7 +1,9 @@
 import 'package:da1/src/config/api_config.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
+import 'package:da1/src/data/datasources/auth_remote_data_source.dart';
 import 'package:da1/src/data/datasources/post_remote_data_source.dart';
 import 'package:da1/src/data/models/post_model.dart';
+import 'package:da1/src/data/models/user_model.dart';
 import 'package:da1/src/presentation/widgets/community/comments_bottom_sheet.dart';
 import 'package:da1/src/presentation/widgets/community/create_post_bottom_sheet.dart';
 import 'package:da1/src/presentation/widgets/community/post_card.dart';
@@ -29,6 +31,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
   int _currentPage = 1;
   final int _limit = 10;
   bool _hasMoreData = true;
+
+  UserModel? _currentUser;
+  Dio? _dio;
 
   @override
   void initState() {
@@ -81,7 +86,26 @@ class _CommunityScreenState extends State<CommunityScreen> {
     );
 
     _postDataSource = PostRemoteDataSourceImpl(dio: dio);
+    _dio = dio;
+
+    // Load current user
+    _loadCurrentUser();
+
     await _loadPosts();
+  }
+
+  Future<void> _loadCurrentUser() async {
+    if (_dio == null) return;
+
+    try {
+      final authDataSource = AuthRemoteDataSourceImpl(dio: _dio!);
+      final user = await authDataSource.getCurrentUser();
+      setState(() {
+        _currentUser = user;
+      });
+    } catch (e) {
+      // Silent fail - user will see default avatar/name in create post
+    }
   }
 
   @override
@@ -194,7 +218,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
               Icons.add_circle_outline,
               color: AppColors.primary,
             ),
-            onPressed: () => CreatePostBottomSheet.show(context),
+            onPressed: () => CreatePostBottomSheet.show(context, _currentUser),
           ),
         ],
       ),

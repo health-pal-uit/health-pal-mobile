@@ -1,77 +1,28 @@
-import 'package:da1/src/config/api_config.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
-import 'package:da1/src/data/datasources/auth_remote_data_source.dart';
 import 'package:da1/src/data/models/user_model.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class CreatePostBottomSheet extends StatefulWidget {
-  const CreatePostBottomSheet({super.key});
+  final UserModel? currentUser;
+
+  const CreatePostBottomSheet({super.key, this.currentUser});
 
   @override
   State<CreatePostBottomSheet> createState() => _CreatePostBottomSheetState();
 
-  static void show(BuildContext context) {
+  static void show(BuildContext context, UserModel? currentUser) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => const CreatePostBottomSheet(),
+      builder: (context) => CreatePostBottomSheet(currentUser: currentUser),
     );
   }
 }
 
 class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
   final _contentController = TextEditingController();
-  final _storage = const FlutterSecureStorage();
   String _selectedAttachType = 'meal';
-
-  UserModel? _currentUser;
-  bool _isLoadingUser = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadCurrentUser();
-  }
-
-  Future<void> _loadCurrentUser() async {
-    try {
-      final token = await _storage.read(key: 'auth_token');
-      if (token == null || token.isEmpty) {
-        setState(() => _isLoadingUser = false);
-        return;
-      }
-
-      final dio = Dio(
-        BaseOptions(
-          baseUrl: ApiConfig.baseUrl,
-          connectTimeout: const Duration(seconds: 5),
-          receiveTimeout: const Duration(seconds: 3),
-        ),
-      );
-
-      dio.interceptors.add(
-        InterceptorsWrapper(
-          onRequest: (options, handler) {
-            options.headers['Authorization'] = 'Bearer $token';
-            return handler.next(options);
-          },
-        ),
-      );
-
-      final authDataSource = AuthRemoteDataSourceImpl(dio: dio);
-      final user = await authDataSource.getCurrentUser();
-
-      setState(() {
-        _currentUser = user;
-        _isLoadingUser = false;
-      });
-    } catch (e) {
-      setState(() => _isLoadingUser = false);
-    }
-  }
 
   @override
   void dispose() {
@@ -143,51 +94,9 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
   }
 
   Widget _buildUserInfo() {
-    if (_isLoadingUser) {
-      return Row(
-        children: [
-          const CircleAvatar(
-            radius: 24,
-            backgroundColor: Colors.grey,
-            child: SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 100,
-                height: 16,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Container(
-                width: 150,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-            ],
-          ),
-        ],
-      );
-    }
-
-    final avatarUrl = _currentUser?.avatarUrl;
+    final avatarUrl = widget.currentUser?.avatarUrl;
     final displayName =
-        _currentUser?.fullName ?? _currentUser?.username ?? 'User';
+        widget.currentUser?.fullName ?? widget.currentUser?.username ?? 'User';
 
     return Row(
       children: [
