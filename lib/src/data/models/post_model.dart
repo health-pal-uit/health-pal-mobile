@@ -10,6 +10,7 @@ class PostModel {
   final DateTime? deletedAt;
   final UserInfo user;
   final int likeCount;
+  final bool isLikedByUser;
 
   PostModel({
     required this.id,
@@ -20,6 +21,7 @@ class PostModel {
     this.deletedAt,
     required this.user,
     this.likeCount = 0,
+    this.isLikedByUser = false,
   });
 
   factory PostModel.fromJson(Map<String, dynamic> json) {
@@ -35,6 +37,7 @@ class PostModel {
               : null,
       user: UserInfo.fromJson(json['user'] as Map<String, dynamic>),
       likeCount: (json['like_count'] as num?)?.toInt() ?? 0,
+      isLikedByUser: json['is_liked_by_user'] as bool? ?? false,
     );
   }
 
@@ -48,6 +51,7 @@ class PostModel {
       'deleted_at': deletedAt?.toIso8601String(),
       'user': user.toJson(),
       'like_count': likeCount,
+      'is_liked_by_user': isLikedByUser,
     };
   }
 

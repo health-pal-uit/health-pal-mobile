@@ -300,6 +300,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
             hashtags: post.getHashtags(),
             likes: post.likeCount,
             comments: 0,
+            isLiked: post.isLikedByUser,
             onMorePressed: () => _showPostOptions(context, post),
           );
         },

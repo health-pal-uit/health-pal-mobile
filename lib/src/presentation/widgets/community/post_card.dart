@@ -12,6 +12,7 @@ class PostCard extends StatelessWidget {
     this.hashtags = const [],
     required this.likes,
     required this.comments,
+    this.isLiked = false,
     this.onMorePressed,
   });
 
@@ -23,6 +24,7 @@ class PostCard extends StatelessWidget {
   final List<String> hashtags;
   final int likes;
   final int comments;
+  final bool isLiked;
   final VoidCallback? onMorePressed;
 
   @override
@@ -152,7 +154,11 @@ class PostCard extends StatelessWidget {
   Widget _buildActions() {
     return Row(
       children: [
-        _actionItem(Icons.favorite_border, likes.toString()),
+        _actionItem(
+          isLiked ? Icons.favorite : Icons.favorite_border,
+          likes.toString(),
+          color: isLiked ? AppColors.primary : const Color(0xFF717182),
+        ),
         const SizedBox(width: 24),
         _actionItem(Icons.chat_bubble_outline, comments.toString()),
         const Spacer(),
@@ -161,15 +167,13 @@ class PostCard extends StatelessWidget {
     );
   }
 
-  Widget _actionItem(IconData icon, String count) {
+  Widget _actionItem(IconData icon, String count, {Color? color}) {
+    final iconColor = color ?? const Color(0xFF717182);
     return Row(
       children: [
-        Icon(icon, color: const Color(0xFF717182), size: 22),
+        Icon(icon, color: iconColor, size: 22),
         const SizedBox(width: 6),
-        Text(
-          count,
-          style: const TextStyle(color: Color(0xFF717182), fontSize: 16),
-        ),
+        Text(count, style: TextStyle(color: iconColor, fontSize: 16)),
       ],
     );
   }
