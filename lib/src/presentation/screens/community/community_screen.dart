@@ -218,7 +218,12 @@ class _CommunityScreenState extends State<CommunityScreen> {
               Icons.add_circle_outline,
               color: AppColors.primary,
             ),
-            onPressed: () => CreatePostBottomSheet.show(context, _currentUser),
+            onPressed:
+                () => CreatePostBottomSheet.show(
+                  context,
+                  _currentUser,
+                  onPostCreated: () => _loadPosts(isRefresh: true),
+                ),
           ),
         ],
       ),

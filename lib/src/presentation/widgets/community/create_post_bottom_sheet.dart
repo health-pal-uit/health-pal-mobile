@@ -1,28 +1,45 @@
 import 'package:da1/src/config/theme/app_colors.dart';
+import 'package:da1/src/data/datasources/post_remote_data_source.dart';
 import 'package:da1/src/data/models/user_model.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class CreatePostBottomSheet extends StatefulWidget {
   final UserModel? currentUser;
+  final VoidCallback? onPostCreated;
 
-  const CreatePostBottomSheet({super.key, this.currentUser});
+  const CreatePostBottomSheet({
+    super.key,
+    this.currentUser,
+    this.onPostCreated,
+  });
 
   @override
   State<CreatePostBottomSheet> createState() => _CreatePostBottomSheetState();
 
-  static void show(BuildContext context, UserModel? currentUser) {
+  static void show(
+    BuildContext context,
+    UserModel? currentUser, {
+    VoidCallback? onPostCreated,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => CreatePostBottomSheet(currentUser: currentUser),
+      builder:
+          (context) => CreatePostBottomSheet(
+            currentUser: currentUser,
+            onPostCreated: onPostCreated,
+          ),
     );
   }
 }
 
 class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
   final _contentController = TextEditingController();
-  String _selectedAttachType = 'meal';
+  String? _selectedAttachType;
+  bool _isCreating = false;
 
   @override
   void dispose() {
@@ -155,7 +172,7 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Post Type',
+          'Post Type (Optional)',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -195,7 +212,7 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
       selected: isSelected,
       onSelected: (selected) {
         setState(() {
-          _selectedAttachType = value;
+          _selectedAttachType = selected ? value : null;
         });
       },
       selectedColor: AppColors.primary,
@@ -253,21 +270,32 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
       width: double.infinity,
       height: 50,
       child: ElevatedButton(
-        onPressed: _createPost,
+        onPressed: _isCreating ? null : _createPost,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
+          disabledBackgroundColor: Colors.grey,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        child: const Text(
-          'Post',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
+        child:
+            _isCreating
+                ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+                : const Text(
+                  'Post',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
       ),
     );
   }
@@ -276,7 +304,7 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
     // TODO: Implement image picker
   }
 
-  void _createPost() {
+  Future<void> _createPost() async {
     final content = _contentController.text.trim();
     if (content.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -288,14 +316,47 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
       return;
     }
 
-    // TODO: Implement create post API
+    setState(() => _isCreating = true);
 
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Post created successfully!'),
-        backgroundColor: Colors.green,
-      ),
-    );
+    try {
+      final token = await const FlutterSecureStorage().read(key: 'auth_token');
+      if (token == null) {
+        throw Exception('Not authenticated');
+      }
+
+      final dio = Dio(
+        BaseOptions(
+          baseUrl: 'http://10.0.2.2:3001/',
+          headers: {'Authorization': 'Bearer $token'},
+        ),
+      );
+
+      final dataSource = PostRemoteDataSourceImpl(dio: dio);
+      await dataSource.createPost(
+        content: content,
+        attachType: _selectedAttachType,
+      );
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Post created successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        widget.onPostCreated?.call();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isCreating = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to create post: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

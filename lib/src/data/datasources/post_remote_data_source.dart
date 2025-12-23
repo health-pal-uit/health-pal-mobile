@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 
 abstract class PostRemoteDataSource {
   Future<PostsResponse> getPosts({required int page, required int limit});
+  Future<PostModel> createPost({required String content, String? attachType});
   Future<void> reportPost(String postId);
   Future<void> likePost(String postId);
   Future<void> unlikePost(String postId);
@@ -41,6 +42,37 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
           );
         } else {
           throw Exception('Failed to fetch posts ($statusCode): $message');
+        }
+      } else {
+        throw Exception('Network error: ${e.message}');
+      }
+    } catch (e) {
+      throw Exception('Unexpected error: $e');
+    }
+  }
+
+  @override
+  Future<PostModel> createPost({
+    required String content,
+    String? attachType,
+  }) async {
+    try {
+      final response = await dio.post(
+        ApiConfig.createPost,
+        data: {'content': content, 'attach_type': attachType ?? 'none'},
+      );
+      return PostModel.fromJson(response.data['data']);
+    } on DioException catch (e) {
+      if (e.response != null) {
+        final statusCode = e.response?.statusCode;
+        final message = e.response?.statusMessage;
+
+        if (statusCode == 401) {
+          throw Exception('Unauthorized: Please login again');
+        } else if (statusCode == 400) {
+          throw Exception('Invalid post content');
+        } else {
+          throw Exception('Failed to create post ($statusCode): $message');
         }
       } else {
         throw Exception('Network error: ${e.message}');
