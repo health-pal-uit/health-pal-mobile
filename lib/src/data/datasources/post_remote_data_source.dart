@@ -3,7 +3,7 @@ import 'package:da1/src/data/models/post_model.dart';
 import 'package:dio/dio.dart';
 
 abstract class PostRemoteDataSource {
-  Future<PostsResponse> getPosts();
+  Future<PostsResponse> getPosts({required int page, required int limit});
 }
 
 class PostRemoteDataSourceImpl implements PostRemoteDataSource {
@@ -12,9 +12,15 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
   PostRemoteDataSourceImpl({required this.dio});
 
   @override
-  Future<PostsResponse> getPosts() async {
+  Future<PostsResponse> getPosts({
+    required int page,
+    required int limit,
+  }) async {
     try {
-      final response = await dio.get(ApiConfig.getPosts);
+      final response = await dio.get(
+        ApiConfig.getPosts,
+        queryParameters: {'page': page, 'limit': limit},
+      );
       return PostsResponse.fromJson(response.data);
     } on DioException catch (e) {
       if (e.response != null) {

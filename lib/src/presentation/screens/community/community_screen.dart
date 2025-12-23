@@ -1,4 +1,5 @@
 import 'package:da1/src/config/api_config.dart';
+import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/data/datasources/post_remote_data_source.dart';
 import 'package:da1/src/data/models/post_model.dart';
 import 'package:da1/src/presentation/widgets/community/post_card.dart';
@@ -16,16 +17,29 @@ class CommunityScreen extends StatefulWidget {
 class _CommunityScreenState extends State<CommunityScreen> {
   PostRemoteDataSource? _postDataSource;
   final _storage = const FlutterSecureStorage();
+  final _scrollController = ScrollController();
 
   List<PostModel> _allPosts = [];
   bool _isLoadingMore = false;
   bool _isLoading = true;
   String? _errorMessage;
 
+  int _currentPage = 1;
+  final int _limit = 10;
+  bool _hasMoreData = true;
+
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     _initializeDataSource();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      _loadMore();
+    }
   }
 
   Future<void> _initializeDataSource() async {
@@ -70,10 +84,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadPosts() async {
+  Future<void> _loadPosts({bool isRefresh = false}) async {
     if (_postDataSource == null) {
       setState(() {
         _errorMessage = 'Data source not initialized. Please login first.';
@@ -83,15 +98,32 @@ class _CommunityScreenState extends State<CommunityScreen> {
     }
 
     try {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
+      if (isRefresh) {
+        setState(() {
+          _currentPage = 1;
+          _hasMoreData = true;
+          _isLoading = true;
+          _errorMessage = null;
+        });
+      } else {
+        setState(() {
+          _isLoading = true;
+          _errorMessage = null;
+        });
+      }
 
-      final response = await _postDataSource!.getPosts();
+      final response = await _postDataSource!.getPosts(
+        page: _currentPage,
+        limit: _limit,
+      );
 
       setState(() {
-        _allPosts = response.data;
+        if (isRefresh) {
+          _allPosts = response.data;
+        } else {
+          _allPosts.addAll(response.data);
+        }
+        _hasMoreData = response.data.length >= _limit;
         _isLoading = false;
       });
     } catch (e) {
@@ -103,20 +135,40 @@ class _CommunityScreenState extends State<CommunityScreen> {
   }
 
   Future<void> _onRefresh() async {
-    await _loadPosts();
+    await _loadPosts(isRefresh: true);
   }
 
   Future<void> _loadMore() async {
-    if (_isLoadingMore) return;
+    if (_isLoadingMore || !_hasMoreData || _postDataSource == null) return;
 
     setState(() => _isLoadingMore = true);
 
-    // Simulate loading more - trong thực tế bạn có thể implement pagination
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      _currentPage++;
+      final response = await _postDataSource!.getPosts(
+        page: _currentPage,
+        limit: _limit,
+      );
 
-    setState(() {
-      _isLoadingMore = false;
-    });
+      setState(() {
+        _allPosts.addAll(response.data);
+        _hasMoreData = response.data.length >= _limit;
+        _isLoadingMore = false;
+      });
+    } catch (e) {
+      setState(() {
+        _currentPage--;
+        _isLoadingMore = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load more posts: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -129,7 +181,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
         title: const Text(
           'Community',
           style: TextStyle(
-            color: Color(0xFFFA9500),
+            color: AppColors.primary,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -138,7 +190,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
           IconButton(
             icon: const Icon(
               Icons.add_circle_outline,
-              color: Color(0xFFFA9500),
+              color: AppColors.primary,
             ),
             onPressed: () {},
           ),
@@ -183,7 +235,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
             ElevatedButton(
               onPressed: _loadPosts,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFA9500),
+                backgroundColor: AppColors.primary,
               ),
               child: const Text('Retry'),
             ),
@@ -223,20 +275,19 @@ class _CommunityScreenState extends State<CommunityScreen> {
   Widget _buildPostList(List<PostModel> posts) {
     return RefreshIndicator(
       onRefresh: _onRefresh,
-      color: const Color(0xFFFA9500),
+      color: AppColors.primary,
       child: ListView.builder(
+        controller: _scrollController,
         padding: const EdgeInsets.all(16),
-        itemCount: posts.length + 1,
+        itemCount: posts.length + (_isLoadingMore ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == posts.length) {
-            return _isLoadingMore
-                ? const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: CircularProgressIndicator(color: Color(0xFFFA9500)),
-                  ),
-                )
-                : _buildLoadMoreButton();
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
+            );
           }
 
           final post = posts[index];
@@ -245,27 +296,12 @@ class _CommunityScreenState extends State<CommunityScreen> {
             name: post.user.getDisplayName(),
             timeAgo: post.getTimeAgo(),
             postText: post.content,
-            imageUrl: null, // API không trả về imageUrl, có thể bổ sung sau
+            imageUrl: null,
             hashtags: post.getHashtags(),
-            likes: 0, // API không trả về likes, có thể bổ sung sau
-            comments: 0, // API không trả về comments, có thể bổ sung sau
+            likes: 0,
+            comments: 0,
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildLoadMoreButton() {
-    return Center(
-      child: TextButton(
-        onPressed: _loadMore,
-        child: const Text(
-          'Load More Posts',
-          style: TextStyle(
-            color: Color(0xFFFA9500),
-            fontWeight: FontWeight.w600,
-          ),
-        ),
       ),
     );
   }
