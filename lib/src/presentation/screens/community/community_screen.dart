@@ -2,6 +2,7 @@ import 'package:da1/src/config/api_config.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/data/datasources/post_remote_data_source.dart';
 import 'package:da1/src/data/models/post_model.dart';
+import 'package:da1/src/presentation/widgets/community/comments_bottom_sheet.dart';
 import 'package:da1/src/presentation/widgets/community/post_card.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -299,14 +300,18 @@ class _CommunityScreenState extends State<CommunityScreen> {
             imageUrl: null,
             hashtags: post.getHashtags(),
             likes: post.likeCount,
-            comments: 0,
             isLiked: post.isLikedByUser,
             onMorePressed: () => _showPostOptions(context, post),
             onLikePressed: () => _handleLike(post),
+            onCommentPressed: () => _showComments(context, post),
           );
         },
       ),
     );
+  }
+
+  void _showComments(BuildContext context, PostModel post) {
+    CommentsBottomSheet.show(context, post);
   }
 
   void _showPostOptions(BuildContext context, PostModel post) {

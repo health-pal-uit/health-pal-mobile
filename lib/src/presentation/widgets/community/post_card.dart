@@ -11,10 +11,10 @@ class PostCard extends StatelessWidget {
     this.imageUrl,
     this.hashtags = const [],
     required this.likes,
-    required this.comments,
     this.isLiked = false,
     this.onMorePressed,
     this.onLikePressed,
+    this.onCommentPressed,
   });
 
   final String avatarUrl;
@@ -24,10 +24,10 @@ class PostCard extends StatelessWidget {
   final String? imageUrl;
   final List<String> hashtags;
   final int likes;
-  final int comments;
   final bool isLiked;
   final VoidCallback? onMorePressed;
   final VoidCallback? onLikePressed;
+  final VoidCallback? onCommentPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -165,7 +165,14 @@ class PostCard extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 24),
-        _actionItem(Icons.chat_bubble_outline, comments.toString()),
+        GestureDetector(
+          onTap: onCommentPressed,
+          child: const Icon(
+            Icons.chat_bubble_outline,
+            color: Color(0xFF717182),
+            size: 22,
+          ),
+        ),
         const Spacer(),
         const Icon(Icons.share_outlined, color: Color(0xFF717182), size: 22),
       ],
