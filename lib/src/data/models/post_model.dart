@@ -6,6 +6,7 @@ class PostModel {
   final DateTime createdAt;
   final DateTime? deletedAt;
   final UserInfo user;
+  final int likeCount;
 
   PostModel({
     required this.id,
@@ -15,6 +16,7 @@ class PostModel {
     required this.createdAt,
     this.deletedAt,
     required this.user,
+    this.likeCount = 0,
   });
 
   factory PostModel.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,7 @@ class PostModel {
               ? DateTime.parse(json['deleted_at'] as String)
               : null,
       user: UserInfo.fromJson(json['user'] as Map<String, dynamic>),
+      likeCount: (json['like_count'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -41,6 +44,7 @@ class PostModel {
       'created_at': createdAt.toIso8601String(),
       'deleted_at': deletedAt?.toIso8601String(),
       'user': user.toJson(),
+      'like_count': likeCount,
     };
   }
 

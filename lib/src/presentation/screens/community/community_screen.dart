@@ -298,7 +298,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
             postText: post.content,
             imageUrl: null,
             hashtags: post.getHashtags(),
-            likes: 0,
+            likes: post.likeCount,
             comments: 0,
           );
         },
