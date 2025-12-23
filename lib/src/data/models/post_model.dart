@@ -1,3 +1,6 @@
+import 'package:da1/src/config/utils/date_time_helper.dart';
+import 'package:da1/src/config/utils/hashtag_helper.dart';
+
 class PostModel {
   final String id;
   final String content;
@@ -48,46 +51,12 @@ class PostModel {
     };
   }
 
-  // Helper method để tính thời gian từ khi post
   String getTimeAgo() {
-    final now = DateTime.now();
-    final difference = now.difference(createdAt);
-
-    if (difference.inDays > 365) {
-      return '${(difference.inDays / 365).floor()}y ago';
-    } else if (difference.inDays > 30) {
-      return '${(difference.inDays / 30).floor()}mo ago';
-    } else if (difference.inDays > 0) {
-      return '${difference.inDays}d ago';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}m ago';
-    } else {
-      return 'just now';
-    }
+    return DateTimeHelper.getTimeAgo(createdAt);
   }
 
-  // Helper method để lấy hashtags từ content hoặc attachType
   List<String> getHashtags() {
-    final hashtags = <String>[];
-
-    // Thêm hashtag dựa trên attach_type
-    if (attachType == 'meal') {
-      hashtags.add('#Nutrition');
-      hashtags.add('#MealPrep');
-    } else if (attachType == 'challenge') {
-      hashtags.add('#Challenge');
-      hashtags.add('#Fitness');
-    } else if (attachType == 'medal') {
-      hashtags.add('#Achievement');
-      hashtags.add('#Milestone');
-    } else if (attachType == 'ingredient') {
-      hashtags.add('#HealthyEating');
-      hashtags.add('#Nutrition');
-    }
-
-    return hashtags;
+    return HashtagHelper.getHashtagsFromAttachType(attachType);
   }
 }
 

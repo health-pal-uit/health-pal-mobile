@@ -12,6 +12,7 @@ class PostCard extends StatelessWidget {
     this.hashtags = const [],
     required this.likes,
     required this.comments,
+    this.onMorePressed,
   });
 
   final String avatarUrl;
@@ -22,6 +23,7 @@ class PostCard extends StatelessWidget {
   final List<String> hashtags;
   final int likes;
   final int comments;
+  final VoidCallback? onMorePressed;
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +83,10 @@ class PostCard extends StatelessWidget {
             ],
           ),
         ),
-        const Icon(Icons.more_horiz, color: Color(0xFF717182)),
+        GestureDetector(
+          onTap: onMorePressed,
+          child: const Icon(Icons.more_horiz, color: Color(0xFF717182)),
+        ),
       ],
     );
   }

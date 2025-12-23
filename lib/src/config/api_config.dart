@@ -18,4 +18,5 @@ class ApiConfig {
 
   // Post endpoints
   static const String getPosts = "/posts";
+  static String reportPost(String postId) => "/posts/report/$postId";
 }
