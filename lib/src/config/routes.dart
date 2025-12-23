@@ -13,6 +13,7 @@ import 'package:da1/src/presentation/screens/community/personal_profile_screen.d
 import 'package:da1/src/presentation/screens/home/diet/food_search_screen.dart';
 import 'package:da1/src/presentation/screens/home/exercise/activity_analytics_screen.dart';
 import 'package:da1/src/presentation/screens/home/exercise/add_activity_screen.dart';
+import 'package:da1/src/data/models/post_model.dart';
 import 'package:da1/src/presentation/screens/home/step/steps_screen.dart';
 import 'package:da1/src/presentation/screens/profile/profile_screen.dart';
 import 'package:da1/src/presentation/screens/home/home_screen.dart';
@@ -128,9 +129,13 @@ class AppRoutes {
             builder: (context, state) => CommunityScreen(),
           ),
           GoRoute(
-            path: '/personal-profile',
+            path: '/personal-profile/:userId',
             name: 'personal-profile',
-            builder: (context, state) => PersonalProfileScreen(),
+            builder: (context, state) {
+              final userId = state.pathParameters['userId'];
+              final user = state.extra as UserInfo?;
+              return PersonalProfileScreen(userId: userId, user: user);
+            },
           ),
           GoRoute(
             path: '/profile',

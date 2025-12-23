@@ -1,11 +1,15 @@
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/data/models/post_model.dart';
 import 'package:da1/src/presentation/widgets/community/post_card.dart';
 import 'package:da1/src/presentation/widgets/community/stat_card.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class PersonalProfileScreen extends StatefulWidget {
-  const PersonalProfileScreen({super.key});
+  final String? userId;
+  final UserInfo? user;
+
+  const PersonalProfileScreen({super.key, this.userId, this.user});
 
   @override
   State<PersonalProfileScreen> createState() => _PersonalProfileScreenState();
@@ -26,7 +30,7 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const _ProfileInfoSection(),
+                    _ProfileInfoSection(user: widget.user),
                     const SizedBox(height: 16),
                     const _ProfileBioSection(),
                     const SizedBox(height: 16),
@@ -93,10 +97,15 @@ class _ProfileHeader extends StatelessWidget {
 }
 
 class _ProfileInfoSection extends StatelessWidget {
-  const _ProfileInfoSection();
+  final UserInfo? user;
+
+  const _ProfileInfoSection({this.user});
 
   @override
   Widget build(BuildContext context) {
+    final avatarUrl = user?.avatarUrl;
+    final displayName = user?.fullname ?? user?.username ?? 'User';
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -105,28 +114,30 @@ class _ProfileInfoSection extends StatelessWidget {
           height: 96,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            image: const DecorationImage(
-              image: NetworkImage(
-                'https://blog.nasm.org/hubfs/food-restriction-header.jpg',
-              ),
-              fit: BoxFit.cover,
-            ),
+            color: Colors.grey[300],
+            image:
+                avatarUrl != null && avatarUrl.isNotEmpty
+                    ? DecorationImage(
+                      image: NetworkImage(avatarUrl),
+                      fit: BoxFit.cover,
+                    )
+                    : null,
           ),
+          child:
+              avatarUrl == null || avatarUrl.isEmpty
+                  ? Icon(Icons.person, size: 48, color: Colors.grey[600])
+                  : null,
         ),
         const SizedBox(width: 16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Duy Nguyen', style: AppTypography.body),
+              Text(displayName, style: AppTypography.body),
               const SizedBox(height: 12),
               const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _StatItem(count: '89', label: 'Posts'),
-                  _StatItem(count: '1254', label: 'Followers'),
-                  _StatItem(count: '342', label: 'Following'),
-                ],
+                children: [_StatItem(count: '89', label: 'Posts')],
               ),
             ],
           ),
@@ -201,28 +212,6 @@ class _ActionButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: () {},
-            icon: const Icon(
-              Icons.person_add_alt_1_rounded,
-              color: Colors.white,
-              size: 18,
-            ),
-            label: const Text(
-              'Follow',
-              style: TextStyle(fontSize: 14, color: Colors.white),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFA9500),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 10),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
         Expanded(
           child: OutlinedButton.icon(
             onPressed: () {},
@@ -318,7 +307,7 @@ class _ProfileTabsState extends State<_ProfileTabs> {
       child: Row(
         children: [
           _buildTab(index: 0, text: 'Posts'),
-          _buildTab(index: 1, text: 'Achievements'),
+          _buildTab(index: 1, text: 'Medals'),
           const Spacer(),
         ],
       ),

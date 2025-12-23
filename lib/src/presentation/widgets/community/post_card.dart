@@ -15,6 +15,8 @@ class PostCard extends StatelessWidget {
     this.onMorePressed,
     this.onLikePressed,
     this.onCommentPressed,
+    this.userId,
+    this.onUserTap,
   });
 
   final String avatarUrl;
@@ -28,6 +30,8 @@ class PostCard extends StatelessWidget {
   final VoidCallback? onMorePressed;
   final VoidCallback? onLikePressed;
   final VoidCallback? onCommentPressed;
+  final String? userId;
+  final VoidCallback? onUserTap;
 
   @override
   Widget build(BuildContext context) {
@@ -67,24 +71,36 @@ class PostCard extends StatelessWidget {
   Widget _buildHeader() {
     return Row(
       children: [
-        CircleAvatar(radius: 23, backgroundImage: NetworkImage(avatarUrl)),
+        GestureDetector(
+          onTap: onUserTap,
+          child: CircleAvatar(
+            radius: 23,
+            backgroundImage: NetworkImage(avatarUrl),
+          ),
+        ),
         const SizedBox(width: 12),
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                name,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+          child: GestureDetector(
+            onTap: onUserTap,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
-              ),
-              Text(
-                timeAgo,
-                style: const TextStyle(color: Color(0xFF717182), fontSize: 14),
-              ),
-            ],
+                Text(
+                  timeAgo,
+                  style: const TextStyle(
+                    color: Color(0xFF717182),
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         GestureDetector(

@@ -10,6 +10,7 @@ import 'package:da1/src/presentation/widgets/community/post_card.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:go_router/go_router.dart';
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
@@ -334,6 +335,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
             onMorePressed: () => _showPostOptions(context, post),
             onLikePressed: () => _handleLike(post),
             onCommentPressed: () => _showComments(context, post),
+            userId: post.user.id,
+            onUserTap: () => _navigateToUserProfile(post.user),
           );
         },
       ),
@@ -342,6 +345,10 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
   void _showComments(BuildContext context, PostModel post) {
     CommentsBottomSheet.show(context, post);
+  }
+
+  void _navigateToUserProfile(UserInfo user) {
+    context.push('/personal-profile/${user.id}', extra: user);
   }
 
   void _showPostOptions(BuildContext context, PostModel post) {
