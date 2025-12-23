@@ -1,45 +1,10 @@
-import 'package:da1/src/config/theme/app_colors.dart';
+import 'package:da1/src/config/api_config.dart';
+import 'package:da1/src/data/datasources/post_remote_data_source.dart';
+import 'package:da1/src/data/models/post_model.dart';
 import 'package:da1/src/presentation/widgets/community/post_card.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-
-final List<Map<String, dynamic>> mockPosts = [
-  {
-    "avatarUrl": "https://i.pravatar.cc/150?img=1",
-    "name": "Sarah Johnson",
-    "timeAgo": "2h ago",
-    "postText":
-        "Just completed my 30-day yoga challenge! Feeling more flexible and centered than ever.",
-    "imageUrl": "https://blog.nasm.org/hubfs/food-restriction-header.jpg",
-    "hashtags": ["#Yoga", "#Fitness", "#Wellness"],
-    "likes": 234,
-    "comments": 42,
-    "showFollowButton": true,
-  },
-  {
-    "avatarUrl": "https://i.pravatar.cc/150?img=2",
-    "name": "Mike Chen",
-    "timeAgo": "5h ago",
-    "postText":
-        "Meal prep Sunday! High protein, balanced macros, and delicious.",
-    "imageUrl": "https://blog.nasm.org/hubfs/food-restriction-header.jpg",
-    "hashtags": ["#Nutrition", "#MealPrep"],
-    "likes": 189,
-    "comments": 28,
-    "showFollowButton": false,
-  },
-  {
-    "avatarUrl": "https://i.pravatar.cc/150?img=3",
-    "name": "Emma Rodriguez",
-    "timeAgo": "8h ago",
-    "postText":
-        "New PR: 10K under 50 mins! Progress isn't linear — keep showing up!",
-    "imageUrl": null,
-    "hashtags": ["#Running", "#Cardio", "#Milestone"],
-    "likes": 312,
-    "comments": 56,
-    "showFollowButton": true,
-  },
-];
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
@@ -48,52 +13,109 @@ class CommunityScreen extends StatefulWidget {
   State<CommunityScreen> createState() => _CommunityScreenState();
 }
 
-class _CommunityScreenState extends State<CommunityScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  final List<Map<String, dynamic>> _allPosts = mockPosts;
-  final List<Map<String, dynamic>> _followingPosts =
-      mockPosts.where((p) => p['showFollowButton'] == false).toList();
-  final List<Map<String, dynamic>> _trendingPosts = mockPosts.reversed.toList();
+class _CommunityScreenState extends State<CommunityScreen> {
+  PostRemoteDataSource? _postDataSource;
+  final _storage = const FlutterSecureStorage();
 
+  List<PostModel> _allPosts = [];
   bool _isLoadingMore = false;
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _initializeDataSource();
+  }
+
+  Future<void> _initializeDataSource() async {
+    final token = await _storage.read(key: 'auth_token');
+
+    if (token == null || token.isEmpty) {
+      setState(() {
+        _errorMessage = 'No authentication token found. Please login first.';
+        _isLoading = false;
+      });
+      return;
+    }
+
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: ApiConfig.baseUrl,
+        connectTimeout: const Duration(seconds: 5),
+        receiveTimeout: const Duration(seconds: 3),
+      ),
+    );
+
+    // Add authorization interceptor
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          options.headers['Authorization'] = 'Bearer $token';
+          return handler.next(options);
+        },
+        onError: (error, handler) {
+          if (error.response?.statusCode == 401) {}
+          return handler.next(error);
+        },
+        onResponse: (response, handler) {
+          return handler.next(response);
+        },
+      ),
+    );
+
+    _postDataSource = PostRemoteDataSourceImpl(dio: dio);
+    await _loadPosts();
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
     super.dispose();
   }
 
+  Future<void> _loadPosts() async {
+    if (_postDataSource == null) {
+      setState(() {
+        _errorMessage = 'Data source not initialized. Please login first.';
+        _isLoading = false;
+      });
+      return;
+    }
+
+    try {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
+      final response = await _postDataSource!.getPosts();
+
+      setState(() {
+        _allPosts = response.data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
   Future<void> _onRefresh() async {
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() {});
+    await _loadPosts();
   }
 
   Future<void> _loadMore() async {
     if (_isLoadingMore) return;
+
     setState(() => _isLoadingMore = true);
+
+    // Simulate loading more - trong thực tế bạn có thể implement pagination
     await Future.delayed(const Duration(seconds: 1));
+
     setState(() {
       _isLoadingMore = false;
-      final newPost = {
-        "avatarUrl": "https://i.pravatar.cc/150?img=${mockPosts.length + 1}",
-        "name": "New User ${mockPosts.length + 1}",
-        "timeAgo": "just now",
-        "postText": "This is a new post loaded dynamically!",
-        "imageUrl": null,
-        "hashtags": ["#New", "#Dynamic"],
-        "likes": 0,
-        "comments": 0,
-        "showFollowButton": true,
-      };
-      _allPosts.add(newPost);
-      _trendingPosts.insert(0, newPost);
     });
   }
 
@@ -121,77 +143,112 @@ class _CommunityScreenState extends State<CommunityScreen>
             onPressed: () {},
           ),
         ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(50),
-          child: _buildTabBar(),
+      ),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFFFA9500)),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, color: Colors.red, size: 60),
+            const SizedBox(height: 16),
+            Text(
+              'Failed to load posts',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[800],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Text(
+                _errorMessage!,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _loadPosts,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFA9500),
+              ),
+              child: const Text('Retry'),
+            ),
+          ],
         ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildPostList(_allPosts),
-          _buildPostList(_followingPosts),
-          _buildPostList(_trendingPosts),
-        ],
-      ),
-    );
+      );
+    }
+
+    if (_allPosts.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.post_add, color: Colors.grey[400], size: 80),
+            const SizedBox(height: 16),
+            Text(
+              'No posts yet',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Be the first to share something!',
+              style: TextStyle(color: Colors.grey[500]),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return _buildPostList(_allPosts);
   }
 
-  Widget _buildTabBar() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      height: 40,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: TabBar(
-        controller: _tabController,
-        labelColor: AppColors.primary,
-        unselectedLabelColor: const Color(0xFF0A0A0A),
-        indicator: const BoxDecoration(),
-        labelStyle: const TextStyle(fontWeight: FontWeight.w600),
-        tabs: const [
-          Tab(text: 'All'),
-          Tab(text: 'Following'),
-          Tab(text: 'Trending'),
-        ],
-        splashFactory: NoSplash.splashFactory,
-        overlayColor: WidgetStateProperty.all(Colors.transparent),
-        onTap: (index) => setState(() {}),
-      ),
-    );
-  }
-
-  Widget _buildPostList(List<Map<String, dynamic>> posts) {
+  Widget _buildPostList(List<PostModel> posts) {
     return RefreshIndicator(
       onRefresh: _onRefresh,
+      color: const Color(0xFFFA9500),
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: posts.length + 1,
         itemBuilder: (context, index) {
           if (index == posts.length) {
             return _isLoadingMore
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: CircularProgressIndicator(color: Color(0xFFFA9500)),
+                  ),
+                )
                 : _buildLoadMoreButton();
           }
 
           final post = posts[index];
           return PostCard(
-            avatarUrl: post['avatarUrl'],
-            name: post['name'],
-            timeAgo: post['timeAgo'],
-            postText: post['postText'],
-            imageUrl: post['imageUrl'],
-            hashtags: post['hashtags'],
-            likes: post['likes'],
-            comments: post['comments'],
-            showFollowButton: post['showFollowButton'],
-            onFollow: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Following ${post['name']}')),
-              );
-            },
+            avatarUrl: post.user.getAvatarUrl(),
+            name: post.user.getDisplayName(),
+            timeAgo: post.getTimeAgo(),
+            postText: post.content,
+            imageUrl: null, // API không trả về imageUrl, có thể bổ sung sau
+            hashtags: post.getHashtags(),
+            likes: 0, // API không trả về likes, có thể bổ sung sau
+            comments: 0, // API không trả về comments, có thể bổ sung sau
           );
         },
       ),

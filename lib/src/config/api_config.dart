@@ -15,4 +15,7 @@ class ApiConfig {
 
   // Chat endpoints
   static const String chatAI = "/chat-ai";
+
+  // Post endpoints
+  static const String getPosts = "/posts";
 }

@@ -1,3 +1,4 @@
+import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class PostCard extends StatelessWidget {
@@ -11,8 +12,6 @@ class PostCard extends StatelessWidget {
     this.hashtags = const [],
     required this.likes,
     required this.comments,
-    this.showFollowButton = false,
-    this.onFollow,
   });
 
   final String avatarUrl;
@@ -23,8 +22,6 @@ class PostCard extends StatelessWidget {
   final List<String> hashtags;
   final int likes;
   final int comments;
-  final bool showFollowButton;
-  final VoidCallback? onFollow;
 
   @override
   Widget build(BuildContext context) {
@@ -84,32 +81,8 @@ class PostCard extends StatelessWidget {
             ],
           ),
         ),
-        if (showFollowButton)
-          _buildFollowButton()
-        else
-          const Icon(Icons.more_horiz, color: Color(0xFF717182)),
+        const Icon(Icons.more_horiz, color: Color(0xFF717182)),
       ],
-    );
-  }
-
-  Widget _buildFollowButton() {
-    return GestureDetector(
-      onTap: onFollow,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xFFFA9500)),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: const Text(
-          'Follow',
-          style: TextStyle(
-            color: Color(0xFFFA9500),
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ),
     );
   }
 
@@ -154,14 +127,14 @@ class PostCard extends StatelessWidget {
                 color: const Color(0x19FA9500),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: const Color(0xFFFA9500).withValues(alpha: 0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   width: 0.5,
                 ),
               ),
               child: Text(
                 tag,
                 style: const TextStyle(
-                  color: Color(0xFFFA9500),
+                  color: AppColors.primary,
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
