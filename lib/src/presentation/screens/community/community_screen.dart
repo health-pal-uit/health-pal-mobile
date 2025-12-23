@@ -302,6 +302,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
             comments: 0,
             isLiked: post.isLikedByUser,
             onMorePressed: () => _showPostOptions(context, post),
+            onLikePressed: () => _handleLike(post),
           );
         },
       ),
@@ -385,6 +386,82 @@ class _CommunityScreenState extends State<CommunityScreen> {
         Navigator.of(context, rootNavigator: true).pop();
         isDialogShowing = false;
       }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleLike(PostModel post) async {
+    if (_postDataSource == null) return;
+
+    // Don't allow liking if already liked
+    if (post.isLikedByUser) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('You have already liked this post'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
+    try {
+      // Optimistically update UI
+      setState(() {
+        final index = _allPosts.indexWhere((p) => p.id == post.id);
+        if (index != -1) {
+          _allPosts[index] = PostModel(
+            id: post.id,
+            content: post.content,
+            attachType: post.attachType,
+            isApproved: post.isApproved,
+            createdAt: post.createdAt,
+            deletedAt: post.deletedAt,
+            user: post.user,
+            likeCount: post.likeCount + 1,
+            isLikedByUser: true,
+          );
+        }
+      });
+
+      await _postDataSource!.likePost(post.id);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Post liked successfully'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (e) {
+      // Revert optimistic update on error
+      setState(() {
+        final index = _allPosts.indexWhere((p) => p.id == post.id);
+        if (index != -1) {
+          _allPosts[index] = PostModel(
+            id: post.id,
+            content: post.content,
+            attachType: post.attachType,
+            isApproved: post.isApproved,
+            createdAt: post.createdAt,
+            deletedAt: post.deletedAt,
+            user: post.user,
+            likeCount: post.likeCount,
+            isLikedByUser: false,
+          );
+        }
+      });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

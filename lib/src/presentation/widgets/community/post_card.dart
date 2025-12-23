@@ -14,6 +14,7 @@ class PostCard extends StatelessWidget {
     required this.comments,
     this.isLiked = false,
     this.onMorePressed,
+    this.onLikePressed,
   });
 
   final String avatarUrl;
@@ -26,6 +27,7 @@ class PostCard extends StatelessWidget {
   final int comments;
   final bool isLiked;
   final VoidCallback? onMorePressed;
+  final VoidCallback? onLikePressed;
 
   @override
   Widget build(BuildContext context) {
@@ -154,10 +156,13 @@ class PostCard extends StatelessWidget {
   Widget _buildActions() {
     return Row(
       children: [
-        _actionItem(
-          isLiked ? Icons.favorite : Icons.favorite_border,
-          likes.toString(),
-          color: isLiked ? AppColors.primary : const Color(0xFF717182),
+        GestureDetector(
+          onTap: onLikePressed,
+          child: _actionItem(
+            isLiked ? Icons.favorite : Icons.favorite_border,
+            likes.toString(),
+            color: isLiked ? AppColors.primary : const Color(0xFF717182),
+          ),
         ),
         const SizedBox(width: 24),
         _actionItem(Icons.chat_bubble_outline, comments.toString()),
