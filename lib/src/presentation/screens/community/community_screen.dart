@@ -3,6 +3,7 @@ import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/data/datasources/post_remote_data_source.dart';
 import 'package:da1/src/data/models/post_model.dart';
 import 'package:da1/src/presentation/widgets/community/comments_bottom_sheet.dart';
+import 'package:da1/src/presentation/widgets/community/create_post_bottom_sheet.dart';
 import 'package:da1/src/presentation/widgets/community/post_card.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -193,7 +194,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
               Icons.add_circle_outline,
               color: AppColors.primary,
             ),
-            onPressed: () {},
+            onPressed: () => CreatePostBottomSheet.show(context),
           ),
         ],
       ),
