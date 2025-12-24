@@ -1,17 +1,72 @@
+import 'package:da1/src/config/api_config.dart';
+import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/data/datasources/post_remote_data_source.dart';
+import 'package:da1/src/data/models/post_model.dart';
 import 'package:da1/src/presentation/widgets/community/post_card.dart';
 import 'package:da1/src/presentation/widgets/community/stat_card.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class PersonalProfileScreen extends StatefulWidget {
-  const PersonalProfileScreen({super.key});
+  final String? userId;
+  final UserInfo? user;
+
+  const PersonalProfileScreen({super.key, this.userId, this.user});
 
   @override
   State<PersonalProfileScreen> createState() => _PersonalProfileScreenState();
 }
 
 class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
+  List<PostModel> _userPosts = [];
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.userId != null) {
+      _loadUserPosts();
+    }
+  }
+
+  Future<void> _loadUserPosts() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final token = await const FlutterSecureStorage().read(key: 'auth_token');
+      if (token == null) {
+        throw Exception('Not authenticated');
+      }
+
+      final dio = Dio(
+        BaseOptions(
+          baseUrl: ApiConfig.baseUrl,
+          headers: {'Authorization': 'Bearer $token'},
+        ),
+      );
+
+      final dataSource = PostRemoteDataSourceImpl(dio: dio);
+      final response = await dataSource.getUserPosts(widget.userId!);
+
+      setState(() {
+        _userPosts = response.data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,7 +81,7 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const _ProfileInfoSection(),
+                    _ProfileInfoSection(user: widget.user),
                     const SizedBox(height: 16),
                     const _ProfileBioSection(),
                     const SizedBox(height: 16),
@@ -36,31 +91,7 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
                     const SizedBox(height: 24),
                     const _ProfileTabs(),
                     const SizedBox(height: 16),
-                    PostCard(
-                      avatarUrl: 'https://placehold.co/84x84',
-                      name: "Duy Nguyen",
-                      timeAgo: "2 days ago",
-                      postText:
-                          "Just completed my first 10K! Feeling amazing! 🎉",
-                      imageUrl:
-                          "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTPxlFqDpOqgXOukpsHthkQyB0L4FP7J6Adjw&s",
-                      likes: 156,
-                      comments: 23,
-                    ),
-                    const SizedBox(height: 16),
-                    PostCard(
-                      avatarUrl:
-                          "https://placehold.co/46x46/DEDEDE/000000?text=JP",
-                      name: "John Parker",
-                      timeAgo: "5 days ago",
-                      postText:
-                          "Meal prep Sunday! Keeping it healthy and colorful 🥗",
-                      imageUrl:
-                          "https://blog.nasm.org/hubfs/food-restriction-header.jpg",
-                      likes: 89,
-                      comments: 12,
-                    ),
-                    const SizedBox(height: 24),
+                    _buildPostsList(),
                   ],
                 ),
               ),
@@ -68,6 +99,101 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildPostsList() {
+    if (_isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32.0),
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            children: [
+              Icon(Icons.error_outline, size: 48, color: Colors.grey[400]),
+              const SizedBox(height: 16),
+              Text(
+                'Failed to load posts',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[800],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _errorMessage!,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadUserPosts,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                ),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_userPosts.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            children: [
+              Icon(Icons.post_add, size: 48, color: Colors.grey[400]),
+              const SizedBox(height: 16),
+              Text(
+                'No posts yet',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[800],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'This user hasn\'t posted anything yet',
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        ..._userPosts.map(
+          (post) => Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: PostCard(
+              avatarUrl: post.user.getAvatarUrl(),
+              name: post.user.getDisplayName(),
+              timeAgo: post.getTimeAgo(),
+              postText: post.content,
+              imageUrl: null,
+              hashtags: post.getHashtags(),
+              likes: post.likeCount,
+              isLiked: post.isLikedByUser,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+      ],
     );
   }
 }
@@ -95,10 +221,15 @@ class _ProfileHeader extends StatelessWidget {
 }
 
 class _ProfileInfoSection extends StatelessWidget {
-  const _ProfileInfoSection();
+  final UserInfo? user;
+
+  const _ProfileInfoSection({this.user});
 
   @override
   Widget build(BuildContext context) {
+    final avatarUrl = user?.avatarUrl;
+    final displayName = user?.fullname ?? user?.username ?? 'User';
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -107,28 +238,30 @@ class _ProfileInfoSection extends StatelessWidget {
           height: 96,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            image: const DecorationImage(
-              image: NetworkImage(
-                'https://blog.nasm.org/hubfs/food-restriction-header.jpg',
-              ),
-              fit: BoxFit.cover,
-            ),
+            color: Colors.grey[300],
+            image:
+                avatarUrl != null && avatarUrl.isNotEmpty
+                    ? DecorationImage(
+                      image: NetworkImage(avatarUrl),
+                      fit: BoxFit.cover,
+                    )
+                    : null,
           ),
+          child:
+              avatarUrl == null || avatarUrl.isEmpty
+                  ? Icon(Icons.person, size: 48, color: Colors.grey[600])
+                  : null,
         ),
         const SizedBox(width: 16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Duy Nguyen', style: AppTypography.body),
+              Text(displayName, style: AppTypography.body),
               const SizedBox(height: 12),
               const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _StatItem(count: '89', label: 'Posts'),
-                  _StatItem(count: '1254', label: 'Followers'),
-                  _StatItem(count: '342', label: 'Following'),
-                ],
+                children: [_StatItem(count: '89', label: 'Posts')],
               ),
             ],
           ),
@@ -203,28 +336,6 @@ class _ActionButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: () {},
-            icon: const Icon(
-              Icons.person_add_alt_1_rounded,
-              color: Colors.white,
-              size: 18,
-            ),
-            label: const Text(
-              'Follow',
-              style: TextStyle(fontSize: 14, color: Colors.white),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFA9500),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 10),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
         Expanded(
           child: OutlinedButton.icon(
             onPressed: () {},
@@ -320,7 +431,7 @@ class _ProfileTabsState extends State<_ProfileTabs> {
       child: Row(
         children: [
           _buildTab(index: 0, text: 'Posts'),
-          _buildTab(index: 1, text: 'Achievements'),
+          _buildTab(index: 1, text: 'Medals'),
           const Spacer(),
         ],
       ),

@@ -1,45 +1,16 @@
+import 'package:da1/src/config/api_config.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
+import 'package:da1/src/data/datasources/auth_remote_data_source.dart';
+import 'package:da1/src/data/datasources/post_remote_data_source.dart';
+import 'package:da1/src/data/models/post_model.dart';
+import 'package:da1/src/data/models/user_model.dart';
+import 'package:da1/src/presentation/widgets/community/comments_bottom_sheet.dart';
+import 'package:da1/src/presentation/widgets/community/create_post_bottom_sheet.dart';
 import 'package:da1/src/presentation/widgets/community/post_card.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-
-final List<Map<String, dynamic>> mockPosts = [
-  {
-    "avatarUrl": "https://i.pravatar.cc/150?img=1",
-    "name": "Sarah Johnson",
-    "timeAgo": "2h ago",
-    "postText":
-        "Just completed my 30-day yoga challenge! Feeling more flexible and centered than ever.",
-    "imageUrl": "https://blog.nasm.org/hubfs/food-restriction-header.jpg",
-    "hashtags": ["#Yoga", "#Fitness", "#Wellness"],
-    "likes": 234,
-    "comments": 42,
-    "showFollowButton": true,
-  },
-  {
-    "avatarUrl": "https://i.pravatar.cc/150?img=2",
-    "name": "Mike Chen",
-    "timeAgo": "5h ago",
-    "postText":
-        "Meal prep Sunday! High protein, balanced macros, and delicious.",
-    "imageUrl": "https://blog.nasm.org/hubfs/food-restriction-header.jpg",
-    "hashtags": ["#Nutrition", "#MealPrep"],
-    "likes": 189,
-    "comments": 28,
-    "showFollowButton": false,
-  },
-  {
-    "avatarUrl": "https://i.pravatar.cc/150?img=3",
-    "name": "Emma Rodriguez",
-    "timeAgo": "8h ago",
-    "postText":
-        "New PR: 10K under 50 mins! Progress isn't linear — keep showing up!",
-    "imageUrl": null,
-    "hashtags": ["#Running", "#Cardio", "#Milestone"],
-    "likes": 312,
-    "comments": 56,
-    "showFollowButton": true,
-  },
-];
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:go_router/go_router.dart';
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
@@ -48,53 +19,183 @@ class CommunityScreen extends StatefulWidget {
   State<CommunityScreen> createState() => _CommunityScreenState();
 }
 
-class _CommunityScreenState extends State<CommunityScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  final List<Map<String, dynamic>> _allPosts = mockPosts;
-  final List<Map<String, dynamic>> _followingPosts =
-      mockPosts.where((p) => p['showFollowButton'] == false).toList();
-  final List<Map<String, dynamic>> _trendingPosts = mockPosts.reversed.toList();
+class _CommunityScreenState extends State<CommunityScreen> {
+  PostRemoteDataSource? _postDataSource;
+  final _storage = const FlutterSecureStorage();
+  final _scrollController = ScrollController();
 
+  List<PostModel> _allPosts = [];
   bool _isLoadingMore = false;
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  int _currentPage = 1;
+  final int _limit = 10;
+  bool _hasMoreData = true;
+
+  UserModel? _currentUser;
+  Dio? _dio;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _scrollController.addListener(_onScroll);
+    _initializeDataSource();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      _loadMore();
+    }
+  }
+
+  Future<void> _initializeDataSource() async {
+    final token = await _storage.read(key: 'auth_token');
+
+    if (token == null || token.isEmpty) {
+      setState(() {
+        _errorMessage = 'No authentication token found. Please login first.';
+        _isLoading = false;
+      });
+      return;
+    }
+
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: ApiConfig.baseUrl,
+        connectTimeout: const Duration(seconds: 5),
+        receiveTimeout: const Duration(seconds: 3),
+      ),
+    );
+
+    // Add authorization interceptor
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          options.headers['Authorization'] = 'Bearer $token';
+          return handler.next(options);
+        },
+        onError: (error, handler) {
+          if (error.response?.statusCode == 401) {}
+          return handler.next(error);
+        },
+        onResponse: (response, handler) {
+          return handler.next(response);
+        },
+      ),
+    );
+
+    _postDataSource = PostRemoteDataSourceImpl(dio: dio);
+    _dio = dio;
+
+    // Load current user
+    _loadCurrentUser();
+
+    await _loadPosts();
+  }
+
+  Future<void> _loadCurrentUser() async {
+    if (_dio == null) return;
+
+    try {
+      final authDataSource = AuthRemoteDataSourceImpl(dio: _dio!);
+      final user = await authDataSource.getCurrentUser();
+      setState(() {
+        _currentUser = user;
+      });
+    } catch (e) {
+      // Silent fail - user will see default avatar/name in create post
+    }
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
+  Future<void> _loadPosts({bool isRefresh = false}) async {
+    if (_postDataSource == null) {
+      setState(() {
+        _errorMessage = 'Data source not initialized. Please login first.';
+        _isLoading = false;
+      });
+      return;
+    }
+
+    try {
+      if (isRefresh) {
+        setState(() {
+          _currentPage = 1;
+          _hasMoreData = true;
+          _isLoading = true;
+          _errorMessage = null;
+        });
+      } else {
+        setState(() {
+          _isLoading = true;
+          _errorMessage = null;
+        });
+      }
+
+      final response = await _postDataSource!.getPosts(
+        page: _currentPage,
+        limit: _limit,
+      );
+
+      setState(() {
+        if (isRefresh) {
+          _allPosts = response.data;
+        } else {
+          _allPosts.addAll(response.data);
+        }
+        _hasMoreData = response.data.length >= _limit;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
   Future<void> _onRefresh() async {
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() {});
+    await _loadPosts(isRefresh: true);
   }
 
   Future<void> _loadMore() async {
-    if (_isLoadingMore) return;
+    if (_isLoadingMore || !_hasMoreData || _postDataSource == null) return;
+
     setState(() => _isLoadingMore = true);
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() {
-      _isLoadingMore = false;
-      final newPost = {
-        "avatarUrl": "https://i.pravatar.cc/150?img=${mockPosts.length + 1}",
-        "name": "New User ${mockPosts.length + 1}",
-        "timeAgo": "just now",
-        "postText": "This is a new post loaded dynamically!",
-        "imageUrl": null,
-        "hashtags": ["#New", "#Dynamic"],
-        "likes": 0,
-        "comments": 0,
-        "showFollowButton": true,
-      };
-      _allPosts.add(newPost);
-      _trendingPosts.insert(0, newPost);
-    });
+
+    try {
+      _currentPage++;
+      final response = await _postDataSource!.getPosts(
+        page: _currentPage,
+        limit: _limit,
+      );
+
+      setState(() {
+        _allPosts.addAll(response.data);
+        _hasMoreData = response.data.length >= _limit;
+        _isLoadingMore = false;
+      });
+    } catch (e) {
+      setState(() {
+        _currentPage--;
+        _isLoadingMore = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load more posts: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -107,7 +208,7 @@ class _CommunityScreenState extends State<CommunityScreen>
         title: const Text(
           'Community',
           style: TextStyle(
-            color: Color(0xFFFA9500),
+            color: AppColors.primary,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -116,100 +217,301 @@ class _CommunityScreenState extends State<CommunityScreen>
           IconButton(
             icon: const Icon(
               Icons.add_circle_outline,
-              color: Color(0xFFFA9500),
+              color: AppColors.primary,
             ),
-            onPressed: () {},
+            onPressed:
+                () => CreatePostBottomSheet.show(
+                  context,
+                  _currentUser,
+                  onPostCreated: () => _loadPosts(isRefresh: true),
+                ),
           ),
         ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(50),
-          child: _buildTabBar(),
+      ),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFFFA9500)),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, color: Colors.red, size: 60),
+            const SizedBox(height: 16),
+            Text(
+              'Failed to load posts',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[800],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Text(
+                _errorMessage!,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _loadPosts,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+              ),
+              child: const Text('Retry'),
+            ),
+          ],
         ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildPostList(_allPosts),
-          _buildPostList(_followingPosts),
-          _buildPostList(_trendingPosts),
-        ],
-      ),
-    );
+      );
+    }
+
+    if (_allPosts.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.post_add, color: Colors.grey[400], size: 80),
+            const SizedBox(height: 16),
+            Text(
+              'No posts yet',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Be the first to share something!',
+              style: TextStyle(color: Colors.grey[500]),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return _buildPostList(_allPosts);
   }
 
-  Widget _buildTabBar() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      height: 40,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: TabBar(
-        controller: _tabController,
-        labelColor: AppColors.primary,
-        unselectedLabelColor: const Color(0xFF0A0A0A),
-        indicator: const BoxDecoration(),
-        labelStyle: const TextStyle(fontWeight: FontWeight.w600),
-        tabs: const [
-          Tab(text: 'All'),
-          Tab(text: 'Following'),
-          Tab(text: 'Trending'),
-        ],
-        splashFactory: NoSplash.splashFactory,
-        overlayColor: WidgetStateProperty.all(Colors.transparent),
-        onTap: (index) => setState(() {}),
-      ),
-    );
-  }
-
-  Widget _buildPostList(List<Map<String, dynamic>> posts) {
+  Widget _buildPostList(List<PostModel> posts) {
     return RefreshIndicator(
       onRefresh: _onRefresh,
+      color: AppColors.primary,
       child: ListView.builder(
+        controller: _scrollController,
         padding: const EdgeInsets.all(16),
-        itemCount: posts.length + 1,
+        itemCount: posts.length + (_isLoadingMore ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == posts.length) {
-            return _isLoadingMore
-                ? const Center(child: CircularProgressIndicator())
-                : _buildLoadMoreButton();
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
+            );
           }
 
           final post = posts[index];
           return PostCard(
-            avatarUrl: post['avatarUrl'],
-            name: post['name'],
-            timeAgo: post['timeAgo'],
-            postText: post['postText'],
-            imageUrl: post['imageUrl'],
-            hashtags: post['hashtags'],
-            likes: post['likes'],
-            comments: post['comments'],
-            showFollowButton: post['showFollowButton'],
-            onFollow: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Following ${post['name']}')),
-              );
-            },
+            avatarUrl: post.user.getAvatarUrl(),
+            name: post.user.getDisplayName(),
+            timeAgo: post.getTimeAgo(),
+            postText: post.content,
+            imageUrl: null,
+            hashtags: post.getHashtags(),
+            likes: post.likeCount,
+            isLiked: post.isLikedByUser,
+            onMorePressed: () => _showPostOptions(context, post),
+            onLikePressed: () => _handleLike(post),
+            onCommentPressed: () => _showComments(context, post),
+            userId: post.user.id,
+            onUserTap: () => _navigateToUserProfile(post.user),
           );
         },
       ),
     );
   }
 
-  Widget _buildLoadMoreButton() {
-    return Center(
-      child: TextButton(
-        onPressed: _loadMore,
-        child: const Text(
-          'Load More Posts',
-          style: TextStyle(
-            color: Color(0xFFFA9500),
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+  void _showComments(BuildContext context, PostModel post) {
+    CommentsBottomSheet.show(context, post);
+  }
+
+  void _navigateToUserProfile(UserInfo user) {
+    context.push('/personal-profile/${user.id}', extra: user);
+  }
+
+  void _showPostOptions(BuildContext context, PostModel post) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      builder:
+          (context) => Container(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.flag_outlined, color: Colors.red),
+                  title: const Text(
+                    'Report Post',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _reportPost(post);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.cancel_outlined),
+                  title: const Text('Cancel'),
+                  onTap: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+          ),
     );
+  }
+
+  Future<void> _reportPost(PostModel post) async {
+    if (_postDataSource == null) return;
+
+    bool isDialogShowing = false;
+
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder:
+            (dialogContext) => const Dialog(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              child: Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
+            ),
+      );
+      isDialogShowing = true;
+
+      await _postDataSource!.reportPost(post.id);
+
+      // Close loading dialog
+      if (isDialogShowing && mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+        isDialogShowing = false;
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Post reported successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (isDialogShowing && mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+        isDialogShowing = false;
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleLike(PostModel post) async {
+    if (_postDataSource == null) return;
+
+    final isCurrentlyLiked = post.isLikedByUser;
+
+    try {
+      // Optimistically update UI
+      setState(() {
+        final index = _allPosts.indexWhere((p) => p.id == post.id);
+        if (index != -1) {
+          _allPosts[index] = PostModel(
+            id: post.id,
+            content: post.content,
+            attachType: post.attachType,
+            isApproved: post.isApproved,
+            createdAt: post.createdAt,
+            deletedAt: post.deletedAt,
+            user: post.user,
+            likeCount:
+                isCurrentlyLiked ? post.likeCount - 1 : post.likeCount + 1,
+            isLikedByUser: !isCurrentlyLiked,
+          );
+        }
+      });
+
+      // Call appropriate API
+      if (isCurrentlyLiked) {
+        await _postDataSource!.unlikePost(post.id);
+      } else {
+        await _postDataSource!.likePost(post.id);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isCurrentlyLiked
+                  ? 'Post unliked successfully'
+                  : 'Post liked successfully',
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (e) {
+      // Revert optimistic update on error
+      setState(() {
+        final index = _allPosts.indexWhere((p) => p.id == post.id);
+        if (index != -1) {
+          _allPosts[index] = PostModel(
+            id: post.id,
+            content: post.content,
+            attachType: post.attachType,
+            isApproved: post.isApproved,
+            createdAt: post.createdAt,
+            deletedAt: post.deletedAt,
+            user: post.user,
+            likeCount: post.likeCount,
+            isLikedByUser: isCurrentlyLiked,
+          );
+        }
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

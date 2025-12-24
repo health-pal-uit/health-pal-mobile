@@ -1,3 +1,4 @@
+import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class PostCard extends StatelessWidget {
@@ -10,9 +11,12 @@ class PostCard extends StatelessWidget {
     this.imageUrl,
     this.hashtags = const [],
     required this.likes,
-    required this.comments,
-    this.showFollowButton = false,
-    this.onFollow,
+    this.isLiked = false,
+    this.onMorePressed,
+    this.onLikePressed,
+    this.onCommentPressed,
+    this.userId,
+    this.onUserTap,
   });
 
   final String avatarUrl;
@@ -22,9 +26,12 @@ class PostCard extends StatelessWidget {
   final String? imageUrl;
   final List<String> hashtags;
   final int likes;
-  final int comments;
-  final bool showFollowButton;
-  final VoidCallback? onFollow;
+  final bool isLiked;
+  final VoidCallback? onMorePressed;
+  final VoidCallback? onLikePressed;
+  final VoidCallback? onCommentPressed;
+  final String? userId;
+  final VoidCallback? onUserTap;
 
   @override
   Widget build(BuildContext context) {
@@ -64,52 +71,43 @@ class PostCard extends StatelessWidget {
   Widget _buildHeader() {
     return Row(
       children: [
-        CircleAvatar(radius: 23, backgroundImage: NetworkImage(avatarUrl)),
+        GestureDetector(
+          onTap: onUserTap,
+          child: CircleAvatar(
+            radius: 23,
+            backgroundImage: NetworkImage(avatarUrl),
+          ),
+        ),
         const SizedBox(width: 12),
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                name,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+          child: GestureDetector(
+            onTap: onUserTap,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
-              ),
-              Text(
-                timeAgo,
-                style: const TextStyle(color: Color(0xFF717182), fontSize: 14),
-              ),
-            ],
+                Text(
+                  timeAgo,
+                  style: const TextStyle(
+                    color: Color(0xFF717182),
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        if (showFollowButton)
-          _buildFollowButton()
-        else
-          const Icon(Icons.more_horiz, color: Color(0xFF717182)),
+        GestureDetector(
+          onTap: onMorePressed,
+          child: const Icon(Icons.more_horiz, color: Color(0xFF717182)),
+        ),
       ],
-    );
-  }
-
-  Widget _buildFollowButton() {
-    return GestureDetector(
-      onTap: onFollow,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xFFFA9500)),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: const Text(
-          'Follow',
-          style: TextStyle(
-            color: Color(0xFFFA9500),
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ),
     );
   }
 
@@ -154,14 +152,14 @@ class PostCard extends StatelessWidget {
                 color: const Color(0x19FA9500),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: const Color(0xFFFA9500).withValues(alpha: 0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   width: 0.5,
                 ),
               ),
               child: Text(
                 tag,
                 style: const TextStyle(
-                  color: Color(0xFFFA9500),
+                  color: AppColors.primary,
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
@@ -174,24 +172,36 @@ class PostCard extends StatelessWidget {
   Widget _buildActions() {
     return Row(
       children: [
-        _actionItem(Icons.favorite_border, likes.toString()),
+        GestureDetector(
+          onTap: onLikePressed,
+          child: _actionItem(
+            isLiked ? Icons.favorite : Icons.favorite_border,
+            likes.toString(),
+            color: isLiked ? AppColors.primary : const Color(0xFF717182),
+          ),
+        ),
         const SizedBox(width: 24),
-        _actionItem(Icons.chat_bubble_outline, comments.toString()),
+        GestureDetector(
+          onTap: onCommentPressed,
+          child: const Icon(
+            Icons.chat_bubble_outline,
+            color: Color(0xFF717182),
+            size: 22,
+          ),
+        ),
         const Spacer(),
         const Icon(Icons.share_outlined, color: Color(0xFF717182), size: 22),
       ],
     );
   }
 
-  Widget _actionItem(IconData icon, String count) {
+  Widget _actionItem(IconData icon, String count, {Color? color}) {
+    final iconColor = color ?? const Color(0xFF717182);
     return Row(
       children: [
-        Icon(icon, color: const Color(0xFF717182), size: 22),
+        Icon(icon, color: iconColor, size: 22),
         const SizedBox(width: 6),
-        Text(
-          count,
-          style: const TextStyle(color: Color(0xFF717182), fontSize: 16),
-        ),
+        Text(count, style: TextStyle(color: iconColor, fontSize: 16)),
       ],
     );
   }
