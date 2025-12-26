@@ -1,0 +1,38 @@
+import 'package:da1/src/presentation/widgets/profile/profile_item.dart';
+import 'package:da1/src/presentation/widgets/profile/profile_section.dart';
+import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+class HealthDataSection extends StatelessWidget {
+  const HealthDataSection({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ProfileSection(
+      title: "Health & Data",
+      items: [
+        ProfileItem(
+          icon: Icons.sync,
+          text: "Sync with Google Fit",
+          onTap: () {
+            // TODO: Navigate to Google Fit sync
+          },
+        ),
+        ProfileItem(
+          icon: LucideIcons.ruler,
+          text: "Units of Measurement",
+          onTap: () {
+            // TODO: Navigate to units settings
+          },
+        ),
+        ProfileItem(
+          icon: LucideIcons.shield,
+          text: "Privacy & Data",
+          onTap: () {
+            // TODO: Navigate to privacy settings
+          },
+        ),
+      ],
+    );
+  }
+}
