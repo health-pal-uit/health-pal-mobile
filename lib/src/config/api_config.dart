@@ -9,6 +9,7 @@ class ApiConfig {
 
   // User endpoints
   static const String getProfile = "/users/me";
+  static const String updateProfile = "/users/me";
 
   // Admin endpoints
   static const String getAllUsers = "/admin/users";

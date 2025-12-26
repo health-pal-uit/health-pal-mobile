@@ -3,11 +3,15 @@ import 'package:da1/src/config/api_config.dart';
 import 'package:da1/src/config/env.dart';
 import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/data/repositories/auth_repository.dart';
+import 'package:da1/src/data/repositories/user_repository.dart';
+import 'package:da1/src/data/repositories/user_repository_impl.dart';
+import 'package:da1/src/data/datasources/user_remote_data_source.dart';
 import 'package:da1/src/core/services/deep_link_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:da1/src/presentation/bloc/auth/auth.dart';
+import 'package:da1/src/presentation/bloc/user/user.dart';
 import 'package:da1/src/data/repositories/auth_repository_impl.dart';
 import 'package:da1/src/data/datasources/auth_local_data_source.dart';
 import 'package:da1/src/data/datasources/auth_remote_data_source.dart';
@@ -61,7 +65,15 @@ void main() async {
     localDataSource: localDataSource,
   );
 
+  final UserRemoteDataSource userRemoteDataSource = UserRemoteDataSourceImpl(
+    dio: dio,
+  );
+  final UserRepository userRepository = UserRepositoryImpl(
+    remoteDataSource: userRemoteDataSource,
+  );
+
   final AuthBloc authBloc = AuthBloc(authRepository: authRepository);
+  final UserBloc userBloc = UserBloc(userRepository: userRepository);
 
   deepLinkService.initDeepLinks(
     onTokenReceived: (String token) async {
@@ -94,6 +106,12 @@ void main() async {
   );
 
   runApp(
-    BlocProvider<AuthBloc>(create: (context) => authBloc, child: const App()),
+    MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthBloc>(create: (context) => authBloc),
+        BlocProvider<UserBloc>(create: (context) => userBloc),
+      ],
+      child: const App(),
+    ),
   );
 }
