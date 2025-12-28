@@ -20,6 +20,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  DateTime selectedDate = DateTime.now();
+
   @override
   void initState() {
     super.initState();
@@ -45,6 +47,8 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(context, user, todayDate),
+              const SizedBox(height: 20),
+              _buildDaysList(),
               const SizedBox(height: 30),
               _buildKcalCard(),
               const SizedBox(height: 20),
@@ -62,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(height: 16),
+        SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -77,15 +81,102 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         const SizedBox(height: 10),
-        Text(
-          'Welcome back,',
-          style: AppTypography.body.copyWith(color: AppColors.textSecondary),
-        ),
-        Text(
-          user?.username ?? user?.fullName ?? 'User',
-          style: AppTypography.headline,
+        Text.rich(
+          TextSpan(
+            text: 'Welcome back, ',
+            style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+            children: [
+              TextSpan(
+                text: user?.username ?? user?.fullName ?? 'User',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
         ),
       ],
+    );
+  }
+
+  Widget _buildDaysList() {
+    final now = DateTime.now();
+    final currentWeekStart = now.subtract(Duration(days: now.weekday - 1));
+    final totalWeeks = 41;
+    final initialWeek = 20;
+
+    return SizedBox(
+      height: 70,
+      child: PageView.builder(
+        itemCount: totalWeeks,
+        controller: PageController(
+          initialPage: initialWeek,
+          viewportFraction: 1.0,
+        ),
+        itemBuilder: (context, weekIndex) {
+          final weekStart = currentWeekStart.add(
+            Duration(days: (weekIndex - initialWeek) * 7),
+          );
+
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: List.generate(7, (dayIndex) {
+              final date = weekStart.add(Duration(days: dayIndex));
+              final isSelected =
+                  date.day == selectedDate.day &&
+                  date.month == selectedDate.month &&
+                  date.year == selectedDate.year;
+
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    selectedDate = date;
+                  });
+                },
+                child: Container(
+                  width: 45,
+                  height: 65,
+                  decoration: BoxDecoration(
+                    color: isSelected ? AppColors.primary : Colors.transparent,
+                    borderRadius: BorderRadius.circular(35),
+                    border: Border.all(
+                      color:
+                          isSelected
+                              ? AppColors.primary
+                              : AppColors.textSecondary.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        DateFormat(
+                          'E',
+                        ).format(date).substring(0, 2).toUpperCase(),
+                        style: AppTypography.body.copyWith(
+                          fontSize: 11,
+                          color:
+                              isSelected
+                                  ? Colors.white
+                                  : AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${date.day}',
+                        style: AppTypography.headline.copyWith(
+                          fontSize: 16,
+                          color:
+                              isSelected ? Colors.white : AppColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          );
+        },
+      ),
     );
   }
 
