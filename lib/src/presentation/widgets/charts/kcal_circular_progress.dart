@@ -6,24 +6,32 @@ class KcalCircularProgressCard extends StatelessWidget {
   final int consumed;
   final int needed;
   final int exercise;
+  final double? protein;
+  final double? fat;
+  final double? carbs;
+  final double? fiber;
 
   const KcalCircularProgressCard({
     super.key,
     required this.consumed,
     required this.needed,
     required this.exercise,
+    this.protein,
+    this.fat,
+    this.carbs,
+    this.fiber,
   });
 
   @override
   Widget build(BuildContext context) {
     final remaining = needed - consumed;
-    final carbs = 0;
+    final carbsCurrent = carbs?.round() ?? 0;
     final carbsGoal = 301;
-    final protein = 0;
+    final proteinCurrent = protein?.round() ?? 0;
     final proteinGoal = 138;
-    final fat = 0;
+    final fatCurrent = fat?.round() ?? 0;
     final fatGoal = 72;
-    final fiber = 0;
+    final fiberCurrent = fiber?.round() ?? 0;
     final fiberGoal = 32;
 
     return Container(
@@ -150,7 +158,7 @@ class KcalCircularProgressCard extends StatelessWidget {
               Expanded(
                 child: _buildMacroProgress(
                   '🌾 Carbs',
-                  carbs,
+                  carbsCurrent,
                   carbsGoal,
                   Colors.orange,
                 ),
@@ -159,7 +167,7 @@ class KcalCircularProgressCard extends StatelessWidget {
               Expanded(
                 child: _buildMacroProgress(
                   '🍖 Chất đạm',
-                  protein,
+                  proteinCurrent,
                   proteinGoal,
                   Colors.blue,
                 ),
@@ -172,7 +180,7 @@ class KcalCircularProgressCard extends StatelessWidget {
               Expanded(
                 child: _buildMacroProgress(
                   '🥑 Chất béo',
-                  fat,
+                  fatCurrent,
                   fatGoal,
                   Colors.green,
                 ),
@@ -181,7 +189,7 @@ class KcalCircularProgressCard extends StatelessWidget {
               Expanded(
                 child: _buildMacroProgress(
                   '🥬 Chất xơ',
-                  fiber,
+                  fiberCurrent,
                   fiberGoal,
                   Colors.greenAccent,
                 ),

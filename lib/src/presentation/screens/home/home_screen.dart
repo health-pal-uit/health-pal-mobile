@@ -97,7 +97,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     try {
-      // Format date as "DD-MM-YYYY" to match API endpoint
       final dateStr =
           '${selectedDate.day.toString().padLeft(2, '0')}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.year}';
 
@@ -286,17 +285,33 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildKcalCard() {
-    // Use TDEE if available, otherwise fallback to default value
     final needed = tdeeKcal?.toInt() ?? 2000;
 
-    // Get consumed calories from daily log
     final consumed =
         dailyLog != null ? (dailyLog!['total_kcal_eaten'] ?? 0).toInt() : 0;
+
+    // Get macro nutrients from daily log
+    final protein = dailyLog != null
+        ? (dailyLog!['total_protein_gr'] as num?)?.toDouble()
+        : null;
+    final fat = dailyLog != null
+        ? (dailyLog!['total_fat_gr'] as num?)?.toDouble()
+        : null;
+    final carbs = dailyLog != null
+        ? (dailyLog!['total_carbs_gr'] as num?)?.toDouble()
+        : null;
+    final fiber = dailyLog != null
+        ? (dailyLog!['total_fiber_gr'] as num?)?.toDouble()
+        : null;
 
     return KcalCircularProgressCard(
       consumed: consumed,
       needed: needed,
       exercise: 30,
+      protein: protein,
+      fat: fat,
+      carbs: carbs,
+      fiber: fiber,
     );
   }
 
