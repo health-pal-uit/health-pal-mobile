@@ -71,9 +71,9 @@ class _MealScanScreenState extends State<MealScanScreen> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error taking picture: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error taking picture: $e')));
       }
     }
   }
@@ -92,9 +92,9 @@ class _MealScanScreenState extends State<MealScanScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error selecting image: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error selecting image: $e')));
       }
     }
   }
@@ -139,17 +139,10 @@ class _MealScanScreenState extends State<MealScanScreen> {
         child: Stack(
           children: [
             // Camera or Image Preview
-            _capturedImage != null
-                ? _buildImagePreview()
-                : _buildCameraView(),
+            _capturedImage != null ? _buildImagePreview() : _buildCameraView(),
 
             // Top Bar
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: _buildTopBar(),
-            ),
+            Positioned(top: 0, left: 0, right: 0, child: _buildTopBar()),
 
             // Bottom Controls
             Positioned(
@@ -167,9 +160,7 @@ class _MealScanScreenState extends State<MealScanScreen> {
   Widget _buildCameraView() {
     if (!_isCameraInitialized || _cameraController == null) {
       return const Center(
-        child: CircularProgressIndicator(
-          color: AppColors.primary,
-        ),
+        child: CircularProgressIndicator(color: AppColors.primary),
       );
     }
 
@@ -187,10 +178,7 @@ class _MealScanScreenState extends State<MealScanScreen> {
 
   Widget _buildImagePreview() {
     return SizedBox.expand(
-      child: Image.file(
-        _capturedImage!,
-        fit: BoxFit.cover,
-      ),
+      child: Image.file(_capturedImage!, fit: BoxFit.cover),
     );
   }
 
@@ -201,10 +189,7 @@ class _MealScanScreenState extends State<MealScanScreen> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            Colors.black.withValues(alpha: 0.7),
-            Colors.transparent,
-          ],
+          colors: [Colors.black.withValues(alpha: 0.7), Colors.transparent],
         ),
       ),
       child: Row(
@@ -235,15 +220,13 @@ class _MealScanScreenState extends State<MealScanScreen> {
         gradient: LinearGradient(
           begin: Alignment.bottomCenter,
           end: Alignment.topCenter,
-          colors: [
-            Colors.black.withValues(alpha: 0.8),
-            Colors.transparent,
-          ],
+          colors: [Colors.black.withValues(alpha: 0.8), Colors.transparent],
         ),
       ),
-      child: _capturedImage != null
-          ? _buildPreviewControls()
-          : _buildCameraControls(),
+      child:
+          _capturedImage != null
+              ? _buildPreviewControls()
+              : _buildCameraControls(),
     );
   }
 
@@ -314,29 +297,33 @@ class _MealScanScreenState extends State<MealScanScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: _isAnalyzing
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.analytics_outlined, color: Colors.white),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Analyze Meal',
-                        style: AppTypography.headline.copyWith(
-                          fontSize: 16,
+            child:
+                _isAnalyzing
+                    ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                    : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.analytics_outlined,
                           color: Colors.white,
                         ),
-                      ),
-                    ],
-                  ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Analyze Meal',
+                          style: AppTypography.headline.copyWith(
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
           ),
         ),
         const SizedBox(height: 12),

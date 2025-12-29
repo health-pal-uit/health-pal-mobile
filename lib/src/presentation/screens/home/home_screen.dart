@@ -5,6 +5,7 @@ import 'package:da1/src/presentation/widgets/charts/kcal_circular_progress.dart'
 import 'package:da1/src/presentation/widgets/charts/steps_progress.dart';
 import 'package:da1/src/presentation/widgets/charts/water_intake.dart';
 import 'package:da1/src/presentation/widgets/home_items/workout_card.dart';
+import 'package:da1/src/presentation/widgets/home_items/meal_diary_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -109,6 +110,8 @@ class _HomeScreenState extends State<HomeScreen> {
               _buildDaysList(),
               const SizedBox(height: 30),
               _buildKcalCard(),
+              const SizedBox(height: 20),
+              const MealDiaryCard(),
               const SizedBox(height: 20),
               _buildSmallCards(),
               const SizedBox(height: 30),
