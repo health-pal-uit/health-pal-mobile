@@ -1,3 +1,4 @@
+import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +23,7 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
     text: '100',
   );
   String _selectedUnit = 'g';
+  bool _isAdding = false;
 
   // Common serving sizes
   final List<Map<String, dynamic>> _servingSizes = [
@@ -43,6 +45,67 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
 
   double _calculateNutrient(double per100g) {
     return (per100g * _portionSize) / 100;
+  }
+
+  Future<void> _addToMeal() async {
+    final mealId = widget.meal['id'];
+    if (mealId == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Invalid meal data')));
+      return;
+    }
+
+    setState(() => _isAdding = true);
+
+    final repository = AppRoutes.getDailyMealRepository();
+    if (repository == null) {
+      setState(() => _isAdding = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Repository not initialized')),
+        );
+      }
+      return;
+    }
+
+    // Convert portion to kg
+    final quantityKg = _portionSize / 1000;
+
+    // Format date as "DD/MM/YYYY" based on the API example
+    final now = DateTime.now();
+    final loggedAt =
+        '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
+
+    final result = await repository.addDailyMeal(
+      mealId: mealId,
+      mealType: widget.mealType.toLowerCase(),
+      quantityKg: quantityKg,
+      loggedAt: loggedAt,
+    );
+
+    if (mounted) {
+      setState(() => _isAdding = false);
+
+      result.fold(
+        (failure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to add meal: ${failure.message}')),
+          );
+        },
+        (data) {
+          final name = widget.meal['name'] ?? 'Unknown';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Added ${_portionSize.toStringAsFixed(0)}g of $name to ${widget.mealType}',
+              ),
+            ),
+          );
+          Navigator.pop(context, true); // Return true to indicate success
+        },
+      );
+    }
   }
 
   @override
@@ -199,7 +262,9 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
                                 decoration: BoxDecoration(
                                   color: Colors.grey[50],
                                   borderRadius: BorderRadius.circular(12),
@@ -319,17 +384,7 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // TODO: Implement add to meal functionality
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Added ${_portionSize.toStringAsFixed(0)}g of $name to ${widget.mealType}',
-                        ),
-                      ),
-                    );
-                    Navigator.pop(context);
-                  },
+                  onPressed: _isAdding ? null : _addToMeal,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -337,13 +392,23 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: Text(
-                    'Add to ${widget.mealType}',
-                    style: AppTypography.headline.copyWith(
-                      fontSize: 16,
-                      color: Colors.white,
-                    ),
-                  ),
+                  child:
+                      _isAdding
+                          ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                          : Text(
+                            'Add to ${widget.mealType}',
+                            style: AppTypography.headline.copyWith(
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                          ),
                 ),
               ),
             ),

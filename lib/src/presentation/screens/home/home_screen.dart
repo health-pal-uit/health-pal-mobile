@@ -25,12 +25,15 @@ class _HomeScreenState extends State<HomeScreen> {
   DateTime selectedDate = DateTime.now();
   double? tdeeKcal;
   bool isLoadingTdee = true;
+  Map<String, dynamic>? dailyLog;
+  bool isLoadingDailyLog = true;
 
   @override
   void initState() {
     super.initState();
     context.read<AuthBloc>().add(LoadCurrentUser());
     _loadFitnessProfile();
+    _loadDailyLog();
   }
 
   Future<void> _loadFitnessProfile() async {
@@ -87,6 +90,44 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _loadDailyLog() async {
+    final repository = AppRoutes.getDailyLogRepository();
+    if (repository == null) {
+      return;
+    }
+
+    try {
+      // Format date as "DD-MM-YYYY" to match API endpoint
+      final dateStr =
+          '${selectedDate.day.toString().padLeft(2, '0')}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.year}';
+
+      final result = await repository.getDailyLog(dateStr);
+      result.fold(
+        (failure) {
+          if (mounted) {
+            setState(() {
+              isLoadingDailyLog = false;
+            });
+          }
+        },
+        (log) {
+          if (mounted) {
+            setState(() {
+              dailyLog = log;
+              isLoadingDailyLog = false;
+            });
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          isLoadingDailyLog = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthBloc>().state;
@@ -111,7 +152,9 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 30),
               _buildKcalCard(),
               const SizedBox(height: 20),
-              const MealDiaryCard(),
+              MealDiaryCard(
+                dailyMeals: dailyLog?['daily_meals'] as List<dynamic>?,
+              ),
               const SizedBox(height: 20),
               _buildSmallCards(),
               const SizedBox(height: 30),
@@ -191,6 +234,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   setState(() {
                     selectedDate = date;
                   });
+                  _loadDailyLog(); // Reload daily log for new date
                 },
                 child: Container(
                   width: 45,
@@ -244,8 +288,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildKcalCard() {
     // Use TDEE if available, otherwise fallback to default value
     final needed = tdeeKcal?.toInt() ?? 2000;
+
+    // Get consumed calories from daily log
+    final consumed =
+        dailyLog != null ? (dailyLog!['total_kcal_eaten'] ?? 0).toInt() : 0;
+
     return KcalCircularProgressCard(
-      consumed: 300,
+      consumed: consumed,
       needed: needed,
       exercise: 30,
     );

@@ -3,7 +3,20 @@ import 'package:da1/src/config/theme/typography.dart';
 import 'package:flutter/material.dart';
 
 class MealDiaryCard extends StatelessWidget {
-  const MealDiaryCard({super.key});
+  final List<dynamic>? dailyMeals;
+
+  const MealDiaryCard({super.key, this.dailyMeals});
+
+  int _getMealCount(String mealType) {
+    if (dailyMeals == null) return 0;
+    return dailyMeals!
+        .where(
+          (meal) =>
+              meal['meal_type']?.toString().toLowerCase() ==
+              mealType.toLowerCase(),
+        )
+        .length;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,21 +51,25 @@ class MealDiaryCard extends StatelessWidget {
                 icon: '🌮',
                 label: 'Breakfast',
                 color: const Color(0xFFFFE5C2),
+                count: _getMealCount('breakfast'),
               ),
               _buildMealButton(
                 icon: '🍱',
                 label: 'Lunch',
                 color: const Color(0xFFFFE5C2),
+                count: _getMealCount('lunch'),
               ),
               _buildMealButton(
                 icon: '🍽️',
                 label: 'Dinner',
                 color: const Color(0xFFFFE5C2),
+                count: _getMealCount('dinner'),
               ),
               _buildMealButton(
                 icon: '🥤',
                 label: 'Snack',
                 color: const Color(0xFFFFE5C2),
+                count: _getMealCount('snack'),
               ),
             ],
           ),
@@ -96,6 +113,7 @@ class MealDiaryCard extends StatelessWidget {
     required String icon,
     required String label,
     required Color color,
+    required int count,
   }) {
     return Column(
       children: [
@@ -109,6 +127,26 @@ class MealDiaryCard extends StatelessWidget {
           child: Stack(
             children: [
               Center(child: Text(icon, style: const TextStyle(fontSize: 32))),
+              if (count > 0)
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      count.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
               Positioned(
                 bottom: 4,
                 right: 4,

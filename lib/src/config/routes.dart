@@ -24,12 +24,16 @@ import 'package:da1/src/presentation/screens/auth/login_screen.dart';
 import 'package:da1/src/presentation/widgets/custom_bottom_nav.dart';
 import 'package:da1/src/data/repositories/fitness_profile_repository.dart';
 import 'package:da1/src/data/repositories/meal_repository.dart';
+import 'package:da1/src/data/repositories/daily_meal_repository.dart';
+import 'package:da1/src/data/repositories/daily_log_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class AppRoutes {
   static FitnessProfileRepository? _fitnessProfileRepository;
   static MealRepository? _mealRepository;
+  static DailyMealRepository? _dailyMealRepository;
+  static DailyLogRepository? _dailyLogRepository;
 
   static void setFitnessProfileRepository(FitnessProfileRepository repository) {
     _fitnessProfileRepository = repository;
@@ -45,6 +49,22 @@ class AppRoutes {
 
   static MealRepository? getMealRepository() {
     return _mealRepository;
+  }
+
+  static void setDailyMealRepository(DailyMealRepository repository) {
+    _dailyMealRepository = repository;
+  }
+
+  static DailyMealRepository? getDailyMealRepository() {
+    return _dailyMealRepository;
+  }
+
+  static void setDailyLogRepository(DailyLogRepository repository) {
+    _dailyLogRepository = repository;
+  }
+
+  static DailyLogRepository? getDailyLogRepository() {
+    return _dailyLogRepository;
   }
 
   static final GoRouter router = GoRouter(

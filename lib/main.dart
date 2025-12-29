@@ -10,6 +10,10 @@ import 'package:da1/src/data/repositories/fitness_profile_repository.dart';
 import 'package:da1/src/data/datasources/fitness_profile_remote_data_source.dart';
 import 'package:da1/src/data/repositories/meal_repository.dart';
 import 'package:da1/src/data/datasources/meal_remote_data_source.dart';
+import 'package:da1/src/data/repositories/daily_meal_repository.dart';
+import 'package:da1/src/data/datasources/daily_meal_remote_data_source.dart';
+import 'package:da1/src/data/repositories/daily_log_repository.dart';
+import 'package:da1/src/data/datasources/daily_log_remote_data_source.dart';
 import 'package:da1/src/core/services/deep_link_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -90,12 +94,26 @@ void main() async {
     remoteDataSource: mealRemoteDataSource,
   );
 
+  final DailyMealRemoteDataSource dailyMealRemoteDataSource =
+      DailyMealRemoteDataSourceImpl(dio: dio);
+  final DailyMealRepository dailyMealRepository = DailyMealRepositoryImpl(
+    remoteDataSource: dailyMealRemoteDataSource,
+  );
+
+  final DailyLogRemoteDataSource dailyLogRemoteDataSource =
+      DailyLogRemoteDataSourceImpl(dio: dio);
+  final DailyLogRepository dailyLogRepository = DailyLogRepositoryImpl(
+    remoteDataSource: dailyLogRemoteDataSource,
+  );
+
   final AuthBloc authBloc = AuthBloc(authRepository: authRepository);
   final UserBloc userBloc = UserBloc(userRepository: userRepository);
 
   // Set repositories for routing
   AppRoutes.setFitnessProfileRepository(fitnessProfileRepository);
   AppRoutes.setMealRepository(mealRepository);
+  AppRoutes.setDailyMealRepository(dailyMealRepository);
+  AppRoutes.setDailyLogRepository(dailyLogRepository);
 
   deepLinkService.initDeepLinks(
     onTokenReceived: (String token) async {
