@@ -6,6 +6,8 @@ import 'package:da1/src/data/repositories/auth_repository.dart';
 import 'package:da1/src/data/repositories/user_repository.dart';
 import 'package:da1/src/data/repositories/user_repository_impl.dart';
 import 'package:da1/src/data/datasources/user_remote_data_source.dart';
+import 'package:da1/src/data/repositories/fitness_profile_repository.dart';
+import 'package:da1/src/data/datasources/fitness_profile_remote_data_source.dart';
 import 'package:da1/src/core/services/deep_link_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -72,8 +74,18 @@ void main() async {
     remoteDataSource: userRemoteDataSource,
   );
 
+  final FitnessProfileRemoteDataSource fitnessProfileRemoteDataSource =
+      FitnessProfileRemoteDataSourceImpl(dio: dio);
+  final FitnessProfileRepository fitnessProfileRepository =
+      FitnessProfileRepositoryImpl(
+    remoteDataSource: fitnessProfileRemoteDataSource,
+  );
+
   final AuthBloc authBloc = AuthBloc(authRepository: authRepository);
   final UserBloc userBloc = UserBloc(userRepository: userRepository);
+
+  // Set fitness profile repository for routing
+  AppRoutes.setFitnessProfileRepository(fitnessProfileRepository);
 
   deepLinkService.initDeepLinks(
     onTokenReceived: (String token) async {

@@ -19,10 +19,17 @@ import 'package:da1/src/presentation/screens/profile/profile_screen.dart';
 import 'package:da1/src/presentation/screens/home/home_screen.dart';
 import 'package:da1/src/presentation/screens/auth/login_screen.dart';
 import 'package:da1/src/presentation/widgets/custom_bottom_nav.dart';
+import 'package:da1/src/data/repositories/fitness_profile_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class AppRoutes {
+  static FitnessProfileRepository? _fitnessProfileRepository;
+
+  static void setFitnessProfileRepository(FitnessProfileRepository repository) {
+    _fitnessProfileRepository = repository;
+  }
+
   static final GoRouter router = GoRouter(
     initialLocation: '/welcome',
     routes: [
@@ -116,6 +123,22 @@ class AppRoutes {
           GoRoute(
             path: '/',
             name: 'home',
+            redirect: (context, state) async {
+              // Check if user has fitness profile
+              if (_fitnessProfileRepository != null) {
+                final result = await _fitnessProfileRepository!.hasFitnessProfile();
+                return result.fold(
+                  (failure) => null, // If error, let user proceed to home
+                  (hasProfile) {
+                    if (!hasProfile) {
+                      return '/onboarding-height';
+                    }
+                    return null; // null means no redirect, proceed to home
+                  },
+                );
+              }
+              return null;
+            },
             builder: (context, state) => const HomeScreen(),
           ),
           GoRoute(
