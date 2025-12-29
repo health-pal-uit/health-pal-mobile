@@ -1,5 +1,6 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/presentation/widgets/charts/kcal_circular_progress.dart';
 import 'package:da1/src/presentation/widgets/charts/steps_progress.dart';
 import 'package:da1/src/presentation/widgets/charts/water_intake.dart';
@@ -21,11 +22,69 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   DateTime selectedDate = DateTime.now();
+  double? tdeeKcal;
+  bool isLoadingTdee = true;
 
   @override
   void initState() {
     super.initState();
     context.read<AuthBloc>().add(LoadCurrentUser());
+    _loadFitnessProfile();
+  }
+
+  Future<void> _loadFitnessProfile() async {
+    final repository = AppRoutes.getFitnessProfileRepository();
+    if (repository == null) return;
+
+    try {
+      final result = await repository.hasFitnessProfile();
+      result.fold(
+        (failure) {
+          if (mounted) {
+            setState(() {
+              isLoadingTdee = false;
+            });
+          }
+        },
+        (hasProfile) async {
+          if (hasProfile) {
+            // Fetch the fitness profiles to get TDEE
+            final fitnessProfilesResult =
+                await repository.getFitnessProfiles();
+            fitnessProfilesResult.fold(
+              (failure) {
+                if (mounted) {
+                  setState(() {
+                    isLoadingTdee = false;
+                  });
+                }
+              },
+              (profiles) {
+                if (mounted && profiles.isNotEmpty) {
+                  final profile = profiles[0];
+                  setState(() {
+                    tdeeKcal = profile['tdee_kcal']?.toDouble();
+                    isLoadingTdee = false;
+                  });
+                }
+              },
+            );
+          } else {
+            if (mounted) {
+              setState(() {
+                isLoadingTdee = false;
+              });
+            }
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          isLoadingTdee = false;
+        });
+      }
+    }
   }
 
   @override
@@ -181,7 +240,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildKcalCard() {
-    return KcalCircularProgressCard(consumed: 300, needed: 1500, exercise: 30);
+    // Use TDEE if available, otherwise fallback to default value
+    final needed = tdeeKcal?.toInt() ?? 2000;
+    return KcalCircularProgressCard(
+      consumed: 300,
+      needed: needed,
+      exercise: 30,
+    );
   }
 
   Widget _buildSmallCards() {
