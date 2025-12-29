@@ -1,5 +1,6 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class AddActionBottomSheet extends StatelessWidget {
   const AddActionBottomSheet({super.key});
@@ -19,19 +20,34 @@ class AddActionBottomSheet extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _quickAction(
+                context: context,
                 color: Colors.amber,
                 icon: Icons.search,
                 label: "Log Food",
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/foodSearch');
+                },
               ),
               _quickAction(
+                context: context,
                 color: Colors.redAccent,
                 icon: Icons.camera_alt,
                 label: "Meal Scan",
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/meal-scan');
+                },
               ),
               _quickAction(
+                context: context,
                 color: Colors.blue,
                 icon: Icons.qr_code_scanner,
                 label: "Barcode Scan",
+                onTap: () {
+                  // TODO: Implement barcode scan
+                  Navigator.pop(context);
+                },
               ),
             ],
           ),
@@ -46,24 +62,29 @@ class AddActionBottomSheet extends StatelessWidget {
   }
 
   Widget _quickAction({
+    required BuildContext context,
     required Color color,
     required IconData icon,
     required String label,
+    VoidCallback? onTap,
   }) {
-    return Column(
-      children: [
-        Container(
-          height: 68,
-          width: 68,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(16),
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            height: 68,
+            width: 68,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(icon, size: 32, color: Colors.black),
           ),
-          child: Icon(icon, size: 32, color: Colors.black),
-        ),
-        const SizedBox(height: 6),
-        Text(label, style: const TextStyle(color: AppColors.textPrimary)),
-      ],
+          const SizedBox(height: 6),
+          Text(label, style: const TextStyle(color: AppColors.textPrimary)),
+        ],
+      ),
     );
   }
 

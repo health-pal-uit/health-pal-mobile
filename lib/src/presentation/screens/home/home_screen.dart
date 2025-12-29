@@ -49,8 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
         (hasProfile) async {
           if (hasProfile) {
             // Fetch the fitness profiles to get TDEE
-            final fitnessProfilesResult =
-                await repository.getFitnessProfiles();
+            final fitnessProfilesResult = await repository.getFitnessProfiles();
             fitnessProfilesResult.fold(
               (failure) {
                 if (mounted) {

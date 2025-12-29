@@ -13,6 +13,7 @@ import 'package:da1/src/presentation/screens/auth/welcome/welcome_scroll_screen.
 import 'package:da1/src/presentation/screens/community/community_screen.dart';
 import 'package:da1/src/presentation/screens/community/personal_profile_screen.dart';
 import 'package:da1/src/presentation/screens/home/diet/food_search_screen.dart';
+import 'package:da1/src/presentation/screens/home/diet/meal_scan_screen.dart';
 import 'package:da1/src/presentation/screens/home/exercise/activity_analytics_screen.dart';
 import 'package:da1/src/presentation/screens/home/exercise/add_activity_screen.dart';
 import 'package:da1/src/data/models/post_model.dart';
@@ -132,6 +133,11 @@ class AppRoutes {
         path: '/foodSearch',
         name: 'foodSearch',
         builder: (context, state) => FoodSearchScreen(),
+      ),
+      GoRoute(
+        path: '/meal-scan',
+        name: 'meal-scan',
+        builder: (context, state) => const MealScanScreen(),
       ),
       GoRoute(
         path: '/steps',
