@@ -78,8 +78,8 @@ void main() async {
       FitnessProfileRemoteDataSourceImpl(dio: dio);
   final FitnessProfileRepository fitnessProfileRepository =
       FitnessProfileRepositoryImpl(
-    remoteDataSource: fitnessProfileRemoteDataSource,
-  );
+        remoteDataSource: fitnessProfileRemoteDataSource,
+      );
 
   final AuthBloc authBloc = AuthBloc(authRepository: authRepository);
   final UserBloc userBloc = UserBloc(userRepository: userRepository);

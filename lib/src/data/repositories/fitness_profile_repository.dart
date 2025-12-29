@@ -4,6 +4,9 @@ import 'package:dartz/dartz.dart';
 
 abstract class FitnessProfileRepository {
   Future<Either<Failure, bool>> hasFitnessProfile();
+  Future<Either<Failure, Map<String, dynamic>>> createFitnessProfile(
+    Map<String, dynamic> data,
+  );
 }
 
 class FitnessProfileRepositoryImpl implements FitnessProfileRepository {
@@ -16,6 +19,18 @@ class FitnessProfileRepositoryImpl implements FitnessProfileRepository {
     try {
       final profiles = await remoteDataSource.getFitnessProfiles();
       return Right(profiles.isNotEmpty);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> createFitnessProfile(
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final result = await remoteDataSource.createFitnessProfile(data);
+      return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

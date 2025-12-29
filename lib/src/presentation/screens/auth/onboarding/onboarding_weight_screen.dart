@@ -5,7 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 class OnboardingWeightScreen extends StatefulWidget {
-  const OnboardingWeightScreen({super.key});
+  final double? height;
+
+  const OnboardingWeightScreen({super.key, this.height});
 
   @override
   State<OnboardingWeightScreen> createState() => _OnboardingWeightScreenState();
@@ -43,8 +45,12 @@ class _OnboardingWeightScreenState extends State<OnboardingWeightScreen> {
   }
 
   void _goNext() {
-    if (_isButtonEnabled) {
-      context.go('/onboarding-complete');
+    if (_isButtonEnabled && widget.height != null) {
+      final weight = double.parse(_weightController.text);
+      context.pushNamed(
+        'onboarding-body-measurements',
+        extra: {'height': widget.height, 'weight': weight},
+      );
     }
   }
 
@@ -73,16 +79,14 @@ class _OnboardingWeightScreenState extends State<OnboardingWeightScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
-                  3,
+                  4,
                   (index) => Container(
                     width: screenWidth * 0.1,
                     height: 4,
                     margin: const EdgeInsets.symmetric(horizontal: 4),
                     decoration: BoxDecoration(
                       color:
-                          index <= 1
-                              ? const Color(0xFFFA9500)
-                              : Colors.grey.shade300,
+                          index <= 1 ? AppColors.primary : Colors.grey.shade300,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),

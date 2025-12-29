@@ -44,7 +44,8 @@ class _OnboardingHeightScreenState extends State<OnboardingHeightScreen> {
 
   void _goNext() {
     if (_isButtonEnabled) {
-      context.go('/onboarding-weight');
+      final height = double.parse(_heightController.text);
+      context.pushNamed('onboarding-weight', extra: height);
     }
   }
 
@@ -73,7 +74,7 @@ class _OnboardingHeightScreenState extends State<OnboardingHeightScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
-                  3,
+                  4,
                   (index) => Container(
                     width: screenWidth * 0.1,
                     height: 4,

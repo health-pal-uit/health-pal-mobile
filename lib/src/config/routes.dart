@@ -6,6 +6,8 @@ import 'package:da1/src/presentation/screens/auth/reset_password_screen.dart';
 import 'package:da1/src/presentation/screens/auth/onboarding/onboarding_complete_screen.dart';
 import 'package:da1/src/presentation/screens/auth/onboarding/onboarding_weight_screen.dart';
 import 'package:da1/src/presentation/screens/auth/onboarding/onboarding_height_screen.dart';
+import 'package:da1/src/presentation/screens/auth/onboarding/onboarding_body_measurements_screen.dart';
+import 'package:da1/src/presentation/screens/auth/onboarding/onboarding_activity_level_screen.dart';
 import 'package:da1/src/presentation/screens/auth/signup_screen.dart';
 import 'package:da1/src/presentation/screens/auth/welcome/welcome_scroll_screen.dart';
 import 'package:da1/src/presentation/screens/community/community_screen.dart';
@@ -30,6 +32,10 @@ class AppRoutes {
     _fitnessProfileRepository = repository;
   }
 
+  static FitnessProfileRepository? getFitnessProfileRepository() {
+    return _fitnessProfileRepository;
+  }
+
   static final GoRouter router = GoRouter(
     initialLocation: '/welcome',
     routes: [
@@ -46,7 +52,36 @@ class AppRoutes {
       GoRoute(
         path: '/onboarding-weight',
         name: 'onboarding-weight',
-        builder: (context, state) => const OnboardingWeightScreen(),
+        builder: (context, state) {
+          final height = state.extra as double?;
+          return OnboardingWeightScreen(height: height);
+        },
+      ),
+      GoRoute(
+        path: '/onboarding-body-measurements',
+        name: 'onboarding-body-measurements',
+        builder: (context, state) {
+          final data = state.extra as Map<String, dynamic>;
+          return OnboardingBodyMeasurementsScreen(
+            height: (data['height'] as num).toDouble(),
+            weight: (data['weight'] as num).toDouble(),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/onboarding-activity',
+        name: 'onboarding-activity',
+        builder: (context, state) {
+          final data = state.extra as Map<String, dynamic>;
+          final measurements = {
+            'height': (data['height'] as num).toDouble(),
+            'weight': (data['weight'] as num).toDouble(),
+            'waist': data['waist'] != null ? (data['waist'] as num).toDouble() : null,
+            'hip': data['hip'] != null ? (data['hip'] as num).toDouble() : null,
+            'neck': data['neck'] != null ? (data['neck'] as num).toDouble() : null,
+          };
+          return OnboardingActivityLevelScreen(measurements: measurements);
+        },
       ),
       GoRoute(
         path: '/onboarding-complete',
@@ -126,7 +161,8 @@ class AppRoutes {
             redirect: (context, state) async {
               // Check if user has fitness profile
               if (_fitnessProfileRepository != null) {
-                final result = await _fitnessProfileRepository!.hasFitnessProfile();
+                final result =
+                    await _fitnessProfileRepository!.hasFitnessProfile();
                 return result.fold(
                   (failure) => null, // If error, let user proceed to home
                   (hasProfile) {
