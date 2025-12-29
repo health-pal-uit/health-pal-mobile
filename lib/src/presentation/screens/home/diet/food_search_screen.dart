@@ -1,6 +1,7 @@
 import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/presentation/screens/home/diet/meal_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -250,6 +251,18 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
               Icon(Icons.add_circle, color: AppColors.primary, size: 28),
             ],
           ),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (context) => MealDetailScreen(
+                      meal: meal,
+                      mealType: _selectedMealType,
+                    ),
+              ),
+            );
+          },
         );
       },
       separatorBuilder:

@@ -83,10 +83,12 @@ void main() async {
         remoteDataSource: fitnessProfileRemoteDataSource,
       );
 
-  final MealRemoteDataSource mealRemoteDataSource =
-      MealRemoteDataSourceImpl(dio: dio);
-  final MealRepository mealRepository =
-      MealRepositoryImpl(remoteDataSource: mealRemoteDataSource);
+  final MealRemoteDataSource mealRemoteDataSource = MealRemoteDataSourceImpl(
+    dio: dio,
+  );
+  final MealRepository mealRepository = MealRepositoryImpl(
+    remoteDataSource: mealRemoteDataSource,
+  );
 
   final AuthBloc authBloc = AuthBloc(authRepository: authRepository);
   final UserBloc userBloc = UserBloc(userRepository: userRepository);
