@@ -1,6 +1,6 @@
 import 'package:da1/src/config/theme/app_colors.dart';
+import 'package:da1/src/config/theme/typography.dart';
 import 'package:flutter/material.dart';
-import 'package:syncfusion_flutter_gauges/gauges.dart';
 
 class KcalCircularProgressCard extends StatelessWidget {
   final int consumed;
@@ -16,145 +16,266 @@ class KcalCircularProgressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final remaining = needed - consumed;
+    final carbs = 0;
+    final carbsGoal = 301;
+    final protein = 0;
+    final proteinGoal = 138;
+    final fat = 0;
+    final fatGoal = 72;
+    final fiber = 0;
+    final fiberGoal = 32;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         color: AppColors.backgroundLight,
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(
+            'Calories & Nutrition',
+            style: AppTypography.headline.copyWith(fontSize: 18),
+          ),
+          const SizedBox(height: 20),
+
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 36,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  "Macros",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
-                  ),
+              Expanded(
+                flex: 2,
+                child: Column(
+                  children: [
+                    SizedBox(
+                      width: 120,
+                      height: 120,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Background circle
+                          SizedBox(
+                            width: 120,
+                            height: 120,
+                            child: CircularProgressIndicator(
+                              value: 1.0,
+                              strokeWidth: 12,
+                              backgroundColor: Colors.transparent,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.grey[300]!,
+                              ),
+                            ),
+                          ),
+                          // Progress circle
+                          SizedBox(
+                            width: 120,
+                            height: 120,
+                            child: CircularProgressIndicator(
+                              value:
+                                  needed > 0
+                                      ? (consumed / needed).clamp(0.0, 1.0)
+                                      : 0.0,
+                              strokeWidth: 12,
+                              backgroundColor: Colors.transparent,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.orange,
+                              ),
+                            ),
+                          ),
+                          // Center text
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Consumed',
+                                style: AppTypography.body.copyWith(
+                                  fontSize: 11,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '$consumed',
+                                style: AppTypography.headline.copyWith(
+                                  fontSize: 28,
+                                  color: Colors.orange,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 36,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  "Calories",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
-                  ),
+              const SizedBox(width: 20),
+              Expanded(
+                flex: 3,
+                child: Column(
+                  children: [
+                    _buildStatRow(
+                      Icons.bolt,
+                      'Required',
+                      needed.toString(),
+                      AppColors.primary,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildStatRow(
+                      Icons.restaurant,
+                      'Remaining',
+                      remaining.toString(),
+                      Colors.blue,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildStatRow(
+                      Icons.local_fire_department,
+                      'Burned',
+                      exercise.toString(),
+                      Colors.pink,
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
+
+          const SizedBox(height: 20),
+          Divider(color: Colors.grey[700], height: 1),
           const SizedBox(height: 16),
 
-          SizedBox(
-            height: 180,
-            child: SfRadialGauge(
-              axes: <RadialAxis>[
-                RadialAxis(
-                  minimum: 0,
-                  maximum: 2000,
-                  showLabels: false,
-                  showTicks: false,
-                  axisLineStyle: const AxisLineStyle(
-                    thickness: 0.15,
-                    cornerStyle: CornerStyle.bothFlat,
-                    color: Color(0xFFE0E0E0),
-                    thicknessUnit: GaugeSizeUnit.factor,
-                  ),
-                  annotations: [
-                    GaugeAnnotation(
-                      widget: Text(
-                        consumed.toString(),
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      positionFactor: 0,
-                      angle: 90,
-                    ),
-                  ],
-                  pointers: <GaugePointer>[
-                    RangePointer(
-                      value: consumed.toDouble(),
-                      width: 0.15,
-                      sizeUnit: GaugeSizeUnit.factor,
-                      color: Colors.blue,
-                      cornerStyle: CornerStyle.bothCurve,
-                    ),
-                    RangePointer(
-                      value: needed.toDouble(),
-                      width: 0.15,
-                      sizeUnit: GaugeSizeUnit.factor,
-                      color: Colors.orange,
-                      cornerStyle: CornerStyle.bothCurve,
-                    ),
-                    RangePointer(
-                      value: exercise.toDouble(),
-                      width: 0.15,
-                      sizeUnit: GaugeSizeUnit.factor,
-                      color: Colors.pink,
-                      cornerStyle: CornerStyle.bothCurve,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildLegend(color: Colors.blue, label: "Needed", value: needed),
-              _buildLegend(
-                color: Colors.orange,
-                label: "Consumed",
-                value: consumed,
+              Expanded(
+                child: _buildMacroProgress(
+                  '🌾 Carbs',
+                  carbs,
+                  carbsGoal,
+                  Colors.orange,
+                ),
               ),
-              _buildLegend(
-                color: Colors.pink,
-                label: "Exercise",
-                value: exercise,
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildMacroProgress(
+                  '🍖 Chất đạm',
+                  protein,
+                  proteinGoal,
+                  Colors.blue,
+                ),
               ),
             ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildMacroProgress(
+                  '🥑 Chất béo',
+                  fat,
+                  fatGoal,
+                  Colors.green,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildMacroProgress(
+                  '🥬 Chất xơ',
+                  fiber,
+                  fiberGoal,
+                  Colors.greenAccent,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          Center(
+            child: Text.rich(
+              TextSpan(
+                text: 'Current diet plan: ',
+                style: AppTypography.body.copyWith(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                ),
+                children: [
+                  TextSpan(
+                    text: 'Balanced',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildLegend({
-    required Color color,
-    required String label,
-    required int value,
-  }) {
+  Widget _buildStatRow(IconData icon, String label, String value, Color color) {
     return Row(
       children: [
-        Icon(Icons.square, size: 14, color: color),
-        const SizedBox(width: 4),
-        Text("$label "),
-        Text("$value", style: const TextStyle(fontWeight: FontWeight.bold)),
+        Icon(icon, color: color, size: 20),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            label,
+            style: AppTypography.body.copyWith(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+        Text(
+          value,
+          style: AppTypography.headline.copyWith(
+            fontSize: 16,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMacroProgress(String label, int current, int goal, Color color) {
+    final progress = goal > 0 ? (current / goal).clamp(0.0, 1.0) : 0.0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: AppTypography.body.copyWith(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            Text(
+              '$current/${goal}g',
+              style: AppTypography.body.copyWith(
+                fontSize: 11,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: progress,
+            backgroundColor: Colors.grey[300],
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+            minHeight: 8,
+          ),
+        ),
       ],
     );
   }
