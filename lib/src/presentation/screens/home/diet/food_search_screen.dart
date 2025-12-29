@@ -1,8 +1,8 @@
+import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class FoodSearchScreen extends StatefulWidget {
   const FoodSearchScreen({super.key});
@@ -15,77 +15,78 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
   String _selectedMealType = 'Breakfast';
   final TextEditingController _searchController = TextEditingController();
 
-  final List<Map<String, dynamic>> _allMealHistory = [
-    {
-      "name": "Large Size Egg",
-      "quantity": "3 eggs",
-      "calories": 273,
-      "tab": "My Foods",
-    },
-    {
-      "name": "Chicken Biryani",
-      "quantity": "1 serving",
-      "calories": 273,
-      "tab": "My Meals",
-    },
-    {
-      "name": "Roti (Indian Bread)",
-      "quantity": "100 g",
-      "calories": 243,
-      "tab": "My Foods",
-    },
-    {
-      "name": "Chicken Breast",
-      "quantity": "1 cup",
-      "calories": 74,
-      "tab": "My Foods",
-    },
-    {
-      "name": "Protein Shake",
-      "quantity": "1 serving",
-      "calories": 180,
-      "tab": "My Recipes",
-    },
-    {
-      "name": "White Rice (Cooked)",
-      "quantity": "100 g",
-      "calories": 243,
-      "tab": "My Foods",
-    },
-    {"name": "Tea", "quantity": "1 cup", "calories": 64, "tab": "My Foods"},
-  ];
-
-  late List<Map<String, dynamic>> _filteredMealHistory;
+  List<Map<String, dynamic>> _searchResults = [];
   int _selectedTabIndex = 0;
   final List<String> _tabs = ['All', 'My Meals', 'My Recipes'];
+  bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _filteredMealHistory = _allMealHistory;
-    _searchController.addListener(_filterMeals);
+    _searchController.addListener(_onSearchChanged);
   }
 
   @override
   void dispose() {
-    _searchController.removeListener(_filterMeals);
+    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
   }
 
-  void _filterMeals() {
-    final query = _searchController.text.toLowerCase();
-    final currentTab = _tabs[_selectedTabIndex];
+  void _onSearchChanged() {
+    final query = _searchController.text.trim();
+    if (query.isNotEmpty) {
+      _searchMeals(query);
+    } else {
+      setState(() {
+        _searchResults = [];
+        _errorMessage = null;
+      });
+    }
+  }
 
+  Future<void> _searchMeals(String query) async {
     setState(() {
-      _filteredMealHistory =
-          _allMealHistory.where((meal) {
-            final nameMatches = meal['name'].toLowerCase().contains(query);
-            final tabMatches =
-                (currentTab == 'All' || meal['tab'] == currentTab);
-            return nameMatches && tabMatches;
-          }).toList();
+      _isLoading = true;
+      _errorMessage = null;
     });
+
+    final repository = AppRoutes.getMealRepository();
+    if (repository == null) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Repository not initialized';
+      });
+      return;
+    }
+
+    final result = await repository.searchMeals(query);
+
+    if (mounted) {
+      result.fold(
+        (failure) {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = failure.message;
+            _searchResults = [];
+          });
+        },
+        (meals) {
+          setState(() {
+            _isLoading = false;
+            _searchResults = meals.cast<Map<String, dynamic>>();
+          });
+        },
+      );
+    }
+  }
+
+  List<Map<String, dynamic>> get _filteredResults {
+    if (_selectedTabIndex == 0) {
+      return _searchResults;
+    }
+    return _searchResults;
   }
 
   @override
@@ -120,9 +121,8 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
             style: AppTypography.headline,
           ),
           leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: () => context.pop(),
-            color: AppColors.textPrimary,
+            icon: const Icon(LucideIcons.chevronLeft, color: Colors.black),
+            onPressed: () => Navigator.pop(context),
           ),
           actions: [
             Padding(
@@ -160,40 +160,18 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildScanButton(
-                      context,
-                      icon: Icons.camera_alt,
-                      text: 'Scan a Meal',
-                      onPressed: () {},
-                    ),
-                    SizedBox(width: 16),
-                    _buildScanButton(
-                      context,
-                      icon: FontAwesomeIcons.barcode,
-                      text: 'Scan a Barcode',
-                      onPressed: () {},
-                    ),
-                  ],
-                ),
-              ),
               TabBar(
                 tabAlignment: TabAlignment.center,
                 padding: EdgeInsets.zero,
                 isScrollable: true,
-                labelColor: Colors.teal,
+                labelColor: AppColors.primary,
                 unselectedLabelColor: AppColors.textSecondary,
-                indicatorColor: Colors.teal,
+                indicatorColor: AppColors.primary,
                 indicatorWeight: 3.0,
                 onTap: (index) {
                   setState(() {
                     _selectedTabIndex = index;
                   });
-                  _filterMeals();
                 },
                 tabs: _tabs.map((tabName) => Tab(text: tabName)).toList(),
               ),
@@ -206,31 +184,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
                       top: Radius.circular(20),
                     ),
                   ),
-                  child: ListView.separated(
-                    itemCount: _filteredMealHistory.length,
-                    itemBuilder: (context, index) {
-                      final meal = _filteredMealHistory[index];
-                      return ListTile(
-                        title: Text(meal['name']),
-                        subtitle: Text(meal['quantity']),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('${meal['calories']} cals'),
-                            SizedBox(width: 8),
-                            Icon(
-                              Icons.add_circle,
-                              color: Colors.teal,
-                              size: 28,
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                    separatorBuilder:
-                        (context, index) =>
-                            Divider(height: 1, indent: 16, endIndent: 16),
-                  ),
+                  child: _buildContent(),
                 ),
               ),
             ],
@@ -240,30 +194,66 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
     );
   }
 
-  Widget _buildScanButton(
-    BuildContext context, {
-    required IconData icon,
-    required String text,
-    required VoidCallback onPressed,
-  }) {
-    return Expanded(
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          backgroundColor: Colors.white,
-          side: const BorderSide(color: Colors.white),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
+  Widget _buildContent() {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            _errorMessage!,
+            style: AppTypography.body.copyWith(color: Colors.red),
+            textAlign: TextAlign.center,
+          ),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 32, color: AppColors.textPrimary),
-            SizedBox(height: 8),
-            Text(text, style: AppTypography.body),
-          ],
+      );
+    }
+
+    if (_searchController.text.trim().isEmpty) {
+      return Center(
+        child: Text(
+          'Start typing to search for meals',
+          style: AppTypography.body.copyWith(color: AppColors.textSecondary),
         ),
-      ),
+      );
+    }
+
+    if (_filteredResults.isEmpty) {
+      return Center(
+        child: Text(
+          'No meals found',
+          style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+        ),
+      );
+    }
+
+    return ListView.separated(
+      itemCount: _filteredResults.length,
+      itemBuilder: (context, index) {
+        final meal = _filteredResults[index];
+        final name = meal['name'] ?? 'Unknown';
+        final kcalPer100g = meal['kcal_per_100gr'] ?? 0;
+
+        return ListTile(
+          title: Text(name),
+          subtitle: Text('per 100g'),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('$kcalPer100g cals'),
+              SizedBox(width: 8),
+              Icon(Icons.add_circle, color: AppColors.primary, size: 28),
+            ],
+          ),
+        );
+      },
+      separatorBuilder:
+          (context, index) => Divider(height: 1, indent: 16, endIndent: 16),
     );
   }
 }

@@ -8,6 +8,8 @@ import 'package:da1/src/data/repositories/user_repository_impl.dart';
 import 'package:da1/src/data/datasources/user_remote_data_source.dart';
 import 'package:da1/src/data/repositories/fitness_profile_repository.dart';
 import 'package:da1/src/data/datasources/fitness_profile_remote_data_source.dart';
+import 'package:da1/src/data/repositories/meal_repository.dart';
+import 'package:da1/src/data/datasources/meal_remote_data_source.dart';
 import 'package:da1/src/core/services/deep_link_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -81,11 +83,17 @@ void main() async {
         remoteDataSource: fitnessProfileRemoteDataSource,
       );
 
+  final MealRemoteDataSource mealRemoteDataSource =
+      MealRemoteDataSourceImpl(dio: dio);
+  final MealRepository mealRepository =
+      MealRepositoryImpl(remoteDataSource: mealRemoteDataSource);
+
   final AuthBloc authBloc = AuthBloc(authRepository: authRepository);
   final UserBloc userBloc = UserBloc(userRepository: userRepository);
 
-  // Set fitness profile repository for routing
+  // Set repositories for routing
   AppRoutes.setFitnessProfileRepository(fitnessProfileRepository);
+  AppRoutes.setMealRepository(mealRepository);
 
   deepLinkService.initDeepLinks(
     onTokenReceived: (String token) async {

@@ -23,11 +23,13 @@ import 'package:da1/src/presentation/screens/home/home_screen.dart';
 import 'package:da1/src/presentation/screens/auth/login_screen.dart';
 import 'package:da1/src/presentation/widgets/custom_bottom_nav.dart';
 import 'package:da1/src/data/repositories/fitness_profile_repository.dart';
+import 'package:da1/src/data/repositories/meal_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class AppRoutes {
   static FitnessProfileRepository? _fitnessProfileRepository;
+  static MealRepository? _mealRepository;
 
   static void setFitnessProfileRepository(FitnessProfileRepository repository) {
     _fitnessProfileRepository = repository;
@@ -35,6 +37,14 @@ class AppRoutes {
 
   static FitnessProfileRepository? getFitnessProfileRepository() {
     return _fitnessProfileRepository;
+  }
+
+  static void setMealRepository(MealRepository repository) {
+    _mealRepository = repository;
+  }
+
+  static MealRepository? getMealRepository() {
+    return _mealRepository;
   }
 
   static final GoRouter router = GoRouter(

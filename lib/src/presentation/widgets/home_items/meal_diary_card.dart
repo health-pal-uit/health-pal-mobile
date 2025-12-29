@@ -108,12 +108,7 @@ class MealDiaryCard extends StatelessWidget {
           ),
           child: Stack(
             children: [
-              Center(
-                child: Text(
-                  icon,
-                  style: const TextStyle(fontSize: 32),
-                ),
-              ),
+              Center(child: Text(icon, style: const TextStyle(fontSize: 32))),
               Positioned(
                 bottom: 4,
                 right: 4,
