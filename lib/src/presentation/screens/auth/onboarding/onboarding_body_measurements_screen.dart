@@ -54,15 +54,18 @@ class _OnboardingBodyMeasurementsScreenState
       extra: {
         'height': widget.height,
         'weight': widget.weight,
-        'waist': _waistController.text.trim().isNotEmpty
-            ? double.parse(_waistController.text)
-            : null,
-        'hip': _hipController.text.trim().isNotEmpty
-            ? double.parse(_hipController.text)
-            : null,
-        'neck': _neckController.text.trim().isNotEmpty
-            ? double.parse(_neckController.text)
-            : null,
+        'waist':
+            _waistController.text.trim().isNotEmpty
+                ? double.parse(_waistController.text)
+                : null,
+        'hip':
+            _hipController.text.trim().isNotEmpty
+                ? double.parse(_hipController.text)
+                : null,
+        'neck':
+            _neckController.text.trim().isNotEmpty
+                ? double.parse(_neckController.text)
+                : null,
       },
     );
   }
@@ -240,16 +243,11 @@ class _OnboardingBodyMeasurementsScreenState
               suffixText: suffix,
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(
-                  color: AppColors.textSecondary,
-                ),
+                borderSide: const BorderSide(color: AppColors.textSecondary),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(
-                  color: Colors.blue,
-                  width: 2,
-                ),
+                borderSide: const BorderSide(color: Colors.blue, width: 2),
               ),
             ),
           ),

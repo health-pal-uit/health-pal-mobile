@@ -2,9 +2,7 @@ import 'package:dio/dio.dart';
 
 abstract class FitnessProfileRemoteDataSource {
   Future<List<dynamic>> getFitnessProfiles();
-  Future<Map<String, dynamic>> createFitnessProfile(
-    Map<String, dynamic> data,
-  );
+  Future<Map<String, dynamic>> createFitnessProfile(Map<String, dynamic> data);
 }
 
 class FitnessProfileRemoteDataSourceImpl

@@ -7,10 +7,7 @@ import 'package:go_router/go_router.dart';
 class OnboardingActivityLevelScreen extends StatefulWidget {
   final Map<String, double?> measurements;
 
-  const OnboardingActivityLevelScreen({
-    super.key,
-    required this.measurements,
-  });
+  const OnboardingActivityLevelScreen({super.key, required this.measurements});
 
   @override
   State<OnboardingActivityLevelScreen> createState() =>
@@ -99,9 +96,9 @@ class _OnboardingActivityLevelScreenState
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error creating profile: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error creating profile: $e')));
       }
     } finally {
       if (mounted) {
@@ -190,7 +187,10 @@ class _OnboardingActivityLevelScreenState
                                   : AppColors.backgroundLight,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: isSelected ? AppColors.primary : Colors.grey.shade300,
+                            color:
+                                isSelected
+                                    ? AppColors.primary
+                                    : Colors.grey.shade300,
                             width: 2,
                           ),
                         ),
@@ -200,7 +200,8 @@ class _OnboardingActivityLevelScreenState
                               isSelected
                                   ? Icons.radio_button_checked
                                   : Icons.radio_button_unchecked,
-                              color: isSelected ? AppColors.primary : Colors.grey,
+                              color:
+                                  isSelected ? AppColors.primary : Colors.grey,
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -239,12 +240,12 @@ class _OnboardingActivityLevelScreenState
                         _isLoading
                             ? null
                             : () => context.pushNamed(
-                                  'onboarding-body-measurements',
-                                  extra: {
-                                    'height': widget.measurements['height'],
-                                    'weight': widget.measurements['weight'],
-                                  },
-                                ),
+                              'onboarding-body-measurements',
+                              extra: {
+                                'height': widget.measurements['height'],
+                                'weight': widget.measurements['weight'],
+                              },
+                            ),
                     style: ElevatedButton.styleFrom(
                       shape: const CircleBorder(),
                       backgroundColor: const Color(0xFFFFE5C2),
@@ -277,21 +278,21 @@ class _OnboardingActivityLevelScreenState
                       child:
                           _isLoading
                               ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Text(
-                                  "COMPLETE",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 1.2,
-                                  ),
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
                                 ),
+                              )
+                              : const Text(
+                                "COMPLETE",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
                     ),
                   ),
                 ],

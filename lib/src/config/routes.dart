@@ -76,9 +76,13 @@ class AppRoutes {
           final measurements = {
             'height': (data['height'] as num).toDouble(),
             'weight': (data['weight'] as num).toDouble(),
-            'waist': data['waist'] != null ? (data['waist'] as num).toDouble() : null,
+            'waist':
+                data['waist'] != null
+                    ? (data['waist'] as num).toDouble()
+                    : null,
             'hip': data['hip'] != null ? (data['hip'] as num).toDouble() : null,
-            'neck': data['neck'] != null ? (data['neck'] as num).toDouble() : null,
+            'neck':
+                data['neck'] != null ? (data['neck'] as num).toDouble() : null,
           };
           return OnboardingActivityLevelScreen(measurements: measurements);
         },
