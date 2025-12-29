@@ -96,6 +96,12 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
+    if (mounted) {
+      setState(() {
+        isLoadingDailyLog = true;
+      });
+    }
+
     try {
       final dateStr =
           '${selectedDate.day.toString().padLeft(2, '0')}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.year}';
@@ -153,6 +159,16 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 20),
               MealDiaryCard(
                 dailyMeals: dailyLog?['daily_meals'] as List<dynamic>?,
+                onAddMeal: (mealType) async {
+                  final result = await context.push(
+                    '/foodSearch?mealType=$mealType',
+                  );
+                  // Reload daily log if a meal was added
+                  if (result == true && mounted) {
+                    await _loadDailyLog();
+                    setState(() {}); // Force rebuild
+                  }
+                },
               ),
               const SizedBox(height: 20),
               _buildSmallCards(),
@@ -291,18 +307,22 @@ class _HomeScreenState extends State<HomeScreen> {
         dailyLog != null ? (dailyLog!['total_kcal_eaten'] ?? 0).toInt() : 0;
 
     // Get macro nutrients from daily log
-    final protein = dailyLog != null
-        ? (dailyLog!['total_protein_gr'] as num?)?.toDouble()
-        : null;
-    final fat = dailyLog != null
-        ? (dailyLog!['total_fat_gr'] as num?)?.toDouble()
-        : null;
-    final carbs = dailyLog != null
-        ? (dailyLog!['total_carbs_gr'] as num?)?.toDouble()
-        : null;
-    final fiber = dailyLog != null
-        ? (dailyLog!['total_fiber_gr'] as num?)?.toDouble()
-        : null;
+    final protein =
+        dailyLog != null
+            ? (dailyLog!['total_protein_gr'] as num?)?.toDouble()
+            : null;
+    final fat =
+        dailyLog != null
+            ? (dailyLog!['total_fat_gr'] as num?)?.toDouble()
+            : null;
+    final carbs =
+        dailyLog != null
+            ? (dailyLog!['total_carbs_gr'] as num?)?.toDouble()
+            : null;
+    final fiber =
+        dailyLog != null
+            ? (dailyLog!['total_fiber_gr'] as num?)?.toDouble()
+            : null;
 
     return KcalCircularProgressCard(
       consumed: consumed,
@@ -366,7 +386,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 subtitle: 'Track your meals',
                 icon: LucideIcons.carrot,
                 color: AppColors.primary,
-                onTap: () => context.push('/foodSearch'),
+                onTap: () async {
+                  final result = await context.push('/foodSearch');
+                  // Reload daily log if a meal was added
+                  if (result == true && mounted) {
+                    await _loadDailyLog();
+                    setState(() {}); // Force rebuild
+                  }
+                },
               ),
             ),
           ],

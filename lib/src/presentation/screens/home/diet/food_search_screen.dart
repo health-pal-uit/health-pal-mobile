@@ -6,14 +6,16 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class FoodSearchScreen extends StatefulWidget {
-  const FoodSearchScreen({super.key});
+  final String? initialMealType;
+
+  const FoodSearchScreen({super.key, this.initialMealType});
 
   @override
   State<FoodSearchScreen> createState() => _FoodSearchScreenState();
 }
 
 class _FoodSearchScreenState extends State<FoodSearchScreen> {
-  String _selectedMealType = 'Breakfast';
+  late String _selectedMealType;
   final TextEditingController _searchController = TextEditingController();
 
   List<Map<String, dynamic>> _searchResults = [];
@@ -25,6 +27,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedMealType = widget.initialMealType ?? 'Breakfast';
     _searchController.addListener(_onSearchChanged);
   }
 
@@ -251,8 +254,10 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
               Icon(Icons.add_circle, color: AppColors.primary, size: 28),
             ],
           ),
-          onTap: () {
-            Navigator.push(
+          onTap: () async {
+            if (!context.mounted) return;
+
+            final result = await Navigator.push(
               context,
               MaterialPageRoute(
                 builder:
@@ -262,6 +267,11 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
                     ),
               ),
             );
+
+            // If meal was added successfully, pop back to home screen with success flag
+            if (result == true && context.mounted) {
+              Navigator.pop(context, true);
+            }
           },
         );
       },

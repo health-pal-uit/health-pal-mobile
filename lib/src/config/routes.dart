@@ -162,7 +162,10 @@ class AppRoutes {
       GoRoute(
         path: '/foodSearch',
         name: 'foodSearch',
-        builder: (context, state) => FoodSearchScreen(),
+        builder: (context, state) {
+          final mealType = state.uri.queryParameters['mealType'];
+          return FoodSearchScreen(initialMealType: mealType);
+        },
       ),
       GoRoute(
         path: '/meal-scan',

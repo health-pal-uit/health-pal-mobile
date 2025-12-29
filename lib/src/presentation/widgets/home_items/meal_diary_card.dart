@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 
 class MealDiaryCard extends StatelessWidget {
   final List<dynamic>? dailyMeals;
+  final Function(String mealType)? onAddMeal;
 
-  const MealDiaryCard({super.key, this.dailyMeals});
+  const MealDiaryCard({super.key, this.dailyMeals, this.onAddMeal});
 
   int _getMealCount(String mealType) {
     if (dailyMeals == null) return 0;
@@ -117,55 +118,58 @@ class MealDiaryCard extends StatelessWidget {
   }) {
     return Column(
       children: [
-        Container(
-          width: 70,
-          height: 70,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Stack(
-            children: [
-              Center(child: Text(icon, style: const TextStyle(fontSize: 32))),
-              if (count > 0)
-                Positioned(
-                  top: 4,
-                  right: 4,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      count.toString(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
+        GestureDetector(
+          onTap: () => onAddMeal?.call(label),
+          child: Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Stack(
+              children: [
+                Center(child: Text(icon, style: const TextStyle(fontSize: 32))),
+                if (count > 0)
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        count.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              Positioned(
-                bottom: 4,
-                right: 4,
-                child: Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.primary, width: 2),
+                Positioned(
+                  bottom: 4,
+                  right: 4,
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.primary, width: 2),
+                    ),
+                    child: const Icon(
+                      Icons.add,
+                      size: 16,
+                      color: AppColors.primary,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.add,
-                    size: 16,
-                    color: AppColors.primary,
-                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 8),
