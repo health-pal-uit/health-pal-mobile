@@ -220,9 +220,7 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
                 margin: const EdgeInsets.only(top: 16.0),
                 decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(20),
-                  ),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                 ),
                 child: _buildContent(),
               ),
@@ -287,8 +285,9 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
           },
         );
       },
-      separatorBuilder: (context, index) =>
-          const Divider(height: 1, indent: 16, endIndent: 16),
+      separatorBuilder:
+          (context, index) =>
+              const Divider(height: 1, indent: 16, endIndent: 16),
     );
   }
 }

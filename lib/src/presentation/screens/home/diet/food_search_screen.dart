@@ -19,8 +19,9 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   List<Map<String, dynamic>> _searchResults = [];
+  List<Map<String, dynamic>> _favoriteResults = [];
   int _selectedTabIndex = 0;
-  final List<String> _tabs = ['All', 'My Meals', 'My Recipes'];
+  final List<String> _tabs = ['All', 'Favorites', 'My Recipes'];
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -29,6 +30,26 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
     super.initState();
     _selectedMealType = widget.initialMealType ?? 'Breakfast';
     _searchController.addListener(_onSearchChanged);
+    _loadFavoriteMeals();
+  }
+
+  Future<void> _loadFavoriteMeals() async {
+    final repository = AppRoutes.getMealRepository();
+    if (repository == null) return;
+
+    final result = await repository.getFavoriteMeals(page: 1, limit: 100);
+    if (mounted) {
+      result.fold(
+        (failure) {
+          // Silently fail for favorites
+        },
+        (meals) {
+          setState(() {
+            _favoriteResults = meals.cast<Map<String, dynamic>>();
+          });
+        },
+      );
+    }
   }
 
   @override
@@ -88,9 +109,21 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
 
   List<Map<String, dynamic>> get _filteredResults {
     if (_selectedTabIndex == 0) {
+      // All tab - show search results
       return _searchResults;
+    } else if (_selectedTabIndex == 1) {
+      // Favorites tab - show favorites filtered by search if any
+      if (_searchController.text.trim().isEmpty) {
+        return _favoriteResults;
+      }
+      final query = _searchController.text.trim().toLowerCase();
+      return _favoriteResults.where((meal) {
+        final name = (meal['name'] ?? '').toString().toLowerCase();
+        return name.contains(query);
+      }).toList();
     }
-    return _searchResults;
+    // My Recipes tab - not implemented yet
+    return [];
   }
 
   @override
@@ -109,6 +142,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
                   'Breakfast',
                   'Lunch',
                   'Dinner',
+                  'Snack',
                 ].map<DropdownMenuItem<String>>((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
@@ -128,14 +162,6 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
             icon: const Icon(LucideIcons.chevronLeft, color: Colors.black),
             onPressed: () => Navigator.pop(context),
           ),
-          actions: [
-            Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Center(
-                child: Text('02:59', style: TextStyle(fontSize: 16)),
-              ),
-            ),
-          ],
         ),
         body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -218,7 +244,8 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
       );
     }
 
-    if (_searchController.text.trim().isEmpty) {
+    // Handle empty search for All tab
+    if (_searchController.text.trim().isEmpty && _selectedTabIndex == 0) {
       return Center(
         child: Text(
           'Start typing to search for meals',
@@ -227,7 +254,17 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
       );
     }
 
+    // Handle empty results
     if (_filteredResults.isEmpty) {
+      if (_selectedTabIndex == 1) {
+        // Favorites tab - no favorites
+        return Center(
+          child: Text(
+            'No favorite meals yet',
+            style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+          ),
+        );
+      }
       return Center(
         child: Text(
           'No meals found',

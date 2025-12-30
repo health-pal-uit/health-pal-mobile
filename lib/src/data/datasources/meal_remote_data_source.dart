@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 abstract class MealRemoteDataSource {
   Future<List<dynamic>> searchMeals(String name);
+  Future<List<dynamic>> getFavoriteMeals({int page = 1, int limit = 10});
 }
 
 class MealRemoteDataSourceImpl implements MealRemoteDataSource {
@@ -22,6 +23,31 @@ class MealRemoteDataSourceImpl implements MealRemoteDataSource {
       }
       throw Exception(
         'Failed to search meals - Status: ${response.statusCode}',
+      );
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception('Network error: ${e.message}');
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<dynamic>> getFavoriteMeals({int page = 1, int limit = 10}) async {
+    try {
+      final response = await dio.get(
+        '/fav-meals/user',
+        queryParameters: {'page': page, 'limit': limit},
+      );
+
+      if (response.statusCode == 200) {
+        final outerData = response.data['data'];
+        final favMeals = outerData['data'] as List<dynamic>;
+        // Extract the meal object from each favorite
+        return favMeals.map((fav) => fav['meal']).toList();
+      }
+      throw Exception(
+        'Failed to get favorite meals - Status: ${response.statusCode}',
       );
     } catch (e) {
       if (e is DioException) {
