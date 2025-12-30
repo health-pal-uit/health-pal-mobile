@@ -53,7 +53,7 @@ class AddActionBottomSheet extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           _menuItem(Icons.local_drink, "Water"),
-          _menuItem(Icons.local_fire_department, "Exercise"),
+          _menuItem(Icons.local_fire_department, "Activity"),
           _menuItem(Icons.monitor_weight, "Weight"),
           const SizedBox(height: 20),
         ],

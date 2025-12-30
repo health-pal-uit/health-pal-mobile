@@ -1,4 +1,6 @@
 import 'package:da1/src/config/theme/app_colors.dart';
+import 'package:da1/src/config/routes.dart';
+import 'package:da1/src/domain/entities/activity.dart';
 import 'package:flutter/material.dart';
 
 class AddActivityScreen extends StatefulWidget {
@@ -9,14 +11,78 @@ class AddActivityScreen extends StatefulWidget {
 }
 
 class _AddActivityScreenState extends State<AddActivityScreen> {
-  final List<Map<String, dynamic>> activities = [
-    {'title': 'Chạy nhanh (Running)', 'section': 'Recently Activities'},
-    {'title': 'Bóng bầu dục Úc (Australian Football)', 'section': 'B'},
-    {'title': 'Bóng chày (Baseball)', 'section': 'B'},
-    {'title': 'Bowling', 'section': 'B'},
-    {'title': 'Bóng đá trong nhà (Futsal)', 'section': 'B'},
-    {'title': 'Bài tập thể chất (Calisthenics)', 'section': 'B'},
-  ];
+  List<Activity> activities = [];
+  List<Activity> filteredActivities = [];
+  bool isLoading = true;
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadActivities();
+    _searchController.addListener(_filterActivities);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadActivities() async {
+    final repository = AppRoutes.getActivityRepository();
+    if (repository == null) {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+      return;
+    }
+
+    try {
+      final result = await repository.getActivities();
+      result.fold(
+        (failure) {
+          if (mounted) {
+            setState(() {
+              isLoading = false;
+            });
+          }
+        },
+        (activityList) {
+          if (mounted) {
+            setState(() {
+              activities = activityList;
+              filteredActivities = activityList;
+              isLoading = false;
+            });
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _filterActivities() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      if (query.isEmpty) {
+        filteredActivities = activities;
+      } else {
+        filteredActivities = activities
+            .where(
+              (activity) => activity.name.toLowerCase().contains(query),
+            )
+            .toList();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +117,8 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: TextField(
-              style: const TextStyle(color: Colors.white),
+              controller: _searchController,
+              style: const TextStyle(color: AppColors.textPrimary),
               decoration: InputDecoration(
                 hintText: 'Search activities',
                 hintStyle: TextStyle(color: AppColors.textPrimary),
@@ -73,55 +140,65 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
           const SizedBox(height: 10),
 
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: activities.length,
-              itemBuilder: (context, index) {
-                final activity = activities[index];
-                final showSection =
-                    index == 0 ||
-                    activity['section'] != activities[index - 1]['section'];
+            child: isLoading
+                ? const Center(
+                  child: CircularProgressIndicator(
+                    color: AppColors.primary,
+                  ),
+                )
+                : filteredActivities.isEmpty
+                    ? const Center(
+                      child: Text(
+                        'No activities found',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 16,
+                        ),
+                      ),
+                    )
+                    : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: filteredActivities.length,
+                      itemBuilder: (context, index) {
+                        final activity = filteredActivities[index];
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (showSection)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 12, bottom: 6),
-                        child: Text(
-                          activity['section'],
-                          style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ListTile(
-                      title: Text(
-                        activity['title'],
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 15,
-                        ),
-                      ),
-                      trailing: const Icon(
-                        Icons.arrow_forward_ios,
-                        color: Colors.black,
-                        size: 16,
-                      ),
-                      contentPadding: EdgeInsets.zero,
-                      onTap: () {},
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ListTile(
+                              title: Text(
+                                activity.name,
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              subtitle: Text(
+                                'MET: ${activity.metValue.toStringAsFixed(1)} • ${activity.categories.join(", ")}',
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              trailing: const Icon(
+                                Icons.arrow_forward_ios,
+                                color: Colors.black,
+                                size: 16,
+                              ),
+                              contentPadding: EdgeInsets.zero,
+                              onTap: () {
+                                // TODO: Navigate to activity detail or log activity
+                              },
+                            ),
+                            const Divider(
+                              color: Colors.black,
+                              thickness: 0.5,
+                              height: 4,
+                            ),
+                          ],
+                        );
+                      },
                     ),
-                    const Divider(
-                      color: Colors.black,
-                      thickness: 0.5,
-                      height: 4,
-                    ),
-                  ],
-                );
-              },
-            ),
           ),
         ],
       ),

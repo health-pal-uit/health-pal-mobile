@@ -6,6 +6,8 @@ import 'package:da1/src/presentation/widgets/charts/steps_progress.dart';
 import 'package:da1/src/presentation/widgets/charts/water_intake.dart';
 import 'package:da1/src/presentation/widgets/home_items/workout_card.dart';
 import 'package:da1/src/presentation/widgets/home_items/meal_diary_card.dart';
+import 'package:da1/src/presentation/widgets/diet_type_bottom_sheet.dart';
+import 'package:da1/src/domain/entities/diet_type.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -29,6 +31,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isLoadingDailyLog = true;
   Map<String, dynamic>? fitnessGoal;
   bool isLoadingFitnessGoal = true;
+  List<DietType> dietTypes = [];
+  bool isLoadingDietTypes = true;
 
   @override
   void initState() {
@@ -37,6 +41,117 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadFitnessProfile();
     _loadDailyLog();
     _loadFitnessGoal();
+    _loadDietTypes();
+  }
+
+  Future<void> _loadDietTypes() async {
+    final repository = AppRoutes.getDietTypeRepository();
+    if (repository == null) {
+      if (mounted) {
+        setState(() {
+          isLoadingDietTypes = false;
+        });
+      }
+      return;
+    }
+
+    try {
+      final result = await repository.getDietTypes();
+      result.fold(
+        (failure) {
+          if (mounted) {
+            setState(() {
+              isLoadingDietTypes = false;
+            });
+          }
+        },
+        (types) {
+          if (mounted) {
+            setState(() {
+              dietTypes = types;
+              isLoadingDietTypes = false;
+            });
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          isLoadingDietTypes = false;
+        });
+      }
+    }
+  }
+
+  void _showDietTypeBottomSheet() {
+    if (dietTypes.isEmpty || fitnessGoal == null) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder:
+          (context) => DietTypeBottomSheet(
+            dietTypes: dietTypes,
+            currentDietTypeId: fitnessGoal!['diet_type_id'] as String?,
+            totalKcal: (fitnessGoal!['target_kcal'] as num?)?.toInt() ?? 2000,
+          ),
+    ).then((selectedDietType) {
+      if (selectedDietType != null && selectedDietType is DietType) {
+        _updateFitnessGoalDietType(selectedDietType);
+      }
+    });
+  }
+
+  Future<void> _updateFitnessGoalDietType(DietType dietType) async {
+    final repository = AppRoutes.getFitnessGoalRepository();
+    if (repository == null) return;
+
+    try {
+      final targetKcal = fitnessGoal!['target_kcal'] as int;
+      final payload = {
+        'diet_type_id': dietType.id,
+        'target_protein_gr': dietType.getProteinGrams(targetKcal),
+        'target_fat_gr': dietType.getFatGrams(targetKcal),
+        'target_carbs_gr': dietType.getCarbsGrams(targetKcal),
+      };
+
+      final result = await repository.updateFitnessGoal(payload);
+      result.fold(
+        (failure) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error: ${failure.message}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        (updatedGoal) {
+          if (mounted) {
+            setState(() {
+              fitnessGoal = updatedGoal['data'];
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Completed Update Diet Type: ${dietType.name}'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error updating diet type: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _loadFitnessProfile() async {
@@ -230,12 +345,23 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('TODAY, $todayDate', style: AppTypography.body),
-            IconButton(
-              icon: const Icon(
-                Icons.notifications_none_outlined,
-                color: AppColors.textPrimary,
-              ),
-              onPressed: () => context.push('/notifications'),
+            Row(
+              children: [
+                IconButton(
+                  icon: Icon(
+                    LucideIcons.calendar,
+                    color: AppColors.textPrimary,
+                  ),
+                  onPressed: null,
+                ),
+                IconButton(
+                  icon: const Icon(
+                    Icons.notifications_none_outlined,
+                    color: AppColors.textPrimary,
+                  ),
+                  onPressed: () => context.push('/notifications'),
+                ),
+              ],
             ),
           ],
         ),
@@ -341,7 +467,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildKcalCard() {
-    // Use target_kcal from fitness goal if available, fallback to tdeeKcal
     final needed =
         fitnessGoal != null
             ? (fitnessGoal!['target_kcal'] as num?)?.toInt() ?? 2000
@@ -350,7 +475,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final consumed =
         dailyLog != null ? (dailyLog!['total_kcal_eaten'] ?? 0).toInt() : 0;
 
-    // Get macro nutrients from daily log
     final protein =
         dailyLog != null
             ? (dailyLog!['total_protein_gr'] as num?)?.toDouble()
@@ -394,6 +518,7 @@ class _HomeScreenState extends State<HomeScreen> {
               : null,
       goalType:
           fitnessGoal != null ? fitnessGoal!['goal_type'] as String? : null,
+      onDietTypePressed: _showDietTypeBottomSheet,
     );
   }
 
@@ -450,10 +575,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: AppColors.primary,
                 onTap: () async {
                   final result = await context.push('/foodSearch');
-                  // Reload daily log if a meal was added
                   if (result == true && mounted) {
                     await _loadDailyLog();
-                    setState(() {}); // Force rebuild
+                    setState(() {});
                   }
                 },
               ),

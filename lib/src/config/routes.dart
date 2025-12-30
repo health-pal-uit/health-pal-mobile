@@ -30,6 +30,8 @@ import 'package:da1/src/data/repositories/fitness_goal_repository.dart';
 import 'package:da1/src/data/repositories/meal_repository.dart';
 import 'package:da1/src/data/repositories/daily_meal_repository.dart';
 import 'package:da1/src/data/repositories/daily_log_repository.dart';
+import 'package:da1/src/data/repositories/diet_type_repository.dart';
+import 'package:da1/src/data/repositories/activity_repository.dart';
 import 'package:da1/src/data/repositories/auth_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -40,6 +42,8 @@ class AppRoutes {
   static MealRepository? _mealRepository;
   static DailyMealRepository? _dailyMealRepository;
   static DailyLogRepository? _dailyLogRepository;
+  static DietTypeRepository? _dietTypeRepository;
+  static ActivityRepository? _activityRepository;
   static AuthRepository? _authRepository;
 
   static void setFitnessProfileRepository(FitnessProfileRepository repository) {
@@ -80,6 +84,22 @@ class AppRoutes {
 
   static DailyLogRepository? getDailyLogRepository() {
     return _dailyLogRepository;
+  }
+
+  static void setDietTypeRepository(DietTypeRepository repository) {
+    _dietTypeRepository = repository;
+  }
+
+  static DietTypeRepository? getDietTypeRepository() {
+    return _dietTypeRepository;
+  }
+
+  static void setActivityRepository(ActivityRepository repository) {
+    _activityRepository = repository;
+  }
+
+  static ActivityRepository? getActivityRepository() {
+    return _activityRepository;
   }
 
   static void setAuthRepository(AuthRepository repository) {

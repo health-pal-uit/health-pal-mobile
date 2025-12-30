@@ -16,6 +16,10 @@ import 'package:da1/src/data/repositories/daily_meal_repository.dart';
 import 'package:da1/src/data/datasources/daily_meal_remote_data_source.dart';
 import 'package:da1/src/data/repositories/daily_log_repository.dart';
 import 'package:da1/src/data/datasources/daily_log_remote_data_source.dart';
+import 'package:da1/src/data/repositories/diet_type_repository.dart';
+import 'package:da1/src/data/datasources/diet_type_remote_data_source.dart';
+import 'package:da1/src/data/repositories/activity_repository.dart';
+import 'package:da1/src/data/datasources/activity_remote_data_source.dart';
 import 'package:da1/src/core/services/deep_link_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -52,7 +56,7 @@ void main() async {
   final dio = Dio(
     BaseOptions(
       baseUrl: ApiConfig.baseUrl,
-      connectTimeout: const Duration(seconds: 5),
+      connectTimeout: const Duration(seconds: 10),
     ),
   );
   dio.interceptors.add(
@@ -114,6 +118,18 @@ void main() async {
     remoteDataSource: dailyLogRemoteDataSource,
   );
 
+  final DietTypeRemoteDataSource dietTypeRemoteDataSource =
+      DietTypeRemoteDataSourceImpl(dio: dio);
+  final DietTypeRepository dietTypeRepository = DietTypeRepositoryImpl(
+    remoteDataSource: dietTypeRemoteDataSource,
+  );
+
+  final ActivityRemoteDataSource activityRemoteDataSource =
+      ActivityRemoteDataSourceImpl(dio: dio);
+  final ActivityRepository activityRepository = ActivityRepositoryImpl(
+    remoteDataSource: activityRemoteDataSource,
+  );
+
   final AuthBloc authBloc = AuthBloc(authRepository: authRepository);
   final UserBloc userBloc = UserBloc(userRepository: userRepository);
 
@@ -127,6 +143,8 @@ void main() async {
   AppRoutes.setMealRepository(mealRepository);
   AppRoutes.setDailyMealRepository(dailyMealRepository);
   AppRoutes.setDailyLogRepository(dailyLogRepository);
+  AppRoutes.setDietTypeRepository(dietTypeRepository);
+  AppRoutes.setActivityRepository(activityRepository);
 
   deepLinkService.initDeepLinks(
     onTokenReceived: (String token) async {

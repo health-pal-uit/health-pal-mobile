@@ -15,6 +15,7 @@ class KcalCircularProgressCard extends StatelessWidget {
   final int? carbsGoal;
   final int? fiberGoal;
   final String? goalType;
+  final VoidCallback? onDietTypePressed;
 
   const KcalCircularProgressCard({
     super.key,
@@ -30,6 +31,7 @@ class KcalCircularProgressCard extends StatelessWidget {
     this.carbsGoal,
     this.fiberGoal,
     this.goalType,
+    this.onDietTypePressed,
   });
 
   @override
@@ -209,22 +211,53 @@ class KcalCircularProgressCard extends StatelessWidget {
           const SizedBox(height: 16),
 
           Center(
-            child: Text.rich(
-              TextSpan(
-                text: 'Current diet plan: ',
-                style: AppTypography.body.copyWith(
-                  fontSize: 13,
-                  color: AppColors.textSecondary,
-                ),
-                children: [
-                  TextSpan(
-                    text: goalTypeDisplay,
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
+            child: GestureDetector(
+              onTap: onDietTypePressed,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                    width: 1,
                   ),
-                ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.restaurant_menu,
+                      size: 16,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 6),
+                    Text.rich(
+                      TextSpan(
+                        text: 'Current diet type: ',
+                        style: AppTypography.body.copyWith(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: goalTypeDisplay,
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.arrow_drop_down,
+                      size: 20,
+                      color: AppColors.primary,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
