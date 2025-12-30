@@ -9,7 +9,7 @@ abstract class MealRepository {
     int limit = 10,
   });
   Future<Either<Failure, bool>> checkIfFavorited(String mealId);
-  Future<Either<Failure, void>> toggleFavorite(String mealId);
+  Future<Either<Failure, void>> toggleFavorite(String userId, String mealId);
 }
 
 class MealRepositoryImpl implements MealRepository {
@@ -54,9 +54,9 @@ class MealRepositoryImpl implements MealRepository {
   }
 
   @override
-  Future<Either<Failure, void>> toggleFavorite(String mealId) async {
+  Future<Either<Failure, void>> toggleFavorite(String userId, String mealId) async {
     try {
-      await remoteDataSource.toggleFavorite(mealId);
+      await remoteDataSource.toggleFavorite(userId, mealId);
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

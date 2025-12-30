@@ -1,7 +1,10 @@
 import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/presentation/bloc/auth/auth_bloc.dart';
+import 'package:da1/src/presentation/bloc/auth/auth_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class MealDetailScreen extends StatefulWidget {
@@ -77,6 +80,18 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
     final mealId = widget.meal['id'];
     if (mealId == null || _isTogglingFavorite) return;
 
+    // Get user ID from AuthBloc
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! Authenticated) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User not authenticated')),
+        );
+      }
+      return;
+    }
+    final userId = authState.user.id;
+
     setState(() => _isTogglingFavorite = true);
 
     final repository = AppRoutes.getMealRepository();
@@ -85,7 +100,7 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
       return;
     }
 
-    final result = await repository.toggleFavorite(mealId);
+    final result = await repository.toggleFavorite(userId, mealId);
     if (mounted) {
       setState(() => _isTogglingFavorite = false);
 
@@ -271,8 +286,7 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
                               ),
                             );
                           },
-                          loadingBuilder:
-                              (context, child, loadingProgress) {
+                          loadingBuilder: (context, child, loadingProgress) {
                             if (loadingProgress == null) return child;
                             return Container(
                               decoration: BoxDecoration(

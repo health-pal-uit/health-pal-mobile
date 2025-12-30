@@ -345,6 +345,11 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
               ),
             );
 
+            // Reload favorites when returning from meal detail
+            if (context.mounted) {
+              _loadFavoriteMeals();
+            }
+
             if (result == true && context.mounted) {
               Navigator.pop(context, true);
             }

@@ -4,7 +4,7 @@ abstract class MealRemoteDataSource {
   Future<List<dynamic>> searchMeals(String name);
   Future<List<dynamic>> getFavoriteMeals({int page = 1, int limit = 10});
   Future<bool> checkIfFavorited(String mealId);
-  Future<void> toggleFavorite(String mealId);
+  Future<void> toggleFavorite(String userId, String mealId);
 }
 
 class MealRemoteDataSourceImpl implements MealRemoteDataSource {
@@ -80,9 +80,15 @@ class MealRemoteDataSourceImpl implements MealRemoteDataSource {
   }
 
   @override
-  Future<void> toggleFavorite(String mealId) async {
+  Future<void> toggleFavorite(String userId, String mealId) async {
     try {
-      final response = await dio.post('/fav-meals/$mealId');
+      final response = await dio.post(
+        '/fav-meals',
+        data: {
+          'user_id': userId,
+          'meal_id': mealId,
+        },
+      );
 
       if (response.statusCode != 200 && response.statusCode != 201) {
         throw Exception(
