@@ -4,7 +4,10 @@ import 'package:da1/src/domain/entities/activity.dart';
 import 'package:dartz/dartz.dart';
 
 abstract class ActivityRepository {
-  Future<Either<Failure, List<Activity>>> getActivities();
+  Future<Either<Failure, List<Activity>>> getActivities({
+    int page = 1,
+    int limit = 20,
+  });
 }
 
 class ActivityRepositoryImpl implements ActivityRepository {
@@ -13,9 +16,15 @@ class ActivityRepositoryImpl implements ActivityRepository {
   ActivityRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, List<Activity>>> getActivities() async {
+  Future<Either<Failure, List<Activity>>> getActivities({
+    int page = 1,
+    int limit = 20,
+  }) async {
     try {
-      final data = await remoteDataSource.getActivities();
+      final data = await remoteDataSource.getActivities(
+        page: page,
+        limit: limit,
+      );
       final activities = data.map((json) => Activity.fromJson(json)).toList();
       return Right(activities);
     } catch (e) {

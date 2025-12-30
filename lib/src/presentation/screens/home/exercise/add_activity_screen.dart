@@ -13,23 +13,49 @@ class AddActivityScreen extends StatefulWidget {
 class _AddActivityScreenState extends State<AddActivityScreen> {
   List<Activity> activities = [];
   List<Activity> filteredActivities = [];
-  bool isLoading = true;
+  bool isLoading = false;
+  bool isLoadingMore = false;
+  bool hasMore = true;
+  int currentPage = 1;
+  final int pageSize = 20;
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _loadActivities();
     _searchController.addListener(_filterActivities);
+    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent * 0.8 &&
+        !isLoadingMore &&
+        hasMore &&
+        _searchController.text.isEmpty) {
+      _loadMoreActivities();
+    }
+  }
+
   Future<void> _loadActivities() async {
+    if (isLoading) return;
+
+    setState(() {
+      isLoading = true;
+      currentPage = 1;
+      activities = [];
+      hasMore = true;
+    });
+
     final repository = AppRoutes.getActivityRepository();
     if (repository == null) {
       if (mounted) {
@@ -41,7 +67,10 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
     }
 
     try {
-      final result = await repository.getActivities();
+      final result = await repository.getActivities(
+        page: currentPage,
+        limit: pageSize,
+      );
       result.fold(
         (failure) {
           if (mounted) {
@@ -56,6 +85,7 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
               activities = activityList;
               filteredActivities = activityList;
               isLoading = false;
+              hasMore = activityList.length >= pageSize;
             });
           }
         },
@@ -69,18 +99,68 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
     }
   }
 
+  Future<void> _loadMoreActivities() async {
+    if (isLoadingMore || !hasMore) return;
+
+    setState(() {
+      isLoadingMore = true;
+    });
+
+    final repository = AppRoutes.getActivityRepository();
+    if (repository == null) {
+      if (mounted) {
+        setState(() {
+          isLoadingMore = false;
+        });
+      }
+      return;
+    }
+
+    try {
+      final result = await repository.getActivities(
+        page: currentPage + 1,
+        limit: pageSize,
+      );
+      result.fold(
+        (failure) {
+          if (mounted) {
+            setState(() {
+              isLoadingMore = false;
+            });
+          }
+        },
+        (activityList) {
+          if (mounted) {
+            setState(() {
+              currentPage++;
+              activities.addAll(activityList);
+              filteredActivities = activities;
+              isLoadingMore = false;
+              hasMore = activityList.length >= pageSize;
+            });
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          isLoadingMore = false;
+        });
+      }
+    }
+  }
+
   void _filterActivities() {
     final query = _searchController.text.toLowerCase();
     setState(() {
       if (query.isEmpty) {
         filteredActivities = activities;
       } else {
-        filteredActivities =
-            activities
-                .where(
-                  (activity) => activity.name.toLowerCase().contains(query),
-                )
-                .toList();
+        filteredActivities = activities
+            .where(
+              (activity) => activity.name.toLowerCase().contains(query),
+            )
+            .toList();
       }
     });
   }
@@ -141,66 +221,78 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
           const SizedBox(height: 10),
 
           Expanded(
-            child:
-                isLoading
-                    ? const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.primary,
-                      ),
-                    )
-                    : filteredActivities.isEmpty
-                    ? const Center(
-                      child: Text(
-                        'No activities found',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 16,
-                        ),
-                      ),
-                    )
-                    : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: filteredActivities.length,
-                      itemBuilder: (context, index) {
-                        final activity = filteredActivities[index];
-
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ListTile(
-                              title: Text(
-                                activity.name,
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 15,
-                                ),
-                              ),
-                              subtitle: Text(
-                                'MET: ${activity.metValue.toStringAsFixed(1)} • ${activity.categories.join(", ")}',
-                                style: const TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              trailing: const Icon(
-                                Icons.arrow_forward_ios,
-                                color: Colors.black,
-                                size: 16,
-                              ),
-                              contentPadding: EdgeInsets.zero,
-                              onTap: () {
-                                // TODO: Navigate to activity detail or log activity
-                              },
-                            ),
-                            const Divider(
-                              color: Colors.black,
-                              thickness: 0.5,
-                              height: 4,
-                            ),
-                          ],
-                        );
-                      },
+            child: isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.primary,
                     ),
+                  )
+                : filteredActivities.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'No activities found',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 16,
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount:
+                            filteredActivities.length + (isLoadingMore ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (index == filteredActivities.length) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            );
+                          }
+
+                          final activity = filteredActivities[index];
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ListTile(
+                                title: Text(
+                                  activity.name,
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  'MET: ${activity.metValue.toStringAsFixed(1)} • ${activity.categories.join(", ")}',
+                                  style: const TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                trailing: const Icon(
+                                  Icons.arrow_forward_ios,
+                                  color: Colors.black,
+                                  size: 16,
+                                ),
+                                contentPadding: EdgeInsets.zero,
+                                onTap: () {
+                                  // TODO: Navigate to activity detail or log activity
+                                },
+                              ),
+                              const Divider(
+                                color: Colors.black,
+                                thickness: 0.5,
+                                height: 4,
+                              ),
+                            ],
+                          );
+                        },
+                      ),
           ),
         ],
       ),
