@@ -282,44 +282,45 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
         final imageUrl = meal['image_url'] as String?;
 
         return ListTile(
-          leading: imageUrl != null && imageUrl.isNotEmpty
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    imageUrl,
+          leading:
+              imageUrl != null && imageUrl.isNotEmpty
+                  ? ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      imageUrl,
+                      width: 56,
+                      height: 56,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.restaurant,
+                            color: Colors.grey[600],
+                            size: 28,
+                          ),
+                        );
+                      },
+                    ),
+                  )
+                  : Container(
                     width: 56,
                     height: 56,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          Icons.restaurant,
-                          color: Colors.grey[600],
-                          size: 28,
-                        ),
-                      );
-                    },
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.restaurant,
+                      color: Colors.grey[600],
+                      size: 28,
+                    ),
                   ),
-                )
-              : Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.restaurant,
-                    color: Colors.grey[600],
-                    size: 28,
-                  ),
-                ),
           title: Text(name),
           subtitle: Text('per 100g'),
           trailing: Row(
@@ -351,7 +352,8 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
         );
       },
       separatorBuilder:
-          (context, index) => const Divider(height: 1, indent: 16, endIndent: 16),
+          (context, index) =>
+              const Divider(height: 1, indent: 16, endIndent: 16),
     );
   }
 }

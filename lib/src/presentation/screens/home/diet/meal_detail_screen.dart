@@ -188,6 +188,7 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
     final fatPer100g = (widget.meal['fat_per_100gr'] ?? 0).toDouble();
     final carbsPer100g = (widget.meal['carbs_per_100gr'] ?? 0).toDouble();
     final fiberPer100g = (widget.meal['fiber_per_100gr'] ?? 0).toDouble();
+    final imageUrl = widget.meal['image_url'] as String?;
 
     return Scaffold(
       backgroundColor: Colors.grey[200],
@@ -202,26 +203,27 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
-            child: _isLoadingFavorite
-                ? const Padding(
-                    padding: EdgeInsets.all(12.0),
-                    child: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.primary,
+            child:
+                _isLoadingFavorite
+                    ? const Padding(
+                      padding: EdgeInsets.all(12.0),
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.primary,
+                        ),
                       ),
+                    )
+                    : IconButton(
+                      icon: Icon(
+                        _isFavorited ? Icons.favorite : Icons.favorite_border,
+                        color: _isFavorited ? Colors.red : Colors.black,
+                        size: 26,
+                      ),
+                      onPressed: _isTogglingFavorite ? null : _toggleFavorite,
                     ),
-                  )
-                : IconButton(
-                    icon: Icon(
-                      _isFavorited ? Icons.favorite : Icons.favorite_border,
-                      color: _isFavorited ? Colors.red : Colors.black,
-                      size: 26,
-                    ),
-                    onPressed: _isTogglingFavorite ? null : _toggleFavorite,
-                  ),
           ),
         ],
       ),
@@ -233,6 +235,61 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Meal Image (if available)
+                  if (imageUrl != null && imageUrl.isNotEmpty)
+                    Container(
+                      width: double.infinity,
+                      height: 200,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Center(
+                                child: Icon(
+                                  Icons.restaurant,
+                                  size: 64,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            );
+                          },
+                          loadingBuilder:
+                              (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              decoration: BoxDecoration(
+                                color: Colors.grey[200],
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: const Center(
+                                child: CircularProgressIndicator(
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+
                   // Meal Name Card
                   Container(
                     width: double.infinity,
