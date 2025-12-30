@@ -249,7 +249,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('$kcalPer100g cals'),
+              Text('${kcalPer100g.round()} cals'),
               SizedBox(width: 8),
               Icon(Icons.add_circle, color: AppColors.primary, size: 28),
             ],

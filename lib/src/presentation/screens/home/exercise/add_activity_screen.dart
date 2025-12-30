@@ -2,6 +2,7 @@ import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/domain/entities/activity.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class AddActivityScreen extends StatefulWidget {
   const AddActivityScreen({super.key});
@@ -156,11 +157,12 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
       if (query.isEmpty) {
         filteredActivities = activities;
       } else {
-        filteredActivities = activities
-            .where(
-              (activity) => activity.name.toLowerCase().contains(query),
-            )
-            .toList();
+        filteredActivities =
+            activities
+                .where(
+                  (activity) => activity.name.toLowerCase().contains(query),
+                )
+                .toList();
       }
     });
   }
@@ -168,12 +170,13 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[200],
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.grey[200],
         elevation: 0,
+        centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+          icon: const Icon(LucideIcons.chevronLeft, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
@@ -184,118 +187,108 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
             color: Colors.black,
           ),
         ),
-        centerTitle: true,
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 16),
-            child: Icon(Icons.add, color: Colors.black, size: 26),
-          ),
-        ],
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: TextField(
-              controller: _searchController,
-              style: const TextStyle(color: AppColors.textPrimary),
-              decoration: InputDecoration(
-                hintText: 'Search activities',
-                hintStyle: TextStyle(color: AppColors.textPrimary),
-                prefixIcon: const Icon(
-                  Icons.search,
-                  color: AppColors.textPrimary,
-                ),
-                filled: true,
-                fillColor: AppColors.backgroundLight,
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Search',
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: const BorderSide(color: Colors.white),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: const BorderSide(color: Colors.white),
+                  ),
                 ),
               ),
             ),
-          ),
-
-          const SizedBox(height: 10),
-
-          Expanded(
-            child: isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.primary,
-                    ),
-                  )
-                : filteredActivities.isEmpty
-                    ? const Center(
-                        child: Text(
-                          'No activities found',
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 16,
-                          ),
-                        ),
-                      )
-                    : ListView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount:
-                            filteredActivities.length + (isLoadingMore ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (index == filteredActivities.length) {
-                            return const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 16),
-                              child: Center(
-                                child: CircularProgressIndicator(
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            );
-                          }
-
-                          final activity = filteredActivities[index];
-
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              ListTile(
-                                title: Text(
-                                  activity.name,
-                                  style: const TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 15,
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  'MET: ${activity.metValue.toStringAsFixed(1)} • ${activity.categories.join(", ")}',
-                                  style: const TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                trailing: const Icon(
-                                  Icons.arrow_forward_ios,
-                                  color: Colors.black,
-                                  size: 16,
-                                ),
-                                contentPadding: EdgeInsets.zero,
-                                onTap: () {
-                                  // TODO: Navigate to activity detail or log activity
-                                },
-                              ),
-                              const Divider(
-                                color: Colors.black,
-                                thickness: 0.5,
-                                height: 4,
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-          ),
-        ],
+            Expanded(
+              child: Container(
+                margin: const EdgeInsets.only(top: 16.0),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(20),
+                  ),
+                ),
+                child: _buildContent(),
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildContent() {
+    if (isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
+    }
+
+    if (filteredActivities.isEmpty && _searchController.text.isEmpty) {
+      return const Center(
+        child: Text(
+          'Start typing to search for activities',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
+      );
+    }
+
+    if (filteredActivities.isEmpty) {
+      return const Center(
+        child: Text(
+          'No activities found',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
+      );
+    }
+
+    return ListView.separated(
+      controller: _scrollController,
+      itemCount: filteredActivities.length + (isLoadingMore ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (index == filteredActivities.length) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            ),
+          );
+        }
+
+        final activity = filteredActivities[index];
+
+        return ListTile(
+          title: Text(activity.name),
+          subtitle: Text('MET: ${activity.metValue.toStringAsFixed(1)}'),
+          trailing: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.add_circle, color: AppColors.primary, size: 28),
+            ],
+          ),
+          onTap: () {
+            // TODO: Navigate to activity detail or log activity
+          },
+        );
+      },
+      separatorBuilder: (context, index) =>
+          const Divider(height: 1, indent: 16, endIndent: 16),
     );
   }
 }
