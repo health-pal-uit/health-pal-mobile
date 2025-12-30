@@ -91,10 +91,9 @@ void main() async {
 
   final FitnessGoalRemoteDataSource fitnessGoalRemoteDataSource =
       FitnessGoalRemoteDataSourceImpl(dio: dio);
-  final FitnessGoalRepository fitnessGoalRepository =
-      FitnessGoalRepositoryImpl(
-        remoteDataSource: fitnessGoalRemoteDataSource,
-      );
+  final FitnessGoalRepository fitnessGoalRepository = FitnessGoalRepositoryImpl(
+    remoteDataSource: fitnessGoalRemoteDataSource,
+  );
 
   final MealRemoteDataSource mealRemoteDataSource = MealRemoteDataSourceImpl(
     dio: dio,

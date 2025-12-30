@@ -5,8 +5,7 @@ abstract class FitnessGoalRemoteDataSource {
   Future<Map<String, dynamic>> getFitnessGoal();
 }
 
-class FitnessGoalRemoteDataSourceImpl
-    implements FitnessGoalRemoteDataSource {
+class FitnessGoalRemoteDataSourceImpl implements FitnessGoalRemoteDataSource {
   final Dio dio;
 
   FitnessGoalRemoteDataSourceImpl({required this.dio});
@@ -35,7 +34,7 @@ class FitnessGoalRemoteDataSourceImpl
   @override
   Future<Map<String, dynamic>> getFitnessGoal() async {
     try {
-      final response = await dio.get('/fitness-goals');
+      final response = await dio.get('/fitness-goals/current');
 
       if (response.statusCode == 200) {
         return response.data;

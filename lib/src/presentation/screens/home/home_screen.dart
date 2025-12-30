@@ -27,6 +27,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isLoadingTdee = true;
   Map<String, dynamic>? dailyLog;
   bool isLoadingDailyLog = true;
+  Map<String, dynamic>? fitnessGoal;
+  bool isLoadingFitnessGoal = true;
 
   @override
   void initState() {
@@ -34,6 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
     context.read<AuthBloc>().add(LoadCurrentUser());
     _loadFitnessProfile();
     _loadDailyLog();
+    _loadFitnessGoal();
   }
 
   Future<void> _loadFitnessProfile() async {
@@ -127,6 +130,45 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) {
         setState(() {
           isLoadingDailyLog = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadFitnessGoal() async {
+    final repository = AppRoutes.getFitnessGoalRepository();
+    if (repository == null) {
+      if (mounted) {
+        setState(() {
+          isLoadingFitnessGoal = false;
+        });
+      }
+      return;
+    }
+
+    try {
+      final result = await repository.getFitnessGoal();
+      result.fold(
+        (failure) {
+          if (mounted) {
+            setState(() {
+              isLoadingFitnessGoal = false;
+            });
+          }
+        },
+        (goal) {
+          if (mounted) {
+            setState(() {
+              fitnessGoal = goal['data'];
+              isLoadingFitnessGoal = false;
+            });
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          isLoadingFitnessGoal = false;
         });
       }
     }
@@ -299,7 +341,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildKcalCard() {
-    final needed = tdeeKcal?.toInt() ?? 2000;
+    // Use target_kcal from fitness goal if available, fallback to tdeeKcal
+    final needed =
+        fitnessGoal != null
+            ? (fitnessGoal!['target_kcal'] as num?)?.toInt() ?? 2000
+            : tdeeKcal?.toInt() ?? 2000;
 
     final consumed =
         dailyLog != null ? (dailyLog!['total_kcal_eaten'] ?? 0).toInt() : 0;
@@ -330,6 +376,23 @@ class _HomeScreenState extends State<HomeScreen> {
       fat: fat,
       carbs: carbs,
       fiber: fiber,
+      proteinGoal:
+          fitnessGoal != null
+              ? (fitnessGoal!['target_protein_gr'] as num?)?.toInt()
+              : null,
+      fatGoal:
+          fitnessGoal != null
+              ? (fitnessGoal!['target_fat_gr'] as num?)?.toInt()
+              : null,
+      carbsGoal:
+          fitnessGoal != null
+              ? (fitnessGoal!['target_carbs_gr'] as num?)?.toInt()
+              : null,
+      fiberGoal:
+          fitnessGoal != null
+              ? (fitnessGoal!['target_fiber_gr'] as num?)?.toInt()
+              : null,
+      goalType: fitnessGoal != null ? fitnessGoal!['goal_type'] as String? : null,
     );
   }
 

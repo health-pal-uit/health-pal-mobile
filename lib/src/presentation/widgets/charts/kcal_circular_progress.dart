@@ -10,6 +10,11 @@ class KcalCircularProgressCard extends StatelessWidget {
   final double? fat;
   final double? carbs;
   final double? fiber;
+  final int? proteinGoal;
+  final int? fatGoal;
+  final int? carbsGoal;
+  final int? fiberGoal;
+  final String? goalType;
 
   const KcalCircularProgressCard({
     super.key,
@@ -20,19 +25,25 @@ class KcalCircularProgressCard extends StatelessWidget {
     this.fat,
     this.carbs,
     this.fiber,
+    this.proteinGoal,
+    this.fatGoal,
+    this.carbsGoal,
+    this.fiberGoal,
+    this.goalType,
   });
 
   @override
   Widget build(BuildContext context) {
     final remaining = needed - consumed;
     final carbsCurrent = carbs?.round() ?? 0;
-    final carbsGoal = 301;
+    final carbsGoalValue = carbsGoal ?? 301;
     final proteinCurrent = protein?.round() ?? 0;
-    final proteinGoal = 138;
+    final proteinGoalValue = proteinGoal ?? 138;
     final fatCurrent = fat?.round() ?? 0;
-    final fatGoal = 72;
+    final fatGoalValue = fatGoal ?? 72;
     final fiberCurrent = fiber?.round() ?? 0;
-    final fiberGoal = 32;
+    final fiberGoalValue = fiberGoal ?? 32;
+    final goalTypeDisplay = _getGoalTypeDisplay(goalType);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -74,7 +85,6 @@ class KcalCircularProgressCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                          // Progress circle
                           SizedBox(
                             width: 120,
                             height: 120,
@@ -90,7 +100,6 @@ class KcalCircularProgressCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                          // Center text
                           Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -159,16 +168,16 @@ class KcalCircularProgressCard extends StatelessWidget {
                 child: _buildMacroProgress(
                   '🌾 Carbs',
                   carbsCurrent,
-                  carbsGoal,
+                  carbsGoalValue,
                   Colors.orange,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _buildMacroProgress(
-                  '🍖 Chất đạm',
+                  '🍖 Proteins',
                   proteinCurrent,
-                  proteinGoal,
+                  proteinGoalValue,
                   Colors.blue,
                 ),
               ),
@@ -179,18 +188,18 @@ class KcalCircularProgressCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _buildMacroProgress(
-                  '🥑 Chất béo',
+                  '🥑 Fats',
                   fatCurrent,
-                  fatGoal,
+                  fatGoalValue,
                   Colors.green,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _buildMacroProgress(
-                  '🥬 Chất xơ',
+                  '🥬 Fiber',
                   fiberCurrent,
-                  fiberGoal,
+                  fiberGoalValue,
                   Colors.greenAccent,
                 ),
               ),
@@ -209,7 +218,7 @@ class KcalCircularProgressCard extends StatelessWidget {
                 ),
                 children: [
                   TextSpan(
-                    text: 'Balanced',
+                    text: goalTypeDisplay,
                     style: TextStyle(
                       color: AppColors.primary,
                       fontWeight: FontWeight.bold,
@@ -286,5 +295,23 @@ class KcalCircularProgressCard extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  String _getGoalTypeDisplay(String? goalType) {
+    if (goalType == null) return 'Balanced';
+    switch (goalType) {
+      case 'cut':
+        return 'Cut';
+      case 'bulk':
+        return 'Bulk';
+      case 'maintain':
+        return 'Maintain';
+      case 'recovery':
+        return 'Recovery';
+      case 'gain_muscles':
+        return 'Gain Muscles';
+      default:
+        return 'Balanced';
+    }
   }
 }

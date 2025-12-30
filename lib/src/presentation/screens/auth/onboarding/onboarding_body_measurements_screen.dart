@@ -102,9 +102,7 @@ class _OnboardingBodyMeasurementsScreenState
                     margin: const EdgeInsets.symmetric(horizontal: 4),
                     decoration: BoxDecoration(
                       color:
-                          index <= 2
-                              ? const Color(0xFFFA9500)
-                              : Colors.grey.shade300,
+                          index <= 2 ? AppColors.primary : Colors.grey.shade300,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
