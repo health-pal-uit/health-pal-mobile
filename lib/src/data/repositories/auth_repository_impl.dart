@@ -146,4 +146,20 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(ServerFailure('Đã xảy ra lỗi: ${e.toString()}'));
     }
   }
+
+  @override
+  Future<bool> hasValidToken() async {
+    try {
+      final token = await localDataSource.getToken();
+      if (token == null || token.isEmpty) {
+        return false;
+      }
+
+      // Check if token is expired
+      bool isExpired = JwtDecoder.isExpired(token);
+      return !isExpired;
+    } catch (e) {
+      return false;
+    }
+  }
 }

@@ -18,4 +18,5 @@ abstract class AuthRepository {
   Future<Either<Failure, bool>> checkVerification(String email);
   Future<Either<Failure, User>> loginWithGoogle();
   Future<Either<Failure, User>> getCurrentUser();
+  Future<bool> hasValidToken();
 }

@@ -117,7 +117,11 @@ void main() async {
   final AuthBloc authBloc = AuthBloc(authRepository: authRepository);
   final UserBloc userBloc = UserBloc(userRepository: userRepository);
 
+  // Check authentication status on app startup
+  authBloc.add(CheckAuthStatus());
+
   // Set repositories for routing
+  AppRoutes.setAuthRepository(authRepository);
   AppRoutes.setFitnessProfileRepository(fitnessProfileRepository);
   AppRoutes.setFitnessGoalRepository(fitnessGoalRepository);
   AppRoutes.setMealRepository(mealRepository);

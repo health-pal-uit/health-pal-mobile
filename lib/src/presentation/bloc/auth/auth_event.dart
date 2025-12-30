@@ -50,6 +50,8 @@ class GoogleSignInFailed extends AuthEvent {
 
 class LoadCurrentUser extends AuthEvent {}
 
+class CheckAuthStatus extends AuthEvent {}
+
 class CheckVerificationStatus extends AuthEvent {
   final String email;
 

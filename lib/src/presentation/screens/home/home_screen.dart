@@ -392,7 +392,8 @@ class _HomeScreenState extends State<HomeScreen> {
           fitnessGoal != null
               ? (fitnessGoal!['target_fiber_gr'] as num?)?.toInt()
               : null,
-      goalType: fitnessGoal != null ? fitnessGoal!['goal_type'] as String? : null,
+      goalType:
+          fitnessGoal != null ? fitnessGoal!['goal_type'] as String? : null,
     );
   }
 

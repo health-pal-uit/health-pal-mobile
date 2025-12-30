@@ -30,6 +30,7 @@ import 'package:da1/src/data/repositories/fitness_goal_repository.dart';
 import 'package:da1/src/data/repositories/meal_repository.dart';
 import 'package:da1/src/data/repositories/daily_meal_repository.dart';
 import 'package:da1/src/data/repositories/daily_log_repository.dart';
+import 'package:da1/src/data/repositories/auth_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -39,6 +40,7 @@ class AppRoutes {
   static MealRepository? _mealRepository;
   static DailyMealRepository? _dailyMealRepository;
   static DailyLogRepository? _dailyLogRepository;
+  static AuthRepository? _authRepository;
 
   static void setFitnessProfileRepository(FitnessProfileRepository repository) {
     _fitnessProfileRepository = repository;
@@ -80,8 +82,45 @@ class AppRoutes {
     return _dailyLogRepository;
   }
 
+  static void setAuthRepository(AuthRepository repository) {
+    _authRepository = repository;
+  }
+
+  static AuthRepository? getAuthRepository() {
+    return _authRepository;
+  }
+
   static final GoRouter router = GoRouter(
-    initialLocation: '/welcome',
+    initialLocation: '/',
+    redirect: (context, state) async {
+      // Check if user has a valid token
+      final hasToken = await _authRepository?.hasValidToken() ?? false;
+
+      final isOnWelcomePage = state.matchedLocation == '/welcome';
+      final isOnLoginPage = state.matchedLocation == '/login';
+      final isOnSignupPage = state.matchedLocation == '/signup';
+      final isOnAuthPages =
+          isOnWelcomePage ||
+          isOnLoginPage ||
+          isOnSignupPage ||
+          state.matchedLocation.startsWith('/email-verification') ||
+          state.matchedLocation.startsWith('/forgot-password') ||
+          state.matchedLocation.startsWith('/password-reset') ||
+          state.matchedLocation.startsWith('/reset-password');
+
+      // If not authenticated and trying to access protected route, go to welcome
+      if (!hasToken && !isOnAuthPages) {
+        return '/welcome';
+      }
+
+      // If authenticated and on auth pages, go to home
+      if (hasToken && isOnAuthPages) {
+        return '/';
+      }
+
+      // No redirect needed
+      return null;
+    },
     routes: [
       GoRoute(
         path: '/welcome',
