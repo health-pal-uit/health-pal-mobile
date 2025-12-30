@@ -79,7 +79,7 @@ class _OnboardingWeightScreenState extends State<OnboardingWeightScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
-                  4,
+                  5,
                   (index) => Container(
                     width: screenWidth * 0.1,
                     height: 4,

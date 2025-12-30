@@ -20,12 +20,14 @@ class SignUpScreenState extends State<SignUpScreen> {
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _dateOfBirthController = TextEditingController();
 
   final _usernameFocusNode = FocusNode();
   final _emailFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
 
   bool _isPasswordObscured = true;
+  DateTime? _selectedDate;
 
   @override
   void initState() {
@@ -41,11 +43,41 @@ class SignUpScreenState extends State<SignUpScreen> {
     _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _dateOfBirthController.dispose();
 
     _usernameFocusNode.dispose();
     _emailFocusNode.dispose();
     _passwordFocusNode.dispose();
     super.dispose();
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime(2000),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: AppColors.primary,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+        _dateOfBirthController.text =
+            '${picked.month.toString().padLeft(2, '0')}/${picked.day.toString().padLeft(2, '0')}/${picked.year}';
+      });
+    }
   }
 
   void _onSignUpPressed(BuildContext context, bool isLoading) {
@@ -178,7 +210,29 @@ class SignUpScreenState extends State<SignUpScreen> {
                               ),
                               const SizedBox(height: 20),
 
-                              // --- FIELD 3: PASSWORD ---
+                              // --- FIELD 3: DATE OF BIRTH ---
+                              Container(
+                                decoration: _fieldBoxDecoration(),
+                                child: TextFormField(
+                                  controller: _dateOfBirthController,
+                                  style: AppTypography.body,
+                                  readOnly: true,
+                                  decoration: _fieldInputDecoration(
+                                    hintText: "Select your date of birth",
+                                    icon: Icons.cake_outlined,
+                                    hasFocus: false,
+                                  ),
+                                  onTap: () => _selectDate(context),
+                                  validator:
+                                      (value) =>
+                                          value!.isEmpty
+                                              ? "Date of birth is required"
+                                              : null,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+
+                              // --- FIELD 4: PASSWORD ---
                               Container(
                                 decoration: _fieldBoxDecoration(),
                                 child: TextFormField(

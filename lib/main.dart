@@ -8,6 +8,8 @@ import 'package:da1/src/data/repositories/user_repository_impl.dart';
 import 'package:da1/src/data/datasources/user_remote_data_source.dart';
 import 'package:da1/src/data/repositories/fitness_profile_repository.dart';
 import 'package:da1/src/data/datasources/fitness_profile_remote_data_source.dart';
+import 'package:da1/src/data/repositories/fitness_goal_repository.dart';
+import 'package:da1/src/data/datasources/fitness_goal_remote_data_source.dart';
 import 'package:da1/src/data/repositories/meal_repository.dart';
 import 'package:da1/src/data/datasources/meal_remote_data_source.dart';
 import 'package:da1/src/data/repositories/daily_meal_repository.dart';
@@ -87,6 +89,13 @@ void main() async {
         remoteDataSource: fitnessProfileRemoteDataSource,
       );
 
+  final FitnessGoalRemoteDataSource fitnessGoalRemoteDataSource =
+      FitnessGoalRemoteDataSourceImpl(dio: dio);
+  final FitnessGoalRepository fitnessGoalRepository =
+      FitnessGoalRepositoryImpl(
+        remoteDataSource: fitnessGoalRemoteDataSource,
+      );
+
   final MealRemoteDataSource mealRemoteDataSource = MealRemoteDataSourceImpl(
     dio: dio,
   );
@@ -111,6 +120,7 @@ void main() async {
 
   // Set repositories for routing
   AppRoutes.setFitnessProfileRepository(fitnessProfileRepository);
+  AppRoutes.setFitnessGoalRepository(fitnessGoalRepository);
   AppRoutes.setMealRepository(mealRepository);
   AppRoutes.setDailyMealRepository(dailyMealRepository);
   AppRoutes.setDailyLogRepository(dailyLogRepository);

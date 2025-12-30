@@ -4,104 +4,100 @@ import 'package:da1/src/config/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class OnboardingActivityLevelScreen extends StatefulWidget {
-  final Map<String, double?> measurements;
+class OnboardingGoalTypeScreen extends StatefulWidget {
+  final Map<String, dynamic> previousData;
 
-  const OnboardingActivityLevelScreen({super.key, required this.measurements});
+  const OnboardingGoalTypeScreen({super.key, required this.previousData});
 
   @override
-  State<OnboardingActivityLevelScreen> createState() =>
-      _OnboardingActivityLevelScreenState();
+  State<OnboardingGoalTypeScreen> createState() =>
+      _OnboardingGoalTypeScreenState();
 }
 
-class _OnboardingActivityLevelScreenState
-    extends State<OnboardingActivityLevelScreen> {
-  String? _selectedActivityLevel;
+class _OnboardingGoalTypeScreenState extends State<OnboardingGoalTypeScreen> {
+  String? _selectedGoalType;
   bool _isLoading = false;
 
-  final List<Map<String, String>> _activityLevels = [
+  final List<Map<String, dynamic>> _goalTypes = [
     {
-      'value': 'sedentary',
-      'title': 'Sedentary',
-      'description': 'Little or no exercise',
+      'value': 'cut',
+      'title': 'Cut',
+      'description': 'Lose weight and reduce body fat',
+      'icon': Icons.trending_down,
+      'color': Color(0xFFFF6B6B),
     },
     {
-      'value': 'lightly_active',
-      'title': 'Lightly Active',
-      'description': 'Light exercise 1-3 days/week',
+      'value': 'bulk',
+      'title': 'Bulk',
+      'description': 'Gain weight and build muscle mass',
+      'icon': Icons.trending_up,
+      'color': Color(0xFF4ECDC4),
     },
     {
-      'value': 'moderately',
-      'title': 'Moderately Active',
-      'description': 'Moderate exercise 3-5 days/week',
+      'value': 'maintain',
+      'title': 'Maintain',
+      'description': 'Maintain current weight and fitness',
+      'icon': Icons.trending_flat,
+      'color': Color(0xFF95E1D3),
     },
     {
-      'value': 'active',
-      'title': 'Active',
-      'description': 'Hard exercise 6-7 days/week',
+      'value': 'recovery',
+      'title': 'Recovery',
+      'description': 'Focus on recovery and rehabilitation',
+      'icon': Icons.healing,
+      'color': Color(0xFFFFA07A),
     },
     {
-      'value': 'very_active',
-      'title': 'Very Active',
-      'description': 'Very hard exercise & physical job',
+      'value': 'gain_muscles',
+      'title': 'Gain Muscles',
+      'description': 'Build lean muscle and strength',
+      'icon': Icons.fitness_center,
+      'color': Color(0xFF6C5CE7),
     },
   ];
 
-  Future<void> _createFitnessProfile() async {
-    if (_selectedActivityLevel == null) return;
+  Future<void> _createFitnessGoal() async {
+    if (_selectedGoalType == null) return;
 
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final repository = AppRoutes.getFitnessProfileRepository();
+      final repository = AppRoutes.getFitnessGoalRepository();
       if (repository == null) {
-        throw Exception('Fitness profile repository not available');
+        throw Exception('Fitness goal repository not available');
       }
 
-      // Build the payload, only including non-null optional fields
-      final payload = <String, dynamic>{
-        'weight_kg': widget.measurements['weight'],
-        'height_m': widget.measurements['height']! / 100, // Convert cm to m
-        'activity_level': _selectedActivityLevel,
-      };
+      final payload = {'goal_type': _selectedGoalType};
 
-      // Add optional measurements only if they're not null
-      if (widget.measurements['waist'] != null) {
-        payload['waist_cm'] = (widget.measurements['waist'] as double).toInt();
-      }
-      if (widget.measurements['hip'] != null) {
-        payload['hip_cm'] = (widget.measurements['hip'] as double).toInt();
-      }
-      if (widget.measurements['neck'] != null) {
-        payload['neck_cm'] = (widget.measurements['neck'] as double).toInt();
-      }
-
-      final result = await repository.createFitnessProfile(payload);
+      final result = await repository.createFitnessGoal(payload);
 
       result.fold(
         (failure) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error: ${failure.message}')),
+              SnackBar(
+                content: Text('Error: ${failure.message}'),
+                backgroundColor: Colors.red,
+              ),
             );
           }
         },
         (response) {
           if (mounted) {
-            context.pushNamed(
-              'onboarding-goal',
-              extra: {'fitnessProfileId': response['data']?['id']},
-            );
+            context.go('/onboarding-complete');
           }
         },
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error creating profile: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error creating fitness goal: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } finally {
       if (mounted) {
@@ -143,7 +139,7 @@ class _OnboardingActivityLevelScreenState
                     height: 4,
                     margin: const EdgeInsets.symmetric(horizontal: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFA9500),
+                      color: AppColors.primary,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -151,7 +147,7 @@ class _OnboardingActivityLevelScreenState
               ),
               const SizedBox(height: 40),
               const Text(
-                "Activity Level",
+                "Fitness Goal",
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -160,7 +156,7 @@ class _OnboardingActivityLevelScreenState
               ),
               const SizedBox(height: 8),
               Text(
-                "Select your typical activity level",
+                "What's your main fitness goal?",
                 style: AppTypography.body.copyWith(
                   color: AppColors.textSecondary,
                   fontSize: 14,
@@ -169,15 +165,15 @@ class _OnboardingActivityLevelScreenState
               const SizedBox(height: 24),
               Expanded(
                 child: ListView.builder(
-                  itemCount: _activityLevels.length,
+                  itemCount: _goalTypes.length,
                   itemBuilder: (context, index) {
-                    final level = _activityLevels[index];
-                    final isSelected = _selectedActivityLevel == level['value'];
+                    final goal = _goalTypes[index];
+                    final isSelected = _selectedGoalType == goal['value'];
 
                     return GestureDetector(
                       onTap: () {
                         setState(() {
-                          _selectedActivityLevel = level['value'];
+                          _selectedGoalType = goal['value'];
                         });
                       },
                       child: Container(
@@ -186,33 +182,43 @@ class _OnboardingActivityLevelScreenState
                         decoration: BoxDecoration(
                           color:
                               isSelected
-                                  ? AppColors.primary.withValues(alpha: 0.1)
+                                  ? (goal['color'] as Color).withValues(
+                                    alpha: 0.1,
+                                  )
                                   : AppColors.backgroundLight,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color:
                                 isSelected
-                                    ? AppColors.primary
+                                    ? goal['color'] as Color
                                     : Colors.grey.shade300,
                             width: 2,
                           ),
                         ),
                         child: Row(
                           children: [
-                            Icon(
-                              isSelected
-                                  ? Icons.radio_button_checked
-                                  : Icons.radio_button_unchecked,
-                              color:
-                                  isSelected ? AppColors.primary : Colors.grey,
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color:
+                                    isSelected
+                                        ? goal['color'] as Color
+                                        : Colors.grey.shade200,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                goal['icon'] as IconData,
+                                color: isSelected ? Colors.white : Colors.grey,
+                                size: 28,
+                              ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 16),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    level['title']!,
+                                    goal['title']!,
                                     style: AppTypography.body.copyWith(
                                       fontWeight: FontWeight.w600,
                                       fontSize: 16,
@@ -220,7 +226,7 @@ class _OnboardingActivityLevelScreenState
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    level['description']!,
+                                    goal['description']!,
                                     style: AppTypography.body.copyWith(
                                       color: AppColors.textSecondary,
                                       fontSize: 13,
@@ -228,6 +234,15 @@ class _OnboardingActivityLevelScreenState
                                   ),
                                 ],
                               ),
+                            ),
+                            Icon(
+                              isSelected
+                                  ? Icons.check_circle
+                                  : Icons.radio_button_unchecked,
+                              color:
+                                  isSelected
+                                      ? goal['color'] as Color
+                                      : Colors.grey,
                             ),
                           ],
                         ),
@@ -239,16 +254,7 @@ class _OnboardingActivityLevelScreenState
               Row(
                 children: [
                   ElevatedButton(
-                    onPressed:
-                        _isLoading
-                            ? null
-                            : () => context.pushNamed(
-                              'onboarding-body-measurements',
-                              extra: {
-                                'height': widget.measurements['height'],
-                                'weight': widget.measurements['weight'],
-                              },
-                            ),
+                    onPressed: _isLoading ? null : () => context.pop(),
                     style: ElevatedButton.styleFrom(
                       shape: const CircleBorder(),
                       backgroundColor: const Color(0xFFFFE5C2),
@@ -265,12 +271,12 @@ class _OnboardingActivityLevelScreenState
                     flex: 30,
                     child: ElevatedButton(
                       onPressed:
-                          _selectedActivityLevel != null && !_isLoading
-                              ? _createFitnessProfile
+                          _selectedGoalType != null && !_isLoading
+                              ? _createFitnessGoal
                               : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
-                            _selectedActivityLevel != null && !_isLoading
+                            _selectedGoalType != null && !_isLoading
                                 ? AppColors.primary
                                 : Colors.grey.shade400,
                         shape: RoundedRectangleBorder(
@@ -289,7 +295,7 @@ class _OnboardingActivityLevelScreenState
                                 ),
                               )
                               : const Text(
-                                "NEXT",
+                                "COMPLETE",
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,

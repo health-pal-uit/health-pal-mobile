@@ -95,7 +95,7 @@ class _OnboardingBodyMeasurementsScreenState
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
-                  4,
+                  5,
                   (index) => Container(
                     width: screenWidth * 0.08,
                     height: 4,

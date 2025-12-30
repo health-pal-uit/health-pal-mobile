@@ -8,6 +8,7 @@ import 'package:da1/src/presentation/screens/auth/onboarding/onboarding_weight_s
 import 'package:da1/src/presentation/screens/auth/onboarding/onboarding_height_screen.dart';
 import 'package:da1/src/presentation/screens/auth/onboarding/onboarding_body_measurements_screen.dart';
 import 'package:da1/src/presentation/screens/auth/onboarding/onboarding_activity_level_screen.dart';
+import 'package:da1/src/presentation/screens/auth/onboarding/onboarding_goal_type_screen.dart';
 import 'package:da1/src/presentation/screens/auth/signup_screen.dart';
 import 'package:da1/src/presentation/screens/auth/welcome/welcome_scroll_screen.dart';
 import 'package:da1/src/presentation/screens/community/community_screen.dart';
@@ -25,6 +26,7 @@ import 'package:da1/src/presentation/screens/home/home_screen.dart';
 import 'package:da1/src/presentation/screens/auth/login_screen.dart';
 import 'package:da1/src/presentation/widgets/custom_bottom_nav.dart';
 import 'package:da1/src/data/repositories/fitness_profile_repository.dart';
+import 'package:da1/src/data/repositories/fitness_goal_repository.dart';
 import 'package:da1/src/data/repositories/meal_repository.dart';
 import 'package:da1/src/data/repositories/daily_meal_repository.dart';
 import 'package:da1/src/data/repositories/daily_log_repository.dart';
@@ -33,6 +35,7 @@ import 'package:go_router/go_router.dart';
 
 class AppRoutes {
   static FitnessProfileRepository? _fitnessProfileRepository;
+  static FitnessGoalRepository? _fitnessGoalRepository;
   static MealRepository? _mealRepository;
   static DailyMealRepository? _dailyMealRepository;
   static DailyLogRepository? _dailyLogRepository;
@@ -43,6 +46,14 @@ class AppRoutes {
 
   static FitnessProfileRepository? getFitnessProfileRepository() {
     return _fitnessProfileRepository;
+  }
+
+  static void setFitnessGoalRepository(FitnessGoalRepository repository) {
+    _fitnessGoalRepository = repository;
+  }
+
+  static FitnessGoalRepository? getFitnessGoalRepository() {
+    return _fitnessGoalRepository;
   }
 
   static void setMealRepository(MealRepository repository) {
@@ -118,6 +129,14 @@ class AppRoutes {
                 data['neck'] != null ? (data['neck'] as num).toDouble() : null,
           };
           return OnboardingActivityLevelScreen(measurements: measurements);
+        },
+      ),
+      GoRoute(
+        path: '/onboarding-goal',
+        name: 'onboarding-goal',
+        builder: (context, state) {
+          final data = state.extra as Map<String, dynamic>;
+          return OnboardingGoalTypeScreen(previousData: data);
         },
       ),
       GoRoute(
