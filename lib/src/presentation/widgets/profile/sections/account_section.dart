@@ -13,16 +13,9 @@ class AccountSection extends StatelessWidget {
       items: [
         ProfileItem(
           icon: LucideIcons.user,
-          text: "Personal Health Information",
+          text: "Personal Information",
           onTap: () {
-            // TODO: Navigate to personal health info
-          },
-        ),
-        ProfileItem(
-          icon: LucideIcons.mail,
-          text: "Email Address",
-          onTap: () {
-            // TODO: Navigate to email settings
+            // TODO: Navigate to personal information
           },
         ),
         ProfileItem(

@@ -268,7 +268,6 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
               ),
             );
 
-            // If meal was added successfully, pop back to home screen with success flag
             if (result == true && context.mounted) {
               Navigator.pop(context, true);
             }

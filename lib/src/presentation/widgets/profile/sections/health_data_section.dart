@@ -12,17 +12,17 @@ class HealthDataSection extends StatelessWidget {
       title: "Health & Data",
       items: [
         ProfileItem(
+          icon: LucideIcons.activity,
+          text: "Fitness Profile",
+          onTap: () {
+            // TODO: Navigate to fitness profile
+          },
+        ),
+        ProfileItem(
           icon: Icons.sync,
           text: "Sync with Google Fit",
           onTap: () {
             // TODO: Navigate to Google Fit sync
-          },
-        ),
-        ProfileItem(
-          icon: LucideIcons.ruler,
-          text: "Units of Measurement",
-          onTap: () {
-            // TODO: Navigate to units settings
           },
         ),
         ProfileItem(
