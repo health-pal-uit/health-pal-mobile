@@ -75,11 +75,12 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
       if (query.isEmpty) {
         filteredActivities = activities;
       } else {
-        filteredActivities = activities
-            .where(
-              (activity) => activity.name.toLowerCase().contains(query),
-            )
-            .toList();
+        filteredActivities =
+            activities
+                .where(
+                  (activity) => activity.name.toLowerCase().contains(query),
+                )
+                .toList();
       }
     });
   }
@@ -140,13 +141,14 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
           const SizedBox(height: 10),
 
           Expanded(
-            child: isLoading
-                ? const Center(
-                  child: CircularProgressIndicator(
-                    color: AppColors.primary,
-                  ),
-                )
-                : filteredActivities.isEmpty
+            child:
+                isLoading
+                    ? const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                      ),
+                    )
+                    : filteredActivities.isEmpty
                     ? const Center(
                       child: Text(
                         'No activities found',

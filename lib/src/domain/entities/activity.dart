@@ -20,9 +20,10 @@ class Activity {
       id: json['id'] as String,
       name: json['name'] as String,
       metValue: (json['met_value'] as num).toDouble(),
-      categories: (json['categories'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
+      categories:
+          (json['categories'] as List<dynamic>)
+              .map((e) => e as String)
+              .toList(),
       createdAt: DateTime.parse(json['created_at'] as String),
       deletedAt:
           json['deleted_at'] != null

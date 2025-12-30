@@ -20,10 +20,7 @@ class ActivityRemoteDataSourceImpl implements ActivityRemoteDataSource {
       while (hasMore) {
         final response = await dio.get(
           '/activities',
-          queryParameters: {
-            'page': page,
-            'limit': limit,
-          },
+          queryParameters: {'page': page, 'limit': limit},
         );
 
         if (response.statusCode == 200) {

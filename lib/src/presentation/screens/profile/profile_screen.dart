@@ -40,59 +40,75 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (authState is Authenticated) {
       user = authState.user;
     }
-    return BlocListener<UserBloc, UserState>(
-      listener: (context, state) {
-        if (state is UserLoading) {
-          _isLoadingDialogShown = true;
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder:
-                (dialogContext) => PopScope(
-                  canPop: false,
-                  child: const Center(child: CircularProgressIndicator()),
-                ),
-          );
-        } else {
-          if (_isLoadingDialogShown) {
-            _isLoadingDialogShown = false;
-            Navigator.of(context, rootNavigator: true).pop();
-          }
-
-          if (state is UserAvatarUpdated) {
-            if (mounted) {
-              context.read<AuthBloc>().add(LoadCurrentUser());
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<AuthBloc, AuthState>(
+          listener: (context, state) {
+            if (state is Unauthenticated) {
+              // Navigate to root, which will trigger router redirect to welcome
+              Future.microtask(() {
+                if (context.mounted) {
+                  context.go('/');
+                }
+              });
             }
-            final scaffoldMessenger = ScaffoldMessenger.of(context);
-
-            Future.delayed(const Duration(milliseconds: 100), () {
-              if (!mounted) return;
-
-              scaffoldMessenger.showSnackBar(
-                const SnackBar(
-                  content: Text('Avatar updated successfully!'),
-                  backgroundColor: Colors.green,
-                  duration: Duration(seconds: 2),
-                ),
+          },
+        ),
+        BlocListener<UserBloc, UserState>(
+          listener: (context, state) {
+            if (state is UserLoading) {
+              _isLoadingDialogShown = true;
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder:
+                    (dialogContext) => PopScope(
+                      canPop: false,
+                      child: const Center(child: CircularProgressIndicator()),
+                    ),
               );
-            });
-          } else if (state is UserFailure) {
-            final scaffoldMessenger = ScaffoldMessenger.of(context);
+            } else {
+              if (_isLoadingDialogShown) {
+                _isLoadingDialogShown = false;
+                Navigator.of(context, rootNavigator: true).pop();
+              }
 
-            Future.delayed(const Duration(milliseconds: 100), () {
-              if (!mounted) return;
+              if (state is UserAvatarUpdated) {
+                if (mounted) {
+                  context.read<AuthBloc>().add(LoadCurrentUser());
+                }
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
 
-              scaffoldMessenger.showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: Colors.red,
-                  duration: const Duration(seconds: 3),
-                ),
-              );
-            });
-          }
-        }
-      },
+                Future.delayed(const Duration(milliseconds: 100), () {
+                  if (!mounted) return;
+
+                  scaffoldMessenger.showSnackBar(
+                    const SnackBar(
+                      content: Text('Avatar updated successfully!'),
+                      backgroundColor: Colors.green,
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                });
+              } else if (state is UserFailure) {
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+                Future.delayed(const Duration(milliseconds: 100), () {
+                  if (!mounted) return;
+
+                  scaffoldMessenger.showSnackBar(
+                    SnackBar(
+                      content: Text(state.message),
+                      backgroundColor: Colors.red,
+                      duration: const Duration(seconds: 3),
+                    ),
+                  );
+                });
+              }
+            }
+          },
+        ),
+      ],
       child: Scaffold(
         body: Center(
           child: SingleChildScrollView(
@@ -124,9 +140,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SupportSection(),
 
                     GestureDetector(
-                      onTap: () {
-                        context.read<AuthBloc>().add(SignOutRequested());
-                        context.go('/login');
+                      onTap: () async {
+                        final shouldLogout = await showDialog<bool>(
+                          context: context,
+                          builder: (dialogContext) => AlertDialog(
+                            title: const Text('Logout'),
+                            content:
+                                const Text('Are you sure you want to logout?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(dialogContext).pop(false),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(dialogContext).pop(true),
+                                child: const Text(
+                                  'Logout',
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (shouldLogout == true && context.mounted) {
+                          context.read<AuthBloc>().add(SignOutRequested());
+                        }
                       },
                       child: ProfileItem(icon: Icons.logout, text: "Logout"),
                     ),
