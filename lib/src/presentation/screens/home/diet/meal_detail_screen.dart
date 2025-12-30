@@ -24,6 +24,9 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
   );
   String _selectedUnit = 'g';
   bool _isAdding = false;
+  bool _isFavorited = false;
+  bool _isLoadingFavorite = true;
+  bool _isTogglingFavorite = false;
 
   // Common serving sizes
   final List<Map<String, dynamic>> _servingSizes = [
@@ -34,9 +37,78 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _checkFavoriteStatus();
+  }
+
+  @override
   void dispose() {
     _portionController.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkFavoriteStatus() async {
+    final mealId = widget.meal['id'];
+    if (mealId == null) {
+      setState(() => _isLoadingFavorite = false);
+      return;
+    }
+
+    final repository = AppRoutes.getMealRepository();
+    if (repository == null) {
+      setState(() => _isLoadingFavorite = false);
+      return;
+    }
+
+    final result = await repository.checkIfFavorited(mealId);
+    if (mounted) {
+      result.fold(
+        (failure) => setState(() => _isLoadingFavorite = false),
+        (isFavorited) => setState(() {
+          _isFavorited = isFavorited;
+          _isLoadingFavorite = false;
+        }),
+      );
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    final mealId = widget.meal['id'];
+    if (mealId == null || _isTogglingFavorite) return;
+
+    setState(() => _isTogglingFavorite = true);
+
+    final repository = AppRoutes.getMealRepository();
+    if (repository == null) {
+      setState(() => _isTogglingFavorite = false);
+      return;
+    }
+
+    final result = await repository.toggleFavorite(mealId);
+    if (mounted) {
+      setState(() => _isTogglingFavorite = false);
+
+      result.fold(
+        (failure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to update favorite: ${failure.message}'),
+            ),
+          );
+        },
+        (_) {
+          setState(() => _isFavorited = !_isFavorited);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                _isFavorited ? 'Added to favorites' : 'Removed from favorites',
+              ),
+            ),
+          );
+        },
+      );
+    }
   }
 
   double get _portionSize {
@@ -127,6 +199,31 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
           icon: const Icon(LucideIcons.chevronLeft, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: _isLoadingFavorite
+                ? const Padding(
+                    padding: EdgeInsets.all(12.0),
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  )
+                : IconButton(
+                    icon: Icon(
+                      _isFavorited ? Icons.favorite : Icons.favorite_border,
+                      color: _isFavorited ? Colors.red : Colors.black,
+                      size: 26,
+                    ),
+                    onPressed: _isTogglingFavorite ? null : _toggleFavorite,
+                  ),
+          ),
+        ],
       ),
       body: Column(
         children: [
