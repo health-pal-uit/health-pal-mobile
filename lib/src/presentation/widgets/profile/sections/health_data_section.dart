@@ -1,6 +1,7 @@
 import 'package:da1/src/presentation/widgets/profile/profile_item.dart';
 import 'package:da1/src/presentation/widgets/profile/profile_section.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class HealthDataSection extends StatelessWidget {
@@ -21,9 +22,7 @@ class HealthDataSection extends StatelessWidget {
         ProfileItem(
           icon: Icons.sync,
           text: "Sync with Google Fit",
-          onTap: () {
-            // TODO: Navigate to Google Fit sync
-          },
+          onTap: () => context.push('/google-fit-sync'),
         ),
         ProfileItem(
           icon: LucideIcons.shield,

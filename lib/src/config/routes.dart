@@ -17,6 +17,7 @@ import 'package:da1/src/presentation/screens/home/diet/meal_scan_screen.dart';
 import 'package:da1/src/presentation/screens/home/exercise/activity_analytics_screen.dart';
 import 'package:da1/src/presentation/screens/home/exercise/add_activity_screen.dart';
 import 'package:da1/src/presentation/screens/notifications/notifications_screen.dart';
+import 'package:da1/src/presentation/screens/profile/integrations/google_fit_sync_screen.dart';
 import 'package:da1/src/data/models/post_model.dart';
 import 'package:da1/src/presentation/screens/home/step/steps_screen.dart';
 import 'package:da1/src/presentation/screens/profile/profile_screen.dart';
@@ -192,6 +193,11 @@ class AppRoutes {
         path: '/notifications',
         name: 'notifications',
         builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: '/google-fit-sync',
+        name: 'google-fit-sync',
+        builder: (context, state) => const GoogleFitSyncScreen(),
       ),
       ShellRoute(
         builder: (context, state, child) {
