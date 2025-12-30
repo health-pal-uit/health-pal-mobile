@@ -30,6 +30,7 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
   bool _isFavorited = false;
   bool _isLoadingFavorite = true;
   bool _isTogglingFavorite = false;
+  String? _favId; // Store the favorite ID for deletion
 
   // Common serving sizes
   final List<Map<String, dynamic>> _servingSizes = [
@@ -58,6 +59,16 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
       return;
     }
 
+    // Check if meal already has fav_id from the list
+    if (widget.meal['fav_id'] != null) {
+      setState(() {
+        _favId = widget.meal['fav_id'];
+        _isFavorited = true;
+        _isLoadingFavorite = false;
+      });
+      return;
+    }
+
     final repository = AppRoutes.getMealRepository();
     if (repository == null) {
       setState(() => _isLoadingFavorite = false);
@@ -68,10 +79,40 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
     if (mounted) {
       result.fold(
         (failure) => setState(() => _isLoadingFavorite = false),
-        (isFavorited) => setState(() {
-          _isFavorited = isFavorited;
-          _isLoadingFavorite = false;
-        }),
+        (isFavorited) {
+          setState(() {
+            _isFavorited = isFavorited;
+            _isLoadingFavorite = false;
+          });
+          // If favorited, we need to get all favorites to find the fav_id
+          if (isFavorited) {
+            _getFavIdFromList();
+          }
+        },
+      );
+    }
+  }
+
+  Future<void> _getFavIdFromList() async {
+    final repository = AppRoutes.getMealRepository();
+    if (repository == null) return;
+
+    final result = await repository.getFavoriteMeals(page: 1, limit: 100);
+    if (mounted) {
+      result.fold(
+        (failure) {
+          // Failed to get fav_id
+        },
+        (meals) {
+          final mealId = widget.meal['id'];
+          final favMeal = meals.firstWhere(
+            (meal) => meal['id'] == mealId,
+            orElse: () => <String, dynamic>{},
+          );
+          if (favMeal.isNotEmpty && favMeal['fav_id'] != null) {
+            setState(() => _favId = favMeal['fav_id']);
+          }
+        },
       );
     }
   }
@@ -84,9 +125,9 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
     final authState = context.read<AuthBloc>().state;
     if (authState is! Authenticated) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User not authenticated')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('User not authenticated')));
       }
       return;
     }
@@ -100,7 +141,11 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
       return;
     }
 
-    final result = await repository.toggleFavorite(userId, mealId);
+    // If already favorited, remove it. Otherwise, add it.
+    final result = _isFavorited
+        ? await repository.removeFavorite(_favId!)
+        : await repository.addFavorite(userId, mealId);
+
     if (mounted) {
       setState(() => _isTogglingFavorite = false);
 
@@ -113,7 +158,12 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
           );
         },
         (_) {
-          setState(() => _isFavorited = !_isFavorited);
+          setState(() {
+            _isFavorited = !_isFavorited;
+            if (!_isFavorited) {
+              _favId = null; // Clear fav ID when removed
+            }
+          });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
@@ -121,6 +171,10 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
               ),
             ),
           );
+          // Re-check status to get the new fav_id if added
+          if (_isFavorited) {
+            _checkFavoriteStatus();
+          }
         },
       );
     }
