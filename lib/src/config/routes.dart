@@ -16,6 +16,7 @@ import 'package:da1/src/presentation/screens/home/diet/food_search_screen.dart';
 import 'package:da1/src/presentation/screens/home/diet/meal_scan_screen.dart';
 import 'package:da1/src/presentation/screens/home/exercise/activity_analytics_screen.dart';
 import 'package:da1/src/presentation/screens/home/exercise/add_activity_screen.dart';
+import 'package:da1/src/presentation/screens/notifications/notifications_screen.dart';
 import 'package:da1/src/data/models/post_model.dart';
 import 'package:da1/src/presentation/screens/home/step/steps_screen.dart';
 import 'package:da1/src/presentation/screens/profile/profile_screen.dart';
@@ -186,6 +187,11 @@ class AppRoutes {
         path: '/activity-analytics',
         name: 'activity-analytics',
         builder: (context, state) => ActivityAnalyticsScreen(),
+      ),
+      GoRoute(
+        path: '/notifications',
+        name: 'notifications',
+        builder: (context, state) => const NotificationsScreen(),
       ),
       ShellRoute(
         builder: (context, state, child) {

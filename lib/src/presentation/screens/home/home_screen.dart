@@ -52,7 +52,6 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         (hasProfile) async {
           if (hasProfile) {
-            // Fetch the fitness profiles to get TDEE
             final fitnessProfilesResult = await repository.getFitnessProfiles();
             fitnessProfilesResult.fold(
               (failure) {
@@ -163,10 +162,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   final result = await context.push(
                     '/foodSearch?mealType=$mealType',
                   );
-                  // Reload daily log if a meal was added
                   if (result == true && mounted) {
                     await _loadDailyLog();
-                    setState(() {}); // Force rebuild
+                    setState(() {});
                   }
                 },
               ),
@@ -195,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Icons.notifications_none_outlined,
                 color: AppColors.textPrimary,
               ),
-              onPressed: () {},
+              onPressed: () => context.push('/notifications'),
             ),
           ],
         ),
@@ -249,7 +247,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   setState(() {
                     selectedDate = date;
                   });
-                  _loadDailyLog(); // Reload daily log for new date
+                  _loadDailyLog();
                 },
                 child: Container(
                   width: 45,
