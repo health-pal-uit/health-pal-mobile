@@ -6,6 +6,7 @@ abstract class MealRemoteDataSource {
   Future<bool> checkIfFavorited(String mealId);
   Future<void> addFavorite(String userId, String mealId);
   Future<void> removeFavorite(String favId);
+  Future<Map<String, dynamic>> getMealById(String mealId);
 }
 
 class MealRemoteDataSourceImpl implements MealRemoteDataSource {
@@ -116,6 +117,25 @@ class MealRemoteDataSourceImpl implements MealRemoteDataSource {
           'Failed to remove favorite - Status: ${response.statusCode}',
         );
       }
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception('Network error: ${e.message}');
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> getMealById(String mealId) async {
+    try {
+      final response = await dio.get('/meals/$mealId');
+
+      if (response.statusCode == 200) {
+        return response.data['data'] as Map<String, dynamic>;
+      }
+      throw Exception(
+        'Failed to get meal details - Status: ${response.statusCode}',
+      );
     } catch (e) {
       if (e is DioException) {
         throw Exception('Network error: ${e.message}');

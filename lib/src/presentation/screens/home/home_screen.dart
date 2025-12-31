@@ -315,6 +315,8 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 20),
               MealDiaryCard(
                 dailyMeals: dailyLog?['daily_meals'] as List<dynamic>?,
+                selectedDate:
+                    '${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}',
                 onAddMeal: (mealType) async {
                   final dateStr =
                       '${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}';

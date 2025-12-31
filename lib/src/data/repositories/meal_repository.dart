@@ -11,6 +11,7 @@ abstract class MealRepository {
   Future<Either<Failure, bool>> checkIfFavorited(String mealId);
   Future<Either<Failure, void>> addFavorite(String userId, String mealId);
   Future<Either<Failure, void>> removeFavorite(String favId);
+  Future<Either<Failure, Map<String, dynamic>>> getMealById(String mealId);
 }
 
 class MealRepositoryImpl implements MealRepository {
@@ -72,6 +73,18 @@ class MealRepositoryImpl implements MealRepository {
     try {
       await remoteDataSource.removeFavorite(favId);
       return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> getMealById(
+    String mealId,
+  ) async {
+    try {
+      final meal = await remoteDataSource.getMealById(mealId);
+      return Right(meal);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

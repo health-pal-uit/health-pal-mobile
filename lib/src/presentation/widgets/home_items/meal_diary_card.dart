@@ -1,12 +1,19 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/presentation/screens/home/diet/meal_diary_detail_screen.dart';
 import 'package:flutter/material.dart';
 
 class MealDiaryCard extends StatelessWidget {
   final List<dynamic>? dailyMeals;
   final Function(String mealType)? onAddMeal;
+  final String? selectedDate; // Format: "DD/MM/YYYY"
 
-  const MealDiaryCard({super.key, this.dailyMeals, this.onAddMeal});
+  const MealDiaryCard({
+    super.key,
+    this.dailyMeals,
+    this.onAddMeal,
+    this.selectedDate,
+  });
 
   int _getMealCount(String mealType) {
     if (dailyMeals == null) return 0;
@@ -97,7 +104,22 @@ class MealDiaryCard extends StatelessWidget {
           const SizedBox(height: 16),
           InkWell(
             onTap: () {
-              // TODO: Navigate to detailed meal diary
+              if (dailyMeals != null && dailyMeals!.isNotEmpty) {
+                final dateStr = selectedDate ??
+                    (() {
+                      final now = DateTime.now();
+                      return '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
+                    })();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MealDiaryDetailScreen(
+                      dailyMeals: dailyMeals!,
+                      selectedDate: dateStr,
+                    ),
+                  ),
+                );
+              }
             },
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 12),
