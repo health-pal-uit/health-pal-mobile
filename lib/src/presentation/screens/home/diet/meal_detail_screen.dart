@@ -10,11 +10,13 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 class MealDetailScreen extends StatefulWidget {
   final Map<String, dynamic> meal;
   final String mealType;
+  final String? selectedDate; // Format: "DD/MM/YYYY"
 
   const MealDetailScreen({
     super.key,
     required this.meal,
     required this.mealType,
+    this.selectedDate,
   });
 
   @override
@@ -77,19 +79,18 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
 
     final result = await repository.checkIfFavorited(mealId);
     if (mounted) {
-      result.fold(
-        (failure) => setState(() => _isLoadingFavorite = false),
-        (isFavorited) {
-          setState(() {
-            _isFavorited = isFavorited;
-            _isLoadingFavorite = false;
-          });
-          // If favorited, we need to get all favorites to find the fav_id
-          if (isFavorited) {
-            _getFavIdFromList();
-          }
-        },
-      );
+      result.fold((failure) => setState(() => _isLoadingFavorite = false), (
+        isFavorited,
+      ) {
+        setState(() {
+          _isFavorited = isFavorited;
+          _isLoadingFavorite = false;
+        });
+        // If favorited, we need to get all favorites to find the fav_id
+        if (isFavorited) {
+          _getFavIdFromList();
+        }
+      });
     }
   }
 
@@ -141,10 +142,10 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
       return;
     }
 
-    // If already favorited, remove it. Otherwise, add it.
-    final result = _isFavorited
-        ? await repository.removeFavorite(_favId!)
-        : await repository.addFavorite(userId, mealId);
+    final result =
+        _isFavorited
+            ? await repository.removeFavorite(_favId!)
+            : await repository.addFavorite(userId, mealId);
 
     if (mounted) {
       setState(() => _isTogglingFavorite = false);
@@ -161,7 +162,7 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
           setState(() {
             _isFavorited = !_isFavorited;
             if (!_isFavorited) {
-              _favId = null; // Clear fav ID when removed
+              _favId = null;
             }
           });
           ScaffoldMessenger.of(context).showSnackBar(
@@ -171,7 +172,6 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
               ),
             ),
           );
-          // Re-check status to get the new fav_id if added
           if (_isFavorited) {
             _checkFavoriteStatus();
           }
@@ -210,13 +210,14 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
       return;
     }
 
-    // Convert portion to kg
     final quantityKg = _portionSize / 1000;
 
-    // Format date as "DD/MM/YYYY" based on the API example
-    final now = DateTime.now();
     final loggedAt =
-        '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
+        widget.selectedDate ??
+        (() {
+          final now = DateTime.now();
+          return '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
+        })();
 
     final result = await repository.addDailyMeal(
       mealId: mealId,

@@ -7,8 +7,9 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class FoodSearchScreen extends StatefulWidget {
   final String? initialMealType;
+  final String? selectedDate; // Format: "DD/MM/YYYY"
 
-  const FoodSearchScreen({super.key, this.initialMealType});
+  const FoodSearchScreen({super.key, this.initialMealType, this.selectedDate});
 
   @override
   State<FoodSearchScreen> createState() => _FoodSearchScreenState();
@@ -341,6 +342,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
                     (context) => MealDetailScreen(
                       meal: meal,
                       mealType: _selectedMealType,
+                      selectedDate: widget.selectedDate,
                     ),
               ),
             );

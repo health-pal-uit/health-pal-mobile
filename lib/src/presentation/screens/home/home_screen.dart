@@ -316,8 +316,10 @@ class _HomeScreenState extends State<HomeScreen> {
               MealDiaryCard(
                 dailyMeals: dailyLog?['daily_meals'] as List<dynamic>?,
                 onAddMeal: (mealType) async {
+                  final dateStr =
+                      '${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}';
                   final result = await context.push(
-                    '/foodSearch?mealType=$mealType',
+                    '/foodSearch?mealType=$mealType&date=$dateStr',
                   );
                   if (result == true && mounted) {
                     await _loadDailyLog();

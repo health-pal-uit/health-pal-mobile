@@ -244,7 +244,11 @@ class AppRoutes {
         name: 'foodSearch',
         builder: (context, state) {
           final mealType = state.uri.queryParameters['mealType'];
-          return FoodSearchScreen(initialMealType: mealType);
+          final date = state.uri.queryParameters['date'];
+          return FoodSearchScreen(
+            initialMealType: mealType,
+            selectedDate: date,
+          );
         },
       ),
       GoRoute(

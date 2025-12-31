@@ -19,6 +19,22 @@ class MealDiaryCard extends StatelessWidget {
         .length;
   }
 
+  int _getMealKcal(String mealType) {
+    if (dailyMeals == null) return 0;
+    final meals = dailyMeals!.where(
+      (meal) =>
+          meal['meal_type']?.toString().toLowerCase() == mealType.toLowerCase(),
+    );
+
+    double totalKcal = 0;
+    for (final meal in meals) {
+      final mealKcal = (meal['total_kcal'] ?? 0) as num;
+      totalKcal += mealKcal.toDouble();
+    }
+
+    return totalKcal.round();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -53,24 +69,28 @@ class MealDiaryCard extends StatelessWidget {
                 label: 'Breakfast',
                 color: const Color(0xFFFFE5C2),
                 count: _getMealCount('breakfast'),
+                kcal: _getMealKcal('breakfast'),
               ),
               _buildMealButton(
                 icon: '🍱',
                 label: 'Lunch',
                 color: const Color(0xFFFFE5C2),
                 count: _getMealCount('lunch'),
+                kcal: _getMealKcal('lunch'),
               ),
               _buildMealButton(
                 icon: '🍽️',
                 label: 'Dinner',
                 color: const Color(0xFFFFE5C2),
                 count: _getMealCount('dinner'),
+                kcal: _getMealKcal('dinner'),
               ),
               _buildMealButton(
                 icon: '🥤',
                 label: 'Snack',
                 color: const Color(0xFFFFE5C2),
                 count: _getMealCount('snack'),
+                kcal: _getMealKcal('snack'),
               ),
             ],
           ),
@@ -115,6 +135,7 @@ class MealDiaryCard extends StatelessWidget {
     required String label,
     required Color color,
     required int count,
+    required int kcal,
   }) {
     return Column(
       children: [
@@ -130,22 +151,20 @@ class MealDiaryCard extends StatelessWidget {
             child: Stack(
               children: [
                 Center(child: Text(icon, style: const TextStyle(fontSize: 32))),
-                if (count > 0)
-                  Positioned(
-                    top: 4,
-                    right: 4,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
-                      ),
+                if (kcal > 0)
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Center(
                       child: Text(
-                        count.toString(),
+                        '$kcal',
+                        textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),
