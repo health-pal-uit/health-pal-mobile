@@ -150,11 +150,33 @@ class AppRoutes {
       GoRoute(
         path: '/onboarding-height',
         name: 'onboarding-height',
+        redirect: (context, state) async {
+          // Prevent access if user already has fitness profile
+          if (_fitnessProfileRepository != null) {
+            final result = await _fitnessProfileRepository!.hasFitnessProfile();
+            return result.fold(
+              (failure) => null,
+              (hasProfile) => hasProfile ? '/' : null,
+            );
+          }
+          return null;
+        },
         builder: (context, state) => const OnboardingHeightScreen(),
       ),
       GoRoute(
         path: '/onboarding-weight',
         name: 'onboarding-weight',
+        redirect: (context, state) async {
+          // Prevent access if user already has fitness profile
+          if (_fitnessProfileRepository != null) {
+            final result = await _fitnessProfileRepository!.hasFitnessProfile();
+            return result.fold(
+              (failure) => null,
+              (hasProfile) => hasProfile ? '/' : null,
+            );
+          }
+          return null;
+        },
         builder: (context, state) {
           final height = state.extra as double?;
           return OnboardingWeightScreen(height: height);
@@ -163,6 +185,17 @@ class AppRoutes {
       GoRoute(
         path: '/onboarding-body-measurements',
         name: 'onboarding-body-measurements',
+        redirect: (context, state) async {
+          // Prevent access if user already has fitness profile
+          if (_fitnessProfileRepository != null) {
+            final result = await _fitnessProfileRepository!.hasFitnessProfile();
+            return result.fold(
+              (failure) => null,
+              (hasProfile) => hasProfile ? '/' : null,
+            );
+          }
+          return null;
+        },
         builder: (context, state) {
           final data = state.extra as Map<String, dynamic>;
           return OnboardingBodyMeasurementsScreen(
@@ -174,6 +207,17 @@ class AppRoutes {
       GoRoute(
         path: '/onboarding-activity',
         name: 'onboarding-activity',
+        redirect: (context, state) async {
+          // Prevent access if user already has fitness profile
+          if (_fitnessProfileRepository != null) {
+            final result = await _fitnessProfileRepository!.hasFitnessProfile();
+            return result.fold(
+              (failure) => null,
+              (hasProfile) => hasProfile ? '/' : null,
+            );
+          }
+          return null;
+        },
         builder: (context, state) {
           final data = state.extra as Map<String, dynamic>;
           final measurements = {
@@ -193,6 +237,17 @@ class AppRoutes {
       GoRoute(
         path: '/onboarding-goal',
         name: 'onboarding-goal',
+        redirect: (context, state) async {
+          // Prevent access if user already has fitness profile
+          if (_fitnessProfileRepository != null) {
+            final result = await _fitnessProfileRepository!.hasFitnessProfile();
+            return result.fold(
+              (failure) => null,
+              (hasProfile) => hasProfile ? '/' : null,
+            );
+          }
+          return null;
+        },
         builder: (context, state) {
           final data = state.extra as Map<String, dynamic>;
           return OnboardingGoalTypeScreen(previousData: data);

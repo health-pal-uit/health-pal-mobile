@@ -4,10 +4,7 @@ import 'package:dio/dio.dart';
 
 abstract class UserRemoteDataSource {
   Future<UserModel> updateAvatar(String imagePath);
-  Future<UserModel> updateProfile({
-    String? imagePath,
-    String? fullname,
-  });
+  Future<UserModel> updateProfile({String? imagePath, String? fullname});
 }
 
 class UserRemoteDataSourceImpl implements UserRemoteDataSource {
@@ -28,11 +25,7 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
       final response = await dio.patch(
         ApiConfig.updateProfile,
         data: formData,
-        options: Options(
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        ),
+        options: Options(headers: {'Content-Type': 'multipart/form-data'}),
       );
 
       if (response.statusCode == 200) {
@@ -50,10 +43,7 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
   }
 
   @override
-  Future<UserModel> updateProfile({
-    String? imagePath,
-    String? fullname,
-  }) async {
+  Future<UserModel> updateProfile({String? imagePath, String? fullname}) async {
     final Map<String, dynamic> formDataMap = {};
 
     if (imagePath != null) {
@@ -73,11 +63,7 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
       final response = await dio.patch(
         ApiConfig.updateProfile,
         data: formData,
-        options: Options(
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        ),
+        options: Options(headers: {'Content-Type': 'multipart/form-data'}),
       );
 
       if (response.statusCode == 200) {

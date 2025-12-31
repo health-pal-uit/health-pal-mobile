@@ -48,7 +48,8 @@ class _OnboardingActivityLevelScreenState
   ];
 
   Future<void> _createFitnessProfile() async {
-    if (_selectedActivityLevel == null) return;
+    // Prevent double-submission
+    if (_selectedActivityLevel == null || _isLoading) return;
 
     setState(() {
       _isLoading = true;
@@ -58,6 +59,23 @@ class _OnboardingActivityLevelScreenState
       final repository = AppRoutes.getFitnessProfileRepository();
       if (repository == null) {
         throw Exception('Fitness profile repository not available');
+      }
+
+      // Check if profile already exists to prevent duplicates
+      final hasProfileResult = await repository.hasFitnessProfile();
+      final hasProfile = hasProfileResult.fold((l) => false, (r) => r);
+
+      if (hasProfile) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('You already have a fitness profile'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          context.go('/'); // Redirect to home
+        }
+        return;
       }
 
       // Build the payload, only including non-null optional fields
@@ -90,8 +108,9 @@ class _OnboardingActivityLevelScreenState
         },
         (response) {
           if (mounted) {
-            context.pushNamed(
-              'onboarding-goal',
+            // Use go() instead of pushNamed() to prevent back navigation
+            context.go(
+              '/onboarding-goal',
               extra: {'fitnessProfileId': response['data']?['id']},
             );
           }
@@ -239,16 +258,7 @@ class _OnboardingActivityLevelScreenState
               Row(
                 children: [
                   ElevatedButton(
-                    onPressed:
-                        _isLoading
-                            ? null
-                            : () => context.pushNamed(
-                              'onboarding-body-measurements',
-                              extra: {
-                                'height': widget.measurements['height'],
-                                'weight': widget.measurements['weight'],
-                              },
-                            ),
+                    onPressed: _isLoading ? null : () => context.pop(),
                     style: ElevatedButton.styleFrom(
                       shape: const CircleBorder(),
                       backgroundColor: const Color(0xFFFFE5C2),

@@ -147,7 +147,7 @@ class _OnboardingWeightScreenState extends State<OnboardingWeightScreen> {
               Row(
                 children: [
                   ElevatedButton(
-                    onPressed: () => context.go('/onboarding-height'),
+                    onPressed: () => context.pop(),
                     style: ElevatedButton.styleFrom(
                       shape: const CircleBorder(),
                       backgroundColor: const Color(0xFFFFE5C2),

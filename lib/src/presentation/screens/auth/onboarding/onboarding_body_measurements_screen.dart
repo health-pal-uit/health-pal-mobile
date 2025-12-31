@@ -153,7 +153,7 @@ class _OnboardingBodyMeasurementsScreenState
               Row(
                 children: [
                   ElevatedButton(
-                    onPressed: () => context.go('/onboarding-weight'),
+                    onPressed: () => context.pop(),
                     style: ElevatedButton.styleFrom(
                       shape: const CircleBorder(),
                       backgroundColor: const Color(0xFFFFE5C2),
