@@ -6,7 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class MealDiaryDetailScreen extends StatefulWidget {
   final List<dynamic> dailyMeals;
-  final String selectedDate; // Format: "DD/MM/YYYY"
+  final String selectedDate;
 
   const MealDiaryDetailScreen({
     super.key,
@@ -179,22 +179,23 @@ class _MealDiaryDetailScreenState extends State<MealDiaryDetailScreen> {
 
           // Meals List by Type
           Expanded(
-            child: _isLoadingDetails
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.primary,
+            child:
+                _isLoadingDetails
+                    ? const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                      ),
+                    )
+                    : ListView(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      children: [
+                        _buildMealTypeSection('breakfast'),
+                        _buildMealTypeSection('lunch'),
+                        _buildMealTypeSection('dinner'),
+                        _buildMealTypeSection('snack'),
+                        const SizedBox(height: 24),
+                      ],
                     ),
-                  )
-                : ListView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    children: [
-                      _buildMealTypeSection('breakfast'),
-                      _buildMealTypeSection('lunch'),
-                      _buildMealTypeSection('dinner'),
-                      _buildMealTypeSection('snack'),
-                      const SizedBox(height: 24),
-                    ],
-                  ),
           ),
         ],
       ),
@@ -308,11 +309,7 @@ class _MealDiaryDetailScreenState extends State<MealDiaryDetailScreen> {
                 color: Colors.grey[300],
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(
-                Icons.restaurant,
-                color: Colors.grey[600],
-                size: 28,
-              ),
+              child: Icon(Icons.restaurant, color: Colors.grey[600], size: 28),
             ),
 
           const SizedBox(width: 12),

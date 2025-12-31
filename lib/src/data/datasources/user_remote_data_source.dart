@@ -4,6 +4,10 @@ import 'package:dio/dio.dart';
 
 abstract class UserRemoteDataSource {
   Future<UserModel> updateAvatar(String imagePath);
+  Future<UserModel> updateProfile({
+    String? imagePath,
+    String? fullname,
+  });
 }
 
 class UserRemoteDataSourceImpl implements UserRemoteDataSource {
@@ -20,8 +24,73 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
       ),
     });
 
-    final response = await dio.patch(ApiConfig.updateProfile, data: formData);
+    try {
+      final response = await dio.patch(
+        ApiConfig.updateProfile,
+        data: formData,
+        options: Options(
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        ),
+      );
 
-    return UserModel.fromJson(response.data['data']);
+      if (response.statusCode == 200) {
+        return UserModel.fromJson(response.data['data']);
+      }
+      throw Exception(
+        'Failed to update avatar - Status: ${response.statusCode}',
+      );
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception('Network error: ${e.message}');
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<UserModel> updateProfile({
+    String? imagePath,
+    String? fullname,
+  }) async {
+    final Map<String, dynamic> formDataMap = {};
+
+    if (imagePath != null) {
+      formDataMap['image'] = await MultipartFile.fromFile(
+        imagePath,
+        filename: imagePath.split('/').last,
+      );
+    }
+
+    if (fullname != null) {
+      formDataMap['fullname'] = fullname;
+    }
+
+    final formData = FormData.fromMap(formDataMap);
+
+    try {
+      final response = await dio.patch(
+        ApiConfig.updateProfile,
+        data: formData,
+        options: Options(
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        return UserModel.fromJson(response.data['data']);
+      }
+      throw Exception(
+        'Failed to update profile - Status: ${response.statusCode}',
+      );
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception('Network error: ${e.message}');
+      }
+      rethrow;
+    }
   }
 }

@@ -105,7 +105,8 @@ class MealDiaryCard extends StatelessWidget {
           InkWell(
             onTap: () {
               if (dailyMeals != null && dailyMeals!.isNotEmpty) {
-                final dateStr = selectedDate ??
+                final dateStr =
+                    selectedDate ??
                     (() {
                       final now = DateTime.now();
                       return '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
@@ -113,10 +114,11 @@ class MealDiaryCard extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => MealDiaryDetailScreen(
-                      dailyMeals: dailyMeals!,
-                      selectedDate: dateStr,
-                    ),
+                    builder:
+                        (context) => MealDiaryDetailScreen(
+                          dailyMeals: dailyMeals!,
+                          selectedDate: dateStr,
+                        ),
                   ),
                 );
               }
