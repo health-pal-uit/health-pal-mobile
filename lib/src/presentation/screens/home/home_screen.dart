@@ -203,12 +203,35 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         (response) {
           if (mounted) {
-            final profile = response['data'];
-            setState(() {
-              fitnessProfile = profile;
-              tdeeKcal = profile['tdee_kcal']?.toDouble();
-              isLoadingTdee = false;
-            });
+            // Handle both single profile and array of profiles
+            dynamic profileData = response['data'];
+            Map<String, dynamic>? profile;
+
+            if (profileData is List && profileData.isNotEmpty) {
+              // If data is a list, get the most recent profile (sorted by created_at)
+              final profiles = List<Map<String, dynamic>>.from(profileData);
+              profiles.sort((a, b) {
+                final dateA = DateTime.parse(a['created_at'] as String);
+                final dateB = DateTime.parse(b['created_at'] as String);
+                return dateB.compareTo(dateA); // Most recent first
+              });
+              profile = profiles.first;
+            } else if (profileData is Map<String, dynamic>) {
+              // If data is already a single profile object
+              profile = profileData;
+            }
+
+            if (profile != null) {
+              setState(() {
+                fitnessProfile = profile;
+                tdeeKcal = profile!['tdee_kcal']?.toDouble();
+                isLoadingTdee = false;
+              });
+            } else {
+              setState(() {
+                isLoadingTdee = false;
+              });
+            }
           }
         },
       );
@@ -510,11 +533,18 @@ class _HomeScreenState extends State<HomeScreen> {
             ? (dailyLog!['total_fiber_gr'] as num?)?.toDouble()
             : null;
 
-    // Extract diet type name from fitness profile
+    // Extract diet type info from fitness profile
     String? dietTypeName;
+    int? proteinPercentages;
+    int? fatPercentages;
+    int? carbsPercentages;
+
     if (fitnessProfile != null && fitnessProfile!['diet_type'] != null) {
       final dietType = fitnessProfile!['diet_type'] as Map<String, dynamic>?;
       dietTypeName = dietType?['name'] as String?;
+      proteinPercentages = (dietType?['protein_percentages'] as num?)?.toInt();
+      fatPercentages = (dietType?['fat_percentages'] as num?)?.toInt();
+      carbsPercentages = (dietType?['carbs_percentages'] as num?)?.toInt();
     }
 
     return KcalCircularProgressCard(
@@ -544,6 +574,9 @@ class _HomeScreenState extends State<HomeScreen> {
       goalType:
           fitnessGoal != null ? fitnessGoal!['goal_type'] as String? : null,
       dietTypeName: dietTypeName,
+      proteinPercentages: proteinPercentages,
+      fatPercentages: fatPercentages,
+      carbsPercentages: carbsPercentages,
       onDietTypePressed: _showDietTypeBottomSheet,
     );
   }

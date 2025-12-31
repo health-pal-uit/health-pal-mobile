@@ -16,6 +16,9 @@ class KcalCircularProgressCard extends StatelessWidget {
   final int? fiberGoal;
   final String? goalType;
   final String? dietTypeName;
+  final int? proteinPercentages;
+  final int? fatPercentages;
+  final int? carbsPercentages;
   final VoidCallback? onDietTypePressed;
 
   const KcalCircularProgressCard({
@@ -33,6 +36,9 @@ class KcalCircularProgressCard extends StatelessWidget {
     this.fiberGoal,
     this.goalType,
     this.dietTypeName,
+    this.proteinPercentages,
+    this.fatPercentages,
+    this.carbsPercentages,
     this.onDietTypePressed,
   });
 
@@ -40,14 +46,30 @@ class KcalCircularProgressCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final remaining = needed - consumed;
     final carbsCurrent = carbs?.round() ?? 0;
-    final carbsGoalValue = carbsGoal ?? 301;
     final proteinCurrent = protein?.round() ?? 0;
-    final proteinGoalValue = proteinGoal ?? 138;
     final fatCurrent = fat?.round() ?? 0;
-    final fatGoalValue = fatGoal ?? 72;
     final fiberCurrent = fiber?.round() ?? 0;
-    final fiberGoalValue = fiberGoal ?? 32;
     final dietTypeDisplay = dietTypeName ?? 'Balanced';
+
+    // Calculate target macros based on diet type percentages
+    int carbsGoalValue;
+    int proteinGoalValue;
+    int fatGoalValue;
+
+    if (proteinPercentages != null && fatPercentages != null && carbsPercentages != null) {
+      // Calculate grams from percentages and total kcal
+      // Protein: 4 kcal/g, Fat: 9 kcal/g, Carbs: 4 kcal/g
+      proteinGoalValue = ((needed * proteinPercentages! / 100) / 4).round();
+      fatGoalValue = ((needed * fatPercentages! / 100) / 9).round();
+      carbsGoalValue = ((needed * carbsPercentages! / 100) / 4).round();
+    } else {
+      // Fallback to provided goals or defaults
+      carbsGoalValue = carbsGoal ?? 301;
+      proteinGoalValue = proteinGoal ?? 138;
+      fatGoalValue = fatGoal ?? 72;
+    }
+
+    final fiberGoalValue = fiberGoal ?? 32;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -334,22 +356,4 @@ class KcalCircularProgressCard extends StatelessWidget {
       ],
     );
   }
-
-  // String _getGoalTypeDisplay(String? goalType) {
-  //   if (goalType == null) return 'Balanced';
-  //   switch (goalType) {
-  //     case 'cut':
-  //       return 'Cut';
-  //     case 'bulk':
-  //       return 'Bulk';
-  //     case 'maintain':
-  //       return 'Maintain';
-  //     case 'recovery':
-  //       return 'Recovery';
-  //     case 'gain_muscles':
-  //       return 'Gain Muscles';
-  //     default:
-  //       return 'Balanced';
-  //   }
-  // }
 }
