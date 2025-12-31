@@ -33,6 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isLoadingFitnessGoal = true;
   List<DietType> dietTypes = [];
   bool isLoadingDietTypes = true;
+  Map<String, dynamic>? fitnessProfile;
 
   @override
   void initState() {
@@ -51,6 +52,12 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           isLoadingDietTypes = false;
         });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Diet type repository not available'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
       return;
     }
@@ -63,6 +70,12 @@ class _HomeScreenState extends State<HomeScreen> {
             setState(() {
               isLoadingDietTypes = false;
             });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to load diet types: ${failure.message}'),
+                backgroundColor: Colors.red,
+              ),
+            );
           }
         },
         (types) {
@@ -79,12 +92,39 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           isLoadingDietTypes = false;
         });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading diet types: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
 
   void _showDietTypeBottomSheet() {
-    if (dietTypes.isEmpty || fitnessGoal == null) return;
+    if (dietTypes.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Loading diet types, please wait...'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // Get current diet type ID from fitness profile
+    String? currentDietTypeId;
+
+    if (fitnessProfile != null && fitnessProfile!['diet_type'] != null) {
+      final dietType = fitnessProfile!['diet_type'] as Map<String, dynamic>?;
+      currentDietTypeId = dietType?['id'] as String?;
+    }
+
+    final targetKcal =
+        fitnessGoal != null
+            ? (fitnessGoal!['target_kcal'] as num?)?.toInt() ?? 2000
+            : 2000;
 
     showModalBottomSheet(
       context: context,
@@ -93,8 +133,8 @@ class _HomeScreenState extends State<HomeScreen> {
       builder:
           (context) => DietTypeBottomSheet(
             dietTypes: dietTypes,
-            currentDietTypeId: fitnessGoal!['diet_type_id'] as String?,
-            totalKcal: (fitnessGoal!['target_kcal'] as num?)?.toInt() ?? 2000,
+            currentDietTypeId: currentDietTypeId,
+            totalKcal: targetKcal,
           ),
     ).then((selectedDietType) {
       if (selectedDietType != null && selectedDietType is DietType) {
@@ -104,19 +144,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _updateFitnessGoalDietType(DietType dietType) async {
-    final repository = AppRoutes.getFitnessGoalRepository();
+    final repository = AppRoutes.getFitnessProfileRepository();
     if (repository == null) return;
 
     try {
-      final targetKcal = fitnessGoal!['target_kcal'] as int;
-      final payload = {
-        'diet_type_id': dietType.id,
-        'target_protein_gr': dietType.getProteinGrams(targetKcal),
-        'target_fat_gr': dietType.getFatGrams(targetKcal),
-        'target_carbs_gr': dietType.getCarbsGrams(targetKcal),
-      };
+      final payload = {'diet_type_id': dietType.id};
 
-      final result = await repository.updateFitnessGoal(payload);
+      final result = await repository.updateFitnessProfile(payload);
       result.fold(
         (failure) {
           if (mounted) {
@@ -128,14 +162,13 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           }
         },
-        (updatedGoal) {
+        (response) {
           if (mounted) {
-            setState(() {
-              fitnessGoal = updatedGoal['data'];
-            });
+            // Reload fitness profile to update the diet type display
+            _loadFitnessProfile();
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Completed Update Diet Type: ${dietType.name}'),
+                content: Text('Diet type updated to: ${dietType.name}'),
                 backgroundColor: Colors.green,
               ),
             );
@@ -159,7 +192,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (repository == null) return;
 
     try {
-      final result = await repository.hasFitnessProfile();
+      final result = await repository.getMyFitnessProfile();
       result.fold(
         (failure) {
           if (mounted) {
@@ -168,33 +201,14 @@ class _HomeScreenState extends State<HomeScreen> {
             });
           }
         },
-        (hasProfile) async {
-          if (hasProfile) {
-            final fitnessProfilesResult = await repository.getFitnessProfiles();
-            fitnessProfilesResult.fold(
-              (failure) {
-                if (mounted) {
-                  setState(() {
-                    isLoadingTdee = false;
-                  });
-                }
-              },
-              (profiles) {
-                if (mounted && profiles.isNotEmpty) {
-                  final profile = profiles[0];
-                  setState(() {
-                    tdeeKcal = profile['tdee_kcal']?.toDouble();
-                    isLoadingTdee = false;
-                  });
-                }
-              },
-            );
-          } else {
-            if (mounted) {
-              setState(() {
-                isLoadingTdee = false;
-              });
-            }
+        (response) {
+          if (mounted) {
+            final profile = response['data'];
+            setState(() {
+              fitnessProfile = profile;
+              tdeeKcal = profile['tdee_kcal']?.toDouble();
+              isLoadingTdee = false;
+            });
           }
         },
       );
@@ -496,6 +510,13 @@ class _HomeScreenState extends State<HomeScreen> {
             ? (dailyLog!['total_fiber_gr'] as num?)?.toDouble()
             : null;
 
+    // Extract diet type name from fitness profile
+    String? dietTypeName;
+    if (fitnessProfile != null && fitnessProfile!['diet_type'] != null) {
+      final dietType = fitnessProfile!['diet_type'] as Map<String, dynamic>?;
+      dietTypeName = dietType?['name'] as String?;
+    }
+
     return KcalCircularProgressCard(
       consumed: consumed,
       needed: needed,
@@ -522,6 +543,7 @@ class _HomeScreenState extends State<HomeScreen> {
               : null,
       goalType:
           fitnessGoal != null ? fitnessGoal!['goal_type'] as String? : null,
+      dietTypeName: dietTypeName,
       onDietTypePressed: _showDietTypeBottomSheet,
     );
   }

@@ -3,6 +3,8 @@ import 'package:dio/dio.dart';
 abstract class FitnessProfileRemoteDataSource {
   Future<List<dynamic>> getFitnessProfiles();
   Future<Map<String, dynamic>> createFitnessProfile(Map<String, dynamic> data);
+  Future<Map<String, dynamic>> getMyFitnessProfile();
+  Future<Map<String, dynamic>> updateFitnessProfile(Map<String, dynamic> data);
 }
 
 class FitnessProfileRemoteDataSourceImpl
@@ -50,6 +52,42 @@ class FitnessProfileRemoteDataSourceImpl
       }
     } catch (e) {
       throw Exception('Failed to create fitness profile: $e');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> getMyFitnessProfile() async {
+    try {
+      final response = await dio.get('/fitness-profiles/me');
+
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        throw Exception('Failed to fetch fitness profile');
+      }
+    } catch (e) {
+      throw Exception('Failed to fetch fitness profile: $e');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> updateFitnessProfile(
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      // Remove null values from the payload
+      final cleanData = Map<String, dynamic>.from(data)
+        ..removeWhere((key, value) => value == null);
+
+      final response = await dio.patch('/fitness-profiles/me', data: cleanData);
+
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        throw Exception('Failed to update fitness profile');
+      }
+    } catch (e) {
+      throw Exception('Failed to update fitness profile: $e');
     }
   }
 }

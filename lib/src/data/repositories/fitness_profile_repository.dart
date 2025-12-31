@@ -8,6 +8,10 @@ abstract class FitnessProfileRepository {
     Map<String, dynamic> data,
   );
   Future<Either<Failure, List<dynamic>>> getFitnessProfiles();
+  Future<Either<Failure, Map<String, dynamic>>> getMyFitnessProfile();
+  Future<Either<Failure, Map<String, dynamic>>> updateFitnessProfile(
+    Map<String, dynamic> data,
+  );
 }
 
 class FitnessProfileRepositoryImpl implements FitnessProfileRepository {
@@ -42,6 +46,28 @@ class FitnessProfileRepositoryImpl implements FitnessProfileRepository {
     try {
       final profiles = await remoteDataSource.getFitnessProfiles();
       return Right(profiles);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> getMyFitnessProfile() async {
+    try {
+      final profile = await remoteDataSource.getMyFitnessProfile();
+      return Right(profile);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> updateFitnessProfile(
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final result = await remoteDataSource.updateFitnessProfile(data);
+      return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

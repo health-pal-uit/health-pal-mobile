@@ -15,6 +15,7 @@ class KcalCircularProgressCard extends StatelessWidget {
   final int? carbsGoal;
   final int? fiberGoal;
   final String? goalType;
+  final String? dietTypeName;
   final VoidCallback? onDietTypePressed;
 
   const KcalCircularProgressCard({
@@ -31,6 +32,7 @@ class KcalCircularProgressCard extends StatelessWidget {
     this.carbsGoal,
     this.fiberGoal,
     this.goalType,
+    this.dietTypeName,
     this.onDietTypePressed,
   });
 
@@ -45,7 +47,7 @@ class KcalCircularProgressCard extends StatelessWidget {
     final fatGoalValue = fatGoal ?? 72;
     final fiberCurrent = fiber?.round() ?? 0;
     final fiberGoalValue = fiberGoal ?? 32;
-    final goalTypeDisplay = _getGoalTypeDisplay(goalType);
+    final dietTypeDisplay = dietTypeName ?? 'Balanced';
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -244,7 +246,7 @@ class KcalCircularProgressCard extends StatelessWidget {
                         ),
                         children: [
                           TextSpan(
-                            text: goalTypeDisplay,
+                            text: dietTypeDisplay,
                             style: TextStyle(
                               color: AppColors.primary,
                               fontWeight: FontWeight.bold,
@@ -333,21 +335,21 @@ class KcalCircularProgressCard extends StatelessWidget {
     );
   }
 
-  String _getGoalTypeDisplay(String? goalType) {
-    if (goalType == null) return 'Balanced';
-    switch (goalType) {
-      case 'cut':
-        return 'Cut';
-      case 'bulk':
-        return 'Bulk';
-      case 'maintain':
-        return 'Maintain';
-      case 'recovery':
-        return 'Recovery';
-      case 'gain_muscles':
-        return 'Gain Muscles';
-      default:
-        return 'Balanced';
-    }
-  }
+  // String _getGoalTypeDisplay(String? goalType) {
+  //   if (goalType == null) return 'Balanced';
+  //   switch (goalType) {
+  //     case 'cut':
+  //       return 'Cut';
+  //     case 'bulk':
+  //       return 'Bulk';
+  //     case 'maintain':
+  //       return 'Maintain';
+  //     case 'recovery':
+  //       return 'Recovery';
+  //     case 'gain_muscles':
+  //       return 'Gain Muscles';
+  //     default:
+  //       return 'Balanced';
+  //   }
+  // }
 }
