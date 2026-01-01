@@ -28,6 +28,8 @@ import 'package:da1/src/data/repositories/chat_message_repository.dart';
 import 'package:da1/src/data/datasources/chat_message_remote_data_source.dart';
 import 'package:da1/src/data/repositories/challenge_repository.dart';
 import 'package:da1/src/data/datasources/challenge_remote_data_source.dart';
+import 'package:da1/src/data/repositories/medal_repository.dart';
+import 'package:da1/src/data/datasources/medal_remote_data_source.dart';
 import 'package:da1/src/core/services/deep_link_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -163,6 +165,13 @@ void main() async {
     remoteDataSource: challengeRemoteDataSource,
   );
 
+  final MedalRemoteDataSource medalRemoteDataSource = MedalRemoteDataSourceImpl(
+    dio: dio,
+  );
+  final MedalRepository medalRepository = MedalRepositoryImpl(
+    remoteDataSource: medalRemoteDataSource,
+  );
+
   final AuthBloc authBloc = AuthBloc(authRepository: authRepository);
   final UserBloc userBloc = UserBloc(userRepository: userRepository);
 
@@ -183,6 +192,7 @@ void main() async {
   AppRoutes.setChatMessageRepository(chatMessageRepository);
   AppRoutes.setUserRepository(userRepository);
   AppRoutes.setChallengeRepository(challengeRepository);
+  AppRoutes.setMedalRepository(medalRepository);
 
   deepLinkService.initDeepLinks(
     onTokenReceived: (String token) async {

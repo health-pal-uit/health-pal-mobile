@@ -4,6 +4,7 @@ import 'package:da1/src/config/theme/typography.dart';
 import 'package:flutter/material.dart';
 import 'package:da1/src/domain/entities/challenge.dart';
 import 'package:da1/src/presentation/screens/home/exercise/challenge_detail_screen.dart';
+import 'package:da1/src/presentation/screens/home/exercise/medals_screen.dart';
 
 class ChallengesScreen extends StatefulWidget {
   const ChallengesScreen({super.key});
@@ -94,9 +95,50 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
-        title: Text(
-          'Challenges',
-          style: AppTypography.headline.copyWith(fontSize: 20),
+        title: PopupMenuButton<String>(
+          offset: const Offset(0, 50),
+          onSelected: (String value) {
+            if (value == 'medals') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const MedalsScreen()),
+              );
+            }
+          },
+          itemBuilder:
+              (BuildContext context) => [
+                const PopupMenuItem<String>(
+                  value: 'challenges',
+                  child: Row(
+                    children: [
+                      Icon(Icons.flag, size: 20),
+                      SizedBox(width: 8),
+                      Text('Challenges'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem<String>(
+                  value: 'medals',
+                  child: Row(
+                    children: [
+                      Icon(Icons.emoji_events, size: 20),
+                      SizedBox(width: 8),
+                      Text('Medals'),
+                    ],
+                  ),
+                ),
+              ],
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Challenges',
+                style: AppTypography.headline.copyWith(fontSize: 20),
+              ),
+              const SizedBox(width: 4),
+              const Icon(Icons.arrow_drop_down, color: AppColors.textPrimary),
+            ],
+          ),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),

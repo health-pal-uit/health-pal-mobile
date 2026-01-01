@@ -38,6 +38,7 @@ import 'package:da1/src/data/repositories/chat_session_repository.dart';
 import 'package:da1/src/data/repositories/chat_message_repository.dart';
 import 'package:da1/src/data/repositories/user_repository.dart';
 import 'package:da1/src/data/repositories/challenge_repository.dart';
+import 'package:da1/src/data/repositories/medal_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -55,6 +56,7 @@ class AppRoutes {
   static ChatMessageRepository? _chatMessageRepository;
   static UserRepository? _userRepository;
   static ChallengeRepository? _challengeRepository;
+  static MedalRepository? _medalRepository;
 
   static void setFitnessProfileRepository(FitnessProfileRepository repository) {
     _fitnessProfileRepository = repository;
@@ -158,6 +160,14 @@ class AppRoutes {
 
   static ChallengeRepository? getChallengeRepository() {
     return _challengeRepository;
+  }
+
+  static void setMedalRepository(MedalRepository repository) {
+    _medalRepository = repository;
+  }
+
+  static MedalRepository? getMedalRepository() {
+    return _medalRepository;
   }
 
   static final GoRouter router = GoRouter(
