@@ -29,6 +29,8 @@ abstract class ChatSessionRepository {
     required String userId,
     bool isAdmin = false,
   });
+
+  Future<Either<Exception, List<dynamic>>> getParticipants(String sessionId);
 }
 
 class ChatSessionRepositoryImpl implements ChatSessionRepository {
@@ -127,6 +129,18 @@ class ChatSessionRepositoryImpl implements ChatSessionRepository {
         isAdmin: isAdmin,
       );
       return const Right(null);
+    } on Exception catch (e) {
+      return Left(e);
+    }
+  }
+
+  @override
+  Future<Either<Exception, List<dynamic>>> getParticipants(
+    String sessionId,
+  ) async {
+    try {
+      final participants = await remoteDataSource.getParticipants(sessionId);
+      return Right(participants);
     } on Exception catch (e) {
       return Left(e);
     }

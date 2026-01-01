@@ -7,6 +7,7 @@ import 'package:da1/src/domain/entities/chat_session.dart';
 import 'package:da1/src/presentation/bloc/auth/auth_bloc.dart';
 import 'package:da1/src/presentation/bloc/auth/auth_state.dart';
 import 'package:da1/src/presentation/screens/chat/add_group_participant_screen.dart';
+import 'package:da1/src/presentation/screens/chat/group_participants_screen.dart';
 import 'package:da1/src/presentation/screens/chat/widgets/delete_chat_dialog.dart';
 import 'package:da1/src/presentation/screens/chat/widgets/message_bubble.dart';
 import 'package:da1/src/presentation/screens/chat/widgets/message_input.dart';
@@ -252,6 +253,26 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                   if (widget.session.isGroup)
                     ListTile(
                       leading: const Icon(
+                        LucideIcons.users,
+                        color: AppColors.primary,
+                      ),
+                      title: const Text('View Participants'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => GroupParticipantsScreen(
+                                  session: widget.session,
+                                ),
+                          ),
+                        );
+                      },
+                    ),
+                  if (widget.session.isGroup)
+                    ListTile(
+                      leading: const Icon(
                         LucideIcons.userPlus,
                         color: AppColors.primary,
                       ),
@@ -421,23 +442,52 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.session.title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
-                  ),
-                  if (widget.session.isGroup)
+              child: GestureDetector(
+                onTap:
+                    widget.session.isGroup
+                        ? () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => GroupParticipantsScreen(
+                                    session: widget.session,
+                                  ),
+                            ),
+                          );
+                        }
+                        : null,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      '${widget.session.participants.length} members',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      widget.session.title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
                     ),
-                ],
+                    if (widget.session.isGroup)
+                      Row(
+                        children: [
+                          Text(
+                            '${widget.session.participants.length} members',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            LucideIcons.chevronRight,
+                            size: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
               ),
             ),
           ],

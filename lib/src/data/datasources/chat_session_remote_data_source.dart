@@ -32,6 +32,9 @@ abstract class ChatSessionRemoteDataSource {
     required String userId,
     bool isAdmin = false,
   });
+
+  /// Get participants of a chat session
+  Future<List<dynamic>> getParticipants(String sessionId);
 }
 
 class ChatSessionRemoteDataSourceImpl implements ChatSessionRemoteDataSource {
@@ -187,6 +190,23 @@ class ChatSessionRemoteDataSourceImpl implements ChatSessionRemoteDataSource {
     } on DioException catch (e) {
       throw Exception(
         e.response?.data['message'] ?? 'Failed to add participant',
+      );
+    }
+  }
+
+  @override
+  Future<List<dynamic>> getParticipants(String sessionId) async {
+    try {
+      final response = await dio.get('/chat-participants/session/$sessionId');
+
+      if (response.statusCode == 200) {
+        return response.data['data'] as List<dynamic>;
+      }
+
+      throw Exception('Failed to get participants');
+    } on DioException catch (e) {
+      throw Exception(
+        e.response?.data['message'] ?? 'Failed to get participants',
       );
     }
   }
