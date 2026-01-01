@@ -6,6 +6,7 @@ import 'package:da1/src/domain/entities/user_chat_message.dart';
 import 'package:da1/src/domain/entities/chat_session.dart';
 import 'package:da1/src/presentation/bloc/auth/auth_bloc.dart';
 import 'package:da1/src/presentation/bloc/auth/auth_state.dart';
+import 'package:da1/src/presentation/screens/chat/add_group_participant_screen.dart';
 import 'package:da1/src/presentation/screens/chat/widgets/delete_chat_dialog.dart';
 import 'package:da1/src/presentation/screens/chat/widgets/message_bubble.dart';
 import 'package:da1/src/presentation/screens/chat/widgets/message_input.dart';
@@ -248,6 +249,30 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
+                  if (widget.session.isGroup)
+                    ListTile(
+                      leading: const Icon(
+                        LucideIcons.userPlus,
+                        color: AppColors.primary,
+                      ),
+                      title: const Text('Add Participants'),
+                      onTap: () async {
+                        Navigator.pop(context);
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => AddGroupParticipantScreen(
+                                  session: widget.session,
+                                ),
+                          ),
+                        );
+                        // Refresh session if participants were added
+                        if (result == true && mounted) {
+                          // Optionally reload session data here
+                        }
+                      },
+                    ),
                   ListTile(
                     leading: const Icon(
                       Icons.delete_outline,

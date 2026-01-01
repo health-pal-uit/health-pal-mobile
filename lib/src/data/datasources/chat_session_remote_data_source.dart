@@ -25,6 +25,13 @@ abstract class ChatSessionRemoteDataSource {
 
   /// Delete a chat session (admin only for groups)
   Future<void> deleteSession(String sessionId);
+
+  /// Add participant to a chat session
+  Future<void> addParticipant({
+    required String chatSessionId,
+    required String userId,
+    bool isAdmin = false,
+  });
 }
 
 class ChatSessionRemoteDataSourceImpl implements ChatSessionRemoteDataSource {
@@ -154,6 +161,32 @@ class ChatSessionRemoteDataSourceImpl implements ChatSessionRemoteDataSource {
     } on DioException catch (e) {
       throw Exception(
         e.response?.data['message'] ?? 'Failed to delete chat session',
+      );
+    }
+  }
+
+  @override
+  Future<void> addParticipant({
+    required String chatSessionId,
+    required String userId,
+    bool isAdmin = false,
+  }) async {
+    try {
+      final response = await dio.post(
+        '/chat-participants',
+        data: {
+          'chat_session_id': chatSessionId,
+          'user_id': userId,
+          'is_admin': isAdmin,
+        },
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception('Failed to add participant');
+      }
+    } on DioException catch (e) {
+      throw Exception(
+        e.response?.data['message'] ?? 'Failed to add participant',
       );
     }
   }

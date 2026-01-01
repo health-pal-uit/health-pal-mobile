@@ -23,6 +23,12 @@ abstract class ChatSessionRepository {
   Future<Either<Exception, void>> leaveSession(String sessionId);
 
   Future<Either<Exception, void>> deleteSession(String sessionId);
+
+  Future<Either<Exception, void>> addParticipant({
+    required String chatSessionId,
+    required String userId,
+    bool isAdmin = false,
+  });
 }
 
 class ChatSessionRepositoryImpl implements ChatSessionRepository {
@@ -102,6 +108,24 @@ class ChatSessionRepositoryImpl implements ChatSessionRepository {
   Future<Either<Exception, void>> deleteSession(String sessionId) async {
     try {
       await remoteDataSource.deleteSession(sessionId);
+      return const Right(null);
+    } on Exception catch (e) {
+      return Left(e);
+    }
+  }
+
+  @override
+  Future<Either<Exception, void>> addParticipant({
+    required String chatSessionId,
+    required String userId,
+    bool isAdmin = false,
+  }) async {
+    try {
+      await remoteDataSource.addParticipant(
+        chatSessionId: chatSessionId,
+        userId: userId,
+        isAdmin: isAdmin,
+      );
       return const Right(null);
     } on Exception catch (e) {
       return Left(e);
