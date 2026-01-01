@@ -131,9 +131,7 @@ class MessageBubble extends StatelessWidget {
                                 child: Icon(
                                   Icons.error,
                                   color:
-                                      isOwnMessage
-                                          ? Colors.white
-                                          : Colors.grey,
+                                      isOwnMessage ? Colors.white : Colors.grey,
                                 ),
                               );
                             },

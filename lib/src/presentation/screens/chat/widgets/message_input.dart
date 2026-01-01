@@ -147,7 +147,8 @@ class _MessageInputState extends State<MessageInput> {
 
   @override
   Widget build(BuildContext context) {
-    final hasContent = _messageController.text.trim().isNotEmpty || _selectedImage != null;
+    final hasContent =
+        _messageController.text.trim().isNotEmpty || _selectedImage != null;
 
     return Container(
       decoration: BoxDecoration(
@@ -225,7 +226,10 @@ class _MessageInputState extends State<MessageInput> {
                   controller: _messageController,
                   enabled: !_isSending,
                   decoration: InputDecoration(
-                    hintText: _selectedImage != null ? 'Add a caption...' : 'Type a message...',
+                    hintText:
+                        _selectedImage != null
+                            ? 'Add a caption...'
+                            : 'Type a message...',
                     hintStyle: TextStyle(color: Colors.grey[400]),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(24),
@@ -274,8 +278,7 @@ class _MessageInputState extends State<MessageInput> {
                             color: Colors.white,
                             size: 20,
                           ),
-                  onPressed:
-                      !hasContent || _isSending ? null : _sendMessage,
+                  onPressed: !hasContent || _isSending ? null : _sendMessage,
                   padding: const EdgeInsets.all(12),
                   constraints: const BoxConstraints(),
                 ),
