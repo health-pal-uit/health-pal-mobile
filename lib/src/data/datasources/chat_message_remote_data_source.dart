@@ -110,14 +110,17 @@ class ChatMessageRemoteDataSourceImpl implements ChatMessageRemoteDataSource {
     required String content,
   }) async {
     try {
-      final response = await dio.post(
-        '/chat-sessions/$sessionId/messages',
-        data: {'content': content, 'message_type': 'text'},
-      );
+      final formData = FormData.fromMap({
+        'content': content,
+        'chat_session_id': sessionId,
+      });
+
+      final response = await dio.post('/chat-messages', data: formData);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = response.data as Map<String, dynamic>;
         return UserChatMessage.fromJson(
-          response.data['data'] as Map<String, dynamic>,
+          responseData['data'] as Map<String, dynamic>,
         );
       }
 
@@ -135,19 +138,17 @@ class ChatMessageRemoteDataSourceImpl implements ChatMessageRemoteDataSource {
   }) async {
     try {
       final formData = FormData.fromMap({
+        'chat_session_id': sessionId,
         'image': await MultipartFile.fromFile(imagePath),
-        'message_type': 'image',
         if (caption != null && caption.isNotEmpty) 'content': caption,
       });
 
-      final response = await dio.post(
-        '/chat-sessions/$sessionId/messages',
-        data: formData,
-      );
+      final response = await dio.post('/chat-messages', data: formData);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = response.data as Map<String, dynamic>;
         return UserChatMessage.fromJson(
-          response.data['data'] as Map<String, dynamic>,
+          responseData['data'] as Map<String, dynamic>,
         );
       }
 

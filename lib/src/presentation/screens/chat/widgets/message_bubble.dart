@@ -97,8 +97,8 @@ class MessageBubble extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (message.messageType == MessageType.image &&
-                          message.mediaUrl != null) ...[
+                      // Show image if media_url is present
+                      if (message.mediaUrl != null) ...[
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.network(
@@ -128,7 +128,13 @@ class MessageBubble extends StatelessWidget {
                               return Container(
                                 height: 100,
                                 alignment: Alignment.center,
-                                child: const Icon(Icons.error),
+                                child: Icon(
+                                  Icons.error,
+                                  color:
+                                      isOwnMessage
+                                          ? Colors.white
+                                          : Colors.grey,
+                                ),
                               );
                             },
                           ),
