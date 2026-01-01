@@ -9,7 +9,10 @@ abstract class ChatSessionRemoteDataSource {
   Future<ChatSession> getSession(String sessionId);
 
   /// Create a new 1-1 chat session with another user
-  Future<ChatSession> createSession(String otherUserId);
+  Future<ChatSession> createSession({
+    required String otherUserId,
+    required String title,
+  });
 
   /// Create a new group chat session
   Future<ChatSession> createGroupSession({
@@ -72,11 +75,18 @@ class ChatSessionRemoteDataSourceImpl implements ChatSessionRemoteDataSource {
   }
 
   @override
-  Future<ChatSession> createSession(String otherUserId) async {
+  Future<ChatSession> createSession({
+    required String otherUserId,
+    required String title,
+  }) async {
     try {
       final response = await dio.post(
         '/chat-sessions',
-        data: {'other_user_id': otherUserId},
+        data: {
+          'title': title,
+          'is_group': false,
+          'participant_ids': [otherUserId],
+        },
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {

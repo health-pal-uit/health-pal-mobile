@@ -1,5 +1,7 @@
+import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/domain/entities/user.dart';
+import 'package:da1/src/presentation/screens/chat/chat_thread_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -79,31 +81,64 @@ class _NewChatScreenState extends State<NewChatScreen> {
 
   Future<void> _createChatSession(User otherUser) async {
     try {
-      // TODO: Create chat session via repository
-      // final repository = AppRoutes.getChatSessionRepository();
-      // final session = await repository.createSession(otherUser.id);
+      final repository = AppRoutes.getChatSessionRepository();
+      if (repository == null) {
+        throw Exception('Chat repository not initialized');
+      }
 
-      // For now, navigate back
-      // Navigator.pushReplacement(
-      //   context,
-      //   MaterialPageRoute(
-      //     builder: (context) => ChatThreadScreen(session: session),
-      //   ),
-      // );
-
+      // Show loading indicator
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Chat session creation not yet implemented'),
-            backgroundColor: AppColors.primary,
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
           ),
         );
       }
+
+      final result = await repository.createSession(
+        otherUserId: otherUser.id,
+        title: otherUser.fullName ?? otherUser.username ?? 'Chat',
+      );
+
+      // Close loading indicator
+      if (mounted) {
+        Navigator.pop(context);
+      }
+
+      result.fold(
+        (error) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(error.toString().replaceAll('Exception: ', '')),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        (session) {
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ChatThreadScreen(session: session),
+              ),
+            );
+          }
+        },
+      );
     } catch (e) {
+      // Close loading indicator if still showing
+      if (mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to create chat: $e'),
+            content: Text(e.toString().replaceAll('Exception: ', '')),
             backgroundColor: Colors.red,
           ),
         );

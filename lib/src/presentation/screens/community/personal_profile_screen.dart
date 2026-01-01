@@ -1,8 +1,10 @@
 import 'package:da1/src/config/api_config.dart';
+import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
 import 'package:da1/src/data/datasources/post_remote_data_source.dart';
 import 'package:da1/src/data/models/post_model.dart';
+import 'package:da1/src/presentation/screens/chat/chat_thread_screen.dart';
 import 'package:da1/src/presentation/widgets/community/post_card.dart';
 import 'package:da1/src/presentation/widgets/community/stat_card.dart';
 import 'package:dio/dio.dart';
@@ -85,7 +87,7 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
                     const SizedBox(height: 16),
                     const _ProfileBioSection(),
                     const SizedBox(height: 16),
-                    const _ActionButtons(),
+                    _ActionButtons(userId: widget.userId, user: widget.user),
                     const SizedBox(height: 28),
                     const _HealthStatsSection(),
                     const SizedBox(height: 24),
@@ -329,8 +331,82 @@ class _ProfileBioSection extends StatelessWidget {
   }
 }
 
-class _ActionButtons extends StatelessWidget {
-  const _ActionButtons();
+class _ActionButtons extends StatefulWidget {
+  final String? userId;
+  final UserInfo? user;
+
+  const _ActionButtons({this.userId, this.user});
+
+  @override
+  State<_ActionButtons> createState() => _ActionButtonsState();
+}
+
+class _ActionButtonsState extends State<_ActionButtons> {
+  bool _isCreatingChat = false;
+
+  Future<void> _createChatWithUser() async {
+    if (widget.userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('User ID not available'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isCreatingChat = true;
+    });
+
+    final repository = AppRoutes.getChatSessionRepository();
+    if (repository == null) {
+      setState(() {
+        _isCreatingChat = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Chat service not available'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    final result = await repository.createSession(
+      otherUserId: widget.userId!,
+      title: widget.user?.fullname ?? widget.user?.username ?? 'Chat',
+    );
+
+    setState(() {
+      _isCreatingChat = false;
+    });
+
+    result.fold(
+      (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(error.toString().replaceAll('Exception: ', '')),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      (session) {
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ChatThreadScreen(session: session),
+            ),
+          );
+        }
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -338,15 +414,25 @@ class _ActionButtons extends StatelessWidget {
       children: [
         Expanded(
           child: OutlinedButton.icon(
-            onPressed: () {},
-            icon: const Icon(
-              Icons.mail_outline_rounded,
-              color: Color(0xFF0A0A0A),
-              size: 18,
-            ),
-            label: const Text(
-              'Message',
-              style: TextStyle(fontSize: 14, color: Color(0xFF0A0A0A)),
+            onPressed: _isCreatingChat ? null : _createChatWithUser,
+            icon:
+                _isCreatingChat
+                    ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Color(0xFF0A0A0A),
+                      ),
+                    )
+                    : const Icon(
+                      Icons.mail_outline_rounded,
+                      color: Color(0xFF0A0A0A),
+                      size: 18,
+                    ),
+            label: Text(
+              _isCreatingChat ? 'Opening...' : 'Message',
+              style: const TextStyle(fontSize: 14, color: Color(0xFF0A0A0A)),
             ),
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: Colors.grey.shade300),

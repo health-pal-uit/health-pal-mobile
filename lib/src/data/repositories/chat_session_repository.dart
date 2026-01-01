@@ -10,7 +10,10 @@ abstract class ChatSessionRepository {
 
   Future<Either<Exception, ChatSession>> getSession(String sessionId);
 
-  Future<Either<Exception, ChatSession>> createSession(String otherUserId);
+  Future<Either<Exception, ChatSession>> createSession({
+    required String otherUserId,
+    required String title,
+  });
 
   Future<Either<Exception, ChatSession>> createGroupSession({
     required String title,
@@ -54,11 +57,15 @@ class ChatSessionRepositoryImpl implements ChatSessionRepository {
   }
 
   @override
-  Future<Either<Exception, ChatSession>> createSession(
-    String otherUserId,
-  ) async {
+  Future<Either<Exception, ChatSession>> createSession({
+    required String otherUserId,
+    required String title,
+  }) async {
     try {
-      final session = await remoteDataSource.createSession(otherUserId);
+      final session = await remoteDataSource.createSession(
+        otherUserId: otherUserId,
+        title: title,
+      );
       return Right(session);
     } on Exception catch (e) {
       return Left(e);
