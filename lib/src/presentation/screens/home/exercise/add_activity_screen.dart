@@ -1,6 +1,7 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/domain/entities/activity.dart';
+import 'package:da1/src/presentation/screens/home/exercise/log_activity_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -280,8 +281,17 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
               Icon(Icons.add_circle, color: AppColors.primary, size: 28),
             ],
           ),
-          onTap: () {
-            // TODO: Navigate to activity detail or log activity
+          onTap: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => LogActivityScreen(activity: activity),
+              ),
+            );
+
+            if (result == true && context.mounted) {
+              Navigator.pop(context, true);
+            }
           },
         );
       },

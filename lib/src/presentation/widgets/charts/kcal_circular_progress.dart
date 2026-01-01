@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 class KcalCircularProgressCard extends StatelessWidget {
   final int consumed;
   final int needed;
-  final int exercise;
+  final int burned;
   final double? protein;
   final double? fat;
   final double? carbs;
@@ -25,7 +25,7 @@ class KcalCircularProgressCard extends StatelessWidget {
     super.key,
     required this.consumed,
     required this.needed,
-    required this.exercise,
+    required this.burned,
     this.protein,
     this.fat,
     this.carbs,
@@ -51,19 +51,17 @@ class KcalCircularProgressCard extends StatelessWidget {
     final fiberCurrent = fiber?.round() ?? 0;
     final dietTypeDisplay = dietTypeName ?? 'Balanced';
 
-    // Calculate target macros based on diet type percentages
     int carbsGoalValue;
     int proteinGoalValue;
     int fatGoalValue;
 
-    if (proteinPercentages != null && fatPercentages != null && carbsPercentages != null) {
-      // Calculate grams from percentages and total kcal
-      // Protein: 4 kcal/g, Fat: 9 kcal/g, Carbs: 4 kcal/g
+    if (proteinPercentages != null &&
+        fatPercentages != null &&
+        carbsPercentages != null) {
       proteinGoalValue = ((needed * proteinPercentages! / 100) / 4).round();
       fatGoalValue = ((needed * fatPercentages! / 100) / 9).round();
       carbsGoalValue = ((needed * carbsPercentages! / 100) / 4).round();
     } else {
-      // Fallback to provided goals or defaults
       carbsGoalValue = carbsGoal ?? 301;
       proteinGoalValue = proteinGoal ?? 138;
       fatGoalValue = fatGoal ?? 72;
@@ -98,7 +96,6 @@ class KcalCircularProgressCard extends StatelessWidget {
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
-                          // Background circle
                           SizedBox(
                             width: 120,
                             height: 120,
@@ -175,7 +172,7 @@ class KcalCircularProgressCard extends StatelessWidget {
                     _buildStatRow(
                       Icons.local_fire_department,
                       'Burned',
-                      exercise.toString(),
+                      burned.toString(),
                       Colors.pink,
                     ),
                   ],

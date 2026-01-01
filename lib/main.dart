@@ -20,6 +20,8 @@ import 'package:da1/src/data/repositories/diet_type_repository.dart';
 import 'package:da1/src/data/datasources/diet_type_remote_data_source.dart';
 import 'package:da1/src/data/repositories/activity_repository.dart';
 import 'package:da1/src/data/datasources/activity_remote_data_source.dart';
+import 'package:da1/src/data/repositories/activity_record_repository.dart';
+import 'package:da1/src/data/datasources/activity_record_remote_data_source.dart';
 import 'package:da1/src/core/services/deep_link_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -130,6 +132,13 @@ void main() async {
     remoteDataSource: activityRemoteDataSource,
   );
 
+  final ActivityRecordRemoteDataSource activityRecordRemoteDataSource =
+      ActivityRecordRemoteDataSourceImpl(dio: dio);
+  final ActivityRecordRepository activityRecordRepository =
+      ActivityRecordRepositoryImpl(
+        remoteDataSource: activityRecordRemoteDataSource,
+      );
+
   final AuthBloc authBloc = AuthBloc(authRepository: authRepository);
   final UserBloc userBloc = UserBloc(userRepository: userRepository);
 
@@ -145,6 +154,7 @@ void main() async {
   AppRoutes.setDailyLogRepository(dailyLogRepository);
   AppRoutes.setDietTypeRepository(dietTypeRepository);
   AppRoutes.setActivityRepository(activityRepository);
+  AppRoutes.setActivityRecordRepository(activityRecordRepository);
 
   deepLinkService.initDeepLinks(
     onTokenReceived: (String token) async {

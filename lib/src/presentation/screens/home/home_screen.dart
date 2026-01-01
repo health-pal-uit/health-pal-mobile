@@ -164,7 +164,6 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         (response) {
           if (mounted) {
-            // Reload fitness profile to update the diet type display
             _loadFitnessProfile();
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -213,11 +212,10 @@ class _HomeScreenState extends State<HomeScreen> {
               profiles.sort((a, b) {
                 final dateA = DateTime.parse(a['created_at'] as String);
                 final dateB = DateTime.parse(b['created_at'] as String);
-                return dateB.compareTo(dateA); // Most recent first
+                return dateB.compareTo(dateA);
               });
               profile = profiles.first;
             } else if (profileData is Map<String, dynamic>) {
-              // If data is already a single profile object
               profile = profileData;
             }
 
@@ -516,6 +514,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final consumed =
         dailyLog != null ? (dailyLog!['total_kcal_eaten'] ?? 0).toInt() : 0;
 
+    final burned =
+        dailyLog != null ? (dailyLog!['total_kcal_burned'] ?? 0).toInt() : 0;
+
     final protein =
         dailyLog != null
             ? (dailyLog!['total_protein_gr'] as num?)?.toDouble()
@@ -533,7 +534,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ? (dailyLog!['total_fiber_gr'] as num?)?.toDouble()
             : null;
 
-    // Extract diet type info from fitness profile
     String? dietTypeName;
     int? proteinPercentages;
     int? fatPercentages;
@@ -550,7 +550,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return KcalCircularProgressCard(
       consumed: consumed,
       needed: needed,
-      exercise: 30,
+      burned: burned,
       protein: protein,
       fat: fat,
       carbs: carbs,
