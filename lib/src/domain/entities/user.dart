@@ -25,6 +25,23 @@ class User extends Equatable {
     this.role,
   });
 
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: json['id'] as String,
+      username: json['username'] as String?,
+      email: json['email'] as String,
+      fullName: json['fullname'] as String?,
+      phone: json['phone'] as String?,
+      gender: json['gender'] as bool?,
+      birthDate: json['birth_date'] != null
+          ? DateTime.parse(json['birth_date'] as String)
+          : null,
+      avatarUrl: json['avatar_url'] as String?,
+      isVerified: json['is_verified'] as bool?,
+      role: json['role'] as String?,
+    );
+  }
+
   @override
   List<Object?> get props => [
     id,

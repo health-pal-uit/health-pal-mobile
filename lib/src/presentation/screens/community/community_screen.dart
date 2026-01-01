@@ -4,6 +4,7 @@ import 'package:da1/src/data/datasources/auth_remote_data_source.dart';
 import 'package:da1/src/data/datasources/post_remote_data_source.dart';
 import 'package:da1/src/data/models/post_model.dart';
 import 'package:da1/src/data/models/user_model.dart';
+import 'package:da1/src/presentation/screens/chat/chat_list_screen.dart';
 import 'package:da1/src/presentation/widgets/community/comments_bottom_sheet.dart';
 import 'package:da1/src/presentation/widgets/community/create_post_bottom_sheet.dart';
 import 'package:da1/src/presentation/widgets/community/post_card.dart';
@@ -11,6 +12,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
@@ -214,6 +216,17 @@ class _CommunityScreenState extends State<CommunityScreen> {
         ),
         actions: [
           IconButton(icon: const Icon(Icons.search), onPressed: () {}),
+          IconButton(
+            icon: const Icon(LucideIcons.messageCircle, color: AppColors.primary),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ChatListScreen(),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(
               Icons.add_circle_outline,
