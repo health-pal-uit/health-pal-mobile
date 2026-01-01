@@ -3,6 +3,11 @@ import 'package:da1/src/domain/entities/user_chat_message.dart';
 import 'package:dartz/dartz.dart';
 
 abstract class ChatMessageRepository {
+  Future<Either<Exception, Map<String, dynamic>>> getRecentMessages({
+    required String sessionId,
+    int limit = 50,
+  });
+
   Future<Either<Exception, List<UserChatMessage>>> getMessages({
     required String sessionId,
     int page = 1,
@@ -30,6 +35,22 @@ class ChatMessageRepositoryImpl implements ChatMessageRepository {
   final ChatMessageRemoteDataSource remoteDataSource;
 
   ChatMessageRepositoryImpl({required this.remoteDataSource});
+
+  @override
+  Future<Either<Exception, Map<String, dynamic>>> getRecentMessages({
+    required String sessionId,
+    int limit = 50,
+  }) async {
+    try {
+      final result = await remoteDataSource.getRecentMessages(
+        sessionId: sessionId,
+        limit: limit,
+      );
+      return Right(result);
+    } on Exception catch (e) {
+      return Left(e);
+    }
+  }
 
   @override
   Future<Either<Exception, List<UserChatMessage>>> getMessages({

@@ -1,3 +1,4 @@
+import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -32,28 +33,48 @@ class _MessageInputState extends State<MessageInput> {
       _isSending = true;
     });
 
-    try {
-      // TODO: Send message via repository
-      // final repository = AppRoutes.getChatMessageRepository();
-      // await repository.sendMessage(widget.sessionId, text);
-
-      _messageController.clear();
-      widget.onMessageSent?.call();
-    } catch (e) {
+    final repository = AppRoutes.getChatMessageRepository();
+    if (repository == null) {
+      setState(() {
+        _isSending = false;
+      });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to send message: $e'),
+          const SnackBar(
+            content: Text('Chat service not available'),
             backgroundColor: Colors.red,
           ),
         );
       }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSending = false;
-        });
-      }
+      return;
+    }
+
+    final result = await repository.sendMessage(
+      sessionId: widget.sessionId,
+      content: text,
+    );
+
+    result.fold(
+      (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(error.toString().replaceAll('Exception: ', '')),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      (_) {
+        _messageController.clear();
+        widget.onMessageSent?.call();
+      },
+    );
+
+    if (mounted) {
+      setState(() {
+        _isSending = false;
+      });
     }
   }
 

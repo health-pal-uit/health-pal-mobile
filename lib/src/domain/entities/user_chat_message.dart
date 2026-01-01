@@ -22,6 +22,17 @@ class UserChatMessage {
   });
 
   factory UserChatMessage.fromJson(Map<String, dynamic> json) {
+    // Handle both chat_session_id directly or nested in chat_session object
+    String sessionId;
+    if (json['chat_session_id'] != null) {
+      sessionId = json['chat_session_id'] as String;
+    } else if (json['chat_session'] != null) {
+      sessionId =
+          (json['chat_session'] as Map<String, dynamic>)['id'] as String;
+    } else {
+      sessionId = '';
+    }
+
     return UserChatMessage(
       id: json['id'] as String,
       content: json['content'] as String? ?? '',
@@ -29,7 +40,7 @@ class UserChatMessage {
       mediaUrl: json['media_url'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       user: User.fromJson(json['user'] as Map<String, dynamic>),
-      chatSessionId: json['chat_session_id'] as String,
+      chatSessionId: sessionId,
     );
   }
 

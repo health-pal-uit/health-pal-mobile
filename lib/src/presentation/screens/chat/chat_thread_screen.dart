@@ -1,11 +1,16 @@
+import 'dart:async';
+
 import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/domain/entities/user_chat_message.dart';
 import 'package:da1/src/domain/entities/chat_session.dart';
+import 'package:da1/src/presentation/bloc/auth/auth_bloc.dart';
+import 'package:da1/src/presentation/bloc/auth/auth_state.dart';
 import 'package:da1/src/presentation/screens/chat/widgets/delete_chat_dialog.dart';
 import 'package:da1/src/presentation/screens/chat/widgets/message_bubble.dart';
 import 'package:da1/src/presentation/screens/chat/widgets/message_input.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class ChatThreadScreen extends StatefulWidget {
@@ -20,18 +25,35 @@ class ChatThreadScreen extends StatefulWidget {
 class _ChatThreadScreenState extends State<ChatThreadScreen> {
   List<UserChatMessage> messages = [];
   bool isLoading = true;
+  bool isLoadingMore = false;
+  bool hasMore = true;
+  int total = 0;
   final ScrollController _scrollController = ScrollController();
+  Timer? _pollingTimer;
 
   @override
   void initState() {
     super.initState();
     _loadMessages();
+    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _pollingTimer?.cancel();
     super.dispose();
+  }
+
+  void _onScroll() {
+    // In reverse ListView, older messages are at maxScrollExtent
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.position.pixels;
+
+    if (currentScroll >= maxScroll - 100 && !isLoadingMore && hasMore) {
+      _loadOlderMessages();
+    }
   }
 
   Future<void> _loadMessages() async {
@@ -39,23 +61,167 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
       isLoading = true;
     });
 
-    // TODO: Load messages from repository
-    // final repository = AppRoutes.getChatMessageRepository();
-    // final result = await repository.getMessages(widget.session.id);
+    final repository = AppRoutes.getChatMessageRepository();
+    if (repository == null) {
+      setState(() {
+        isLoading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Chat message service not available'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    final result = await repository.getRecentMessages(
+      sessionId: widget.session.id,
+      limit: 50,
+    );
+
+    result.fold(
+      (error) {
+        setState(() {
+          isLoading = false;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(error.toString().replaceAll('Exception: ', '')),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      (response) {
+        setState(() {
+          messages = response['messages'] as List<UserChatMessage>;
+          total = response['total'] as int;
+          hasMore = total > messages.length;
+          isLoading = false;
+        });
+        // Scroll to bottom after messages are loaded
+        Future.delayed(const Duration(milliseconds: 100), _scrollToBottom);
+        // Start polling for new messages
+        _startPolling();
+      },
+    );
+  }
+
+  Future<void> _loadOlderMessages() async {
+    if (isLoadingMore || !hasMore) return;
 
     setState(() {
-      isLoading = false;
+      isLoadingMore = true;
     });
+
+    final repository = AppRoutes.getChatMessageRepository();
+    if (repository == null) {
+      setState(() {
+        isLoadingMore = false;
+      });
+      return;
+    }
+
+    final remaining = total - messages.length;
+    if (remaining <= 0) {
+      setState(() {
+        hasMore = false;
+        isLoadingMore = false;
+      });
+      return;
+    }
+
+    final page = (remaining / 50).ceil();
+    final result = await repository.getMessages(
+      sessionId: widget.session.id,
+      page: page,
+      limit: 50,
+    );
+
+    result.fold(
+      (error) {
+        setState(() {
+          isLoadingMore = false;
+        });
+      },
+      (olderMessages) {
+        setState(() {
+          messages = [...olderMessages, ...messages];
+          isLoadingMore = false;
+          if (olderMessages.length < 50) {
+            hasMore = false;
+          }
+        });
+      },
+    );
+  }
+
+  void _startPolling() {
+    _pollingTimer?.cancel();
+    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      _pollNewMessages();
+    });
+  }
+
+  Future<void> _pollNewMessages() async {
+    if (messages.isEmpty) return;
+
+    final repository = AppRoutes.getChatMessageRepository();
+    if (repository == null) return;
+
+    final result = await repository.getRecentMessages(
+      sessionId: widget.session.id,
+      limit: 10,
+    );
+
+    result.fold(
+      (error) {
+        // Silently fail polling
+      },
+      (response) {
+        final recentMessages = response['messages'] as List<UserChatMessage>;
+        final newTotal = response['total'] as int;
+
+        if (recentMessages.isEmpty) return;
+
+        final latest = messages.last;
+        final newMessages =
+            recentMessages.where((m) {
+              return m.createdAt.isAfter(latest.createdAt);
+            }).toList();
+
+        if (newMessages.isNotEmpty) {
+          setState(() {
+            messages = [...messages, ...newMessages];
+            total = newTotal;
+          });
+          // Auto scroll to bottom for new messages
+          Future.delayed(const Duration(milliseconds: 100), _scrollToBottom);
+        }
+      },
+    );
   }
 
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
+        0, // In reverse ListView, 0 is the bottom
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
       );
     }
+  }
+
+  String? _getCurrentUserId() {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is Authenticated) {
+      return authState.user.id;
+    }
+    return null;
   }
 
   void _showOptionsMenu() {
@@ -162,13 +328,11 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
         },
         (_) {
           if (mounted) {
-            // Pop back to previous screen
-            Navigator.of(context).pop(true); // Pass true to indicate deletion
+            Navigator.of(context).pop(true);
           }
         },
       );
     } catch (e) {
-      // Ensure loading dialog is closed on any error
       if (mounted) {
         Navigator.of(context, rootNavigator: true).pop();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -183,12 +347,13 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final currentUserId = _getCurrentUserId();
+
     // Get other user info (for 1-1 chat)
     final otherUser =
         widget.session.participants
             .firstWhere(
-              (p) =>
-                  p.user.id != 'current-user-id', // TODO: Get current user ID
+              (p) => p.user.id != currentUserId,
               orElse: () => widget.session.participants.first,
             )
             .user;
@@ -308,14 +473,31 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   }
 
   Widget _buildMessageList() {
+    final currentUserId = _getCurrentUserId();
+
     return ListView.builder(
       controller: _scrollController,
+      reverse: true,
       padding: const EdgeInsets.all(16),
-      itemCount: messages.length,
+      itemCount: messages.length + (isLoadingMore ? 1 : 0),
       itemBuilder: (context, index) {
-        final message = messages[index];
-        final isOwnMessage =
-            message.user.id == 'current-user-id'; // TODO: Get current user ID
+        // Show loading indicator at the bottom (which appears at top due to reverse)
+        if (index == messages.length && isLoadingMore) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Center(
+              child: CircularProgressIndicator(
+                color: AppColors.primary,
+                strokeWidth: 2,
+              ),
+            ),
+          );
+        }
+
+        // Reverse the index to show newest messages at bottom
+        final messageIndex = messages.length - 1 - index;
+        final message = messages[messageIndex];
+        final isOwnMessage = message.user.id == currentUserId;
 
         return MessageBubble(
           message: message,

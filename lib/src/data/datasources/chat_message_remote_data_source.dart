@@ -2,7 +2,13 @@ import 'package:da1/src/domain/entities/user_chat_message.dart';
 import 'package:dio/dio.dart';
 
 abstract class ChatMessageRemoteDataSource {
-  /// Get messages for a chat session
+  /// Get recent messages for a chat session
+  Future<Map<String, dynamic>> getRecentMessages({
+    required String sessionId,
+    int limit = 50,
+  });
+
+  /// Get messages for a chat session with pagination
   Future<List<UserChatMessage>> getMessages({
     required String sessionId,
     int page = 1,
@@ -35,6 +41,43 @@ class ChatMessageRemoteDataSourceImpl implements ChatMessageRemoteDataSource {
   ChatMessageRemoteDataSourceImpl({required this.dio});
 
   @override
+  Future<Map<String, dynamic>> getRecentMessages({
+    required String sessionId,
+    int limit = 50,
+  }) async {
+    try {
+      final response = await dio.get(
+        '/chat-messages/session/$sessionId/recent',
+        queryParameters: {'limit': limit},
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = response.data as Map<String, dynamic>;
+        final innerData = responseData['data'] as Map<String, dynamic>;
+        final data = innerData['data'] as List<dynamic>;
+        final total = innerData['total'] as int;
+
+        return {
+          'messages':
+              data
+                  .map(
+                    (json) =>
+                        UserChatMessage.fromJson(json as Map<String, dynamic>),
+                  )
+                  .toList(),
+          'total': total,
+        };
+      }
+
+      throw Exception('Failed to load recent messages');
+    } on DioException catch (e) {
+      throw Exception(
+        e.response?.data['message'] ?? 'Failed to load recent messages',
+      );
+    }
+  }
+
+  @override
   Future<List<UserChatMessage>> getMessages({
     required String sessionId,
     int page = 1,
@@ -42,7 +85,7 @@ class ChatMessageRemoteDataSourceImpl implements ChatMessageRemoteDataSource {
   }) async {
     try {
       final response = await dio.get(
-        '/chat-sessions/$sessionId/messages',
+        '/chat-messages/session/$sessionId',
         queryParameters: {'page': page, 'limit': limit},
       );
 
