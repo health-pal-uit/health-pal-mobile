@@ -3,6 +3,7 @@ import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/domain/entities/chat_session.dart';
 import 'package:da1/src/presentation/screens/chat/chat_thread_screen.dart';
 import 'package:da1/src/presentation/screens/chat/new_chat_screen.dart';
+import 'package:da1/src/presentation/screens/chat/new_group_chat_screen.dart';
 import 'package:da1/src/presentation/screens/chat/widgets/delete_chat_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -131,14 +132,48 @@ class _ChatListScreenState extends State<ChatListScreen> {
           ),
         ),
         actions: [
-          IconButton(
+          PopupMenuButton<String>(
             icon: const Icon(LucideIcons.plus, color: AppColors.primary),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const NewChatScreen()),
-              );
+            onSelected: (value) {
+              if (value == 'new_chat') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const NewChatScreen(),
+                  ),
+                );
+              } else if (value == 'new_group') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const NewGroupChatScreen(),
+                  ),
+                );
+              }
             },
+            itemBuilder:
+                (context) => [
+                  const PopupMenuItem(
+                    value: 'new_chat',
+                    child: Row(
+                      children: [
+                        Icon(LucideIcons.messageCircle, size: 20),
+                        SizedBox(width: 12),
+                        Text('New Chat'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'new_group',
+                    child: Row(
+                      children: [
+                        Icon(LucideIcons.users, size: 20),
+                        SizedBox(width: 12),
+                        Text('New Group'),
+                      ],
+                    ),
+                  ),
+                ],
           ),
         ],
       ),

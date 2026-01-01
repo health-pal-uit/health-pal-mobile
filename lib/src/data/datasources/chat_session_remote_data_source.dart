@@ -110,8 +110,8 @@ class ChatSessionRemoteDataSourceImpl implements ChatSessionRemoteDataSource {
   }) async {
     try {
       final response = await dio.post(
-        '/chat-sessions/groups',
-        data: {'title': title, 'user_ids': userIds},
+        '/chat-sessions',
+        data: {'title': title, 'is_group': true, 'participant_ids': userIds},
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
