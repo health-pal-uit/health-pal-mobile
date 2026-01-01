@@ -1,6 +1,8 @@
+import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/domain/entities/chat_session.dart';
 import 'package:da1/src/presentation/screens/chat/chat_thread_screen.dart';
+import 'package:da1/src/presentation/screens/chat/new_chat_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -14,6 +16,7 @@ class ChatListScreen extends StatefulWidget {
 class _ChatListScreenState extends State<ChatListScreen> {
   List<ChatSession> sessions = [];
   bool isLoading = true;
+  String? errorMessage;
 
   @override
   void initState() {
@@ -24,15 +27,34 @@ class _ChatListScreenState extends State<ChatListScreen> {
   Future<void> _loadChatSessions() async {
     setState(() {
       isLoading = true;
+      errorMessage = null;
     });
 
-    // TODO: Load chat sessions from repository
-    // final repository = AppRoutes.getChatSessionRepository();
-    // final result = await repository.getSessions();
+    final repository = AppRoutes.getChatSessionRepository();
+    if (repository == null) {
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Chat repository not initialized';
+      });
+      return;
+    }
 
-    setState(() {
-      isLoading = false;
-    });
+    final result = await repository.getSessions();
+
+    result.fold(
+      (error) {
+        setState(() {
+          isLoading = false;
+          errorMessage = error.toString().replaceAll('Exception: ', '');
+        });
+      },
+      (loadedSessions) {
+        setState(() {
+          sessions = loadedSessions;
+          isLoading = false;
+        });
+      },
+    );
   }
 
   @override
@@ -59,10 +81,10 @@ class _ChatListScreenState extends State<ChatListScreen> {
           IconButton(
             icon: const Icon(LucideIcons.plus, color: AppColors.primary),
             onPressed: () {
-              // TODO: Navigate to new chat screen
-              // Navigator.push(context, MaterialPageRoute(
-              //   builder: (context) => NewChatScreen(),
-              // ));
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const NewChatScreen()),
+              );
             },
           ),
         ],
@@ -72,9 +94,54 @@ class _ChatListScreenState extends State<ChatListScreen> {
               ? const Center(
                 child: CircularProgressIndicator(color: AppColors.primary),
               )
+              : errorMessage != null
+              ? _buildErrorState()
               : sessions.isEmpty
               ? _buildEmptyState()
               : _buildChatList(),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(LucideIcons.messageCircleX, size: 80, color: Colors.grey[400]),
+          const SizedBox(height: 16),
+          Text(
+            'Failed to load chats',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              errorMessage ?? 'Unknown error',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: _loadChatSessions,
+            icon: const Icon(LucideIcons.refreshCw),
+            label: const Text('Retry'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -101,7 +168,10 @@ class _ChatListScreenState extends State<ChatListScreen> {
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () {
-              // TODO: Navigate to new chat screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const NewChatScreen()),
+              );
             },
             icon: const Icon(LucideIcons.plus),
             label: const Text('Start Chat'),

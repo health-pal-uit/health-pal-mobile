@@ -22,7 +22,7 @@ class ChatSession {
   factory ChatSession.fromJson(Map<String, dynamic> json) {
     return ChatSession(
       id: json['id'] as String,
-      title: json['title'] as String,
+      title: json['title'] as String? ?? 'Chat',
       isGroup: json['is_group'] as bool? ?? false,
       status: json['status'] as String? ?? 'chat',
       participants:
@@ -30,8 +30,14 @@ class ChatSession {
               ?.map((p) => ChatParticipant.fromJson(p as Map<String, dynamic>))
               .toList() ??
           [],
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt:
+          json['created_at'] != null
+              ? DateTime.parse(json['created_at'] as String)
+              : DateTime.now(),
+      updatedAt:
+          json['updated_at'] != null
+              ? DateTime.parse(json['updated_at'] as String)
+              : DateTime.now(),
     );
   }
 }

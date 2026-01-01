@@ -22,6 +22,10 @@ import 'package:da1/src/data/repositories/activity_repository.dart';
 import 'package:da1/src/data/datasources/activity_remote_data_source.dart';
 import 'package:da1/src/data/repositories/activity_record_repository.dart';
 import 'package:da1/src/data/datasources/activity_record_remote_data_source.dart';
+import 'package:da1/src/data/repositories/chat_session_repository.dart';
+import 'package:da1/src/data/datasources/chat_session_remote_data_source.dart';
+import 'package:da1/src/data/repositories/chat_message_repository.dart';
+import 'package:da1/src/data/datasources/chat_message_remote_data_source.dart';
 import 'package:da1/src/core/services/deep_link_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -139,6 +143,18 @@ void main() async {
         remoteDataSource: activityRecordRemoteDataSource,
       );
 
+  final ChatSessionRemoteDataSource chatSessionRemoteDataSource =
+      ChatSessionRemoteDataSourceImpl(dio: dio);
+  final ChatSessionRepository chatSessionRepository = ChatSessionRepositoryImpl(
+    remoteDataSource: chatSessionRemoteDataSource,
+  );
+
+  final ChatMessageRemoteDataSource chatMessageRemoteDataSource =
+      ChatMessageRemoteDataSourceImpl(dio: dio);
+  final ChatMessageRepository chatMessageRepository = ChatMessageRepositoryImpl(
+    remoteDataSource: chatMessageRemoteDataSource,
+  );
+
   final AuthBloc authBloc = AuthBloc(authRepository: authRepository);
   final UserBloc userBloc = UserBloc(userRepository: userRepository);
 
@@ -155,6 +171,8 @@ void main() async {
   AppRoutes.setDietTypeRepository(dietTypeRepository);
   AppRoutes.setActivityRepository(activityRepository);
   AppRoutes.setActivityRecordRepository(activityRecordRepository);
+  AppRoutes.setChatSessionRepository(chatSessionRepository);
+  AppRoutes.setChatMessageRepository(chatMessageRepository);
 
   deepLinkService.initDeepLinks(
     onTokenReceived: (String token) async {

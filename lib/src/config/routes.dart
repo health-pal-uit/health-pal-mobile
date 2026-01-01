@@ -34,6 +34,8 @@ import 'package:da1/src/data/repositories/diet_type_repository.dart';
 import 'package:da1/src/data/repositories/activity_repository.dart';
 import 'package:da1/src/data/repositories/activity_record_repository.dart';
 import 'package:da1/src/data/repositories/auth_repository.dart';
+import 'package:da1/src/data/repositories/chat_session_repository.dart';
+import 'package:da1/src/data/repositories/chat_message_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -47,6 +49,8 @@ class AppRoutes {
   static ActivityRepository? _activityRepository;
   static ActivityRecordRepository? _activityRecordRepository;
   static AuthRepository? _authRepository;
+  static ChatSessionRepository? _chatSessionRepository;
+  static ChatMessageRepository? _chatMessageRepository;
 
   static void setFitnessProfileRepository(FitnessProfileRepository repository) {
     _fitnessProfileRepository = repository;
@@ -118,6 +122,22 @@ class AppRoutes {
 
   static AuthRepository? getAuthRepository() {
     return _authRepository;
+  }
+
+  static void setChatSessionRepository(ChatSessionRepository repository) {
+    _chatSessionRepository = repository;
+  }
+
+  static ChatSessionRepository? getChatSessionRepository() {
+    return _chatSessionRepository;
+  }
+
+  static void setChatMessageRepository(ChatMessageRepository repository) {
+    _chatMessageRepository = repository;
+  }
+
+  static ChatMessageRepository? getChatMessageRepository() {
+    return _chatMessageRepository;
   }
 
   static final GoRouter router = GoRouter(
