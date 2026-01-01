@@ -73,13 +73,18 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
     return fallback;
   }
 
-  void _navigateToDetail(Challenge challenge) {
-    Navigator.push(
+  void _navigateToDetail(Challenge challenge) async {
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ChallengeDetailScreen(challenge: challenge),
       ),
     );
+
+    // Refresh if challenge was finished
+    if (result == true) {
+      _loadChallenges();
+    }
   }
 
   @override

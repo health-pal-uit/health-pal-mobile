@@ -4,6 +4,7 @@ import 'package:dartz/dartz.dart';
 
 abstract class ChallengeRepository {
   Future<Either<Exception, List<Challenge>>> getChallenges();
+  Future<Either<Exception, void>> finishChallenge(String challengeId);
 }
 
 class ChallengeRepositoryImpl implements ChallengeRepository {
@@ -16,6 +17,16 @@ class ChallengeRepositoryImpl implements ChallengeRepository {
     try {
       final challenges = await remoteDataSource.getChallenges();
       return Right(challenges);
+    } on Exception catch (e) {
+      return Left(e);
+    }
+  }
+
+  @override
+  Future<Either<Exception, void>> finishChallenge(String challengeId) async {
+    try {
+      await remoteDataSource.finishChallenge(challengeId);
+      return const Right(null);
     } on Exception catch (e) {
       return Left(e);
     }

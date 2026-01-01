@@ -1,12 +1,20 @@
+import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
 import 'package:flutter/material.dart';
 import 'package:da1/src/domain/entities/challenge.dart';
 
-class ChallengeDetailScreen extends StatelessWidget {
+class ChallengeDetailScreen extends StatefulWidget {
   final Challenge challenge;
 
   const ChallengeDetailScreen({super.key, required this.challenge});
+
+  @override
+  State<ChallengeDetailScreen> createState() => _ChallengeDetailScreenState();
+}
+
+class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
+  bool _isFinishing = false;
 
   Color _getDifficultyColor(String difficulty) {
     switch (difficulty.toLowerCase()) {
@@ -22,18 +30,65 @@ class ChallengeDetailScreen extends StatelessWidget {
   }
 
   double _calculateProgress() {
-    if (challenge.progressPercent != null) {
-      return (challenge.progressPercent! / 100).clamp(0.0, 1.0);
+    if (widget.challenge.progressPercent != null) {
+      return (widget.challenge.progressPercent! / 100).clamp(0.0, 1.0);
     }
-    if (challenge.activityRecords.isEmpty) return 0.0;
-    return challenge.activityRecords.length /
-        (challenge.activityRecords.length + 5);
+    if (widget.challenge.activityRecords.isEmpty) return 0.0;
+    return widget.challenge.activityRecords.length /
+        (widget.challenge.activityRecords.length + 5);
+  }
+
+  Future<void> _finishChallenge() async {
+    setState(() {
+      _isFinishing = true;
+    });
+
+    final result = await AppRoutes.getChallengeRepository()!.finishChallenge(
+      widget.challenge.id,
+    );
+
+    if (!mounted) return;
+
+    result.fold(
+      (error) {
+        setState(() {
+          _isFinishing = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to finish challenge: ${error.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      },
+      (_) {
+        setState(() {
+          _isFinishing = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Challenge completed! 🎉'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        // Go back after a delay
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            Navigator.pop(
+              context,
+              true,
+            ); // Return true to indicate refresh needed
+          }
+        });
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final progress = _calculateProgress();
-    final completedCount = challenge.activityRecords.length;
+    final completedCount = widget.challenge.activityRecords.length;
+    final isCompleted = progress >= 1.0;
 
     return Scaffold(
       appBar: AppBar(
@@ -54,11 +109,11 @@ class ChallengeDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Hero image
-            if (challenge.imageUrl != null)
+            if (widget.challenge.imageUrl != null)
               AspectRatio(
                 aspectRatio: 1,
                 child: Image.network(
-                  challenge.imageUrl!,
+                  widget.challenge.imageUrl!,
                   width: double.infinity,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
@@ -85,7 +140,7 @@ class ChallengeDetailScreen extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          challenge.name,
+                          widget.challenge.name,
                           style: AppTypography.headline.copyWith(fontSize: 24),
                         ),
                       ),
@@ -95,11 +150,13 @@ class ChallengeDetailScreen extends StatelessWidget {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: _getDifficultyColor(challenge.difficulty),
+                          color: _getDifficultyColor(
+                            widget.challenge.difficulty,
+                          ),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Text(
-                          challenge.difficulty.toUpperCase(),
+                          widget.challenge.difficulty.toUpperCase(),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
@@ -110,10 +167,10 @@ class ChallengeDetailScreen extends StatelessWidget {
                     ],
                   ),
 
-                  if (challenge.note != null) ...[
+                  if (widget.challenge.note != null) ...[
                     const SizedBox(height: 12),
                     Text(
-                      challenge.note!,
+                      widget.challenge.note!,
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.grey[700],
@@ -131,17 +188,17 @@ class ChallengeDetailScreen extends StatelessWidget {
                       gradient: LinearGradient(
                         colors: [
                           _getDifficultyColor(
-                            challenge.difficulty,
+                            widget.challenge.difficulty,
                           ).withValues(alpha: 0.1),
                           _getDifficultyColor(
-                            challenge.difficulty,
+                            widget.challenge.difficulty,
                           ).withValues(alpha: 0.05),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: _getDifficultyColor(
-                          challenge.difficulty,
+                          widget.challenge.difficulty,
                         ).withValues(alpha: 0.3),
                         width: 1.5,
                       ),
@@ -164,7 +221,7 @@ class ChallengeDetailScreen extends StatelessWidget {
                               style: AppTypography.headline.copyWith(
                                 fontSize: 20,
                                 color: _getDifficultyColor(
-                                  challenge.difficulty,
+                                  widget.challenge.difficulty,
                                 ),
                               ),
                             ),
@@ -178,7 +235,7 @@ class ChallengeDetailScreen extends StatelessWidget {
                             minHeight: 12,
                             backgroundColor: Colors.grey[300],
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              _getDifficultyColor(challenge.difficulty),
+                              _getDifficultyColor(widget.challenge.difficulty),
                             ),
                           ),
                         ),
@@ -193,6 +250,54 @@ class ChallengeDetailScreen extends StatelessWidget {
                       ],
                     ),
                   ),
+
+                  // Finish Challenge Button
+                  if (isCompleted) ...[
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: _isFinishing ? null : _finishChallenge,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _getDifficultyColor(
+                            widget.challenge.difficulty,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child:
+                            _isFinishing
+                                ? const SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                                : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.emoji_events,
+                                      color: Colors.white,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    const Text(
+                                      'Finish Challenge',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                      ),
+                    ),
+                  ],
 
                   const SizedBox(height: 24),
 
@@ -214,7 +319,7 @@ class ChallengeDetailScreen extends StatelessWidget {
                   const SizedBox(height: 16),
 
                   // Activities list
-                  challenge.activityRecords.isEmpty
+                  widget.challenge.activityRecords.isEmpty
                       ? Center(
                         child: Padding(
                           padding: const EdgeInsets.all(40),
@@ -248,10 +353,10 @@ class ChallengeDetailScreen extends StatelessWidget {
                       : ListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        itemCount: challenge.activityRecords.length,
+                        itemCount: widget.challenge.activityRecords.length,
                         itemBuilder: (context, index) {
                           final activityRecord =
-                              challenge.activityRecords[index];
+                              widget.challenge.activityRecords[index];
                           return _buildActivityCard(activityRecord, index);
                         },
                       ),
@@ -293,11 +398,11 @@ class ChallengeDetailScreen extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
           backgroundColor: _getDifficultyColor(
-            challenge.difficulty,
+            widget.challenge.difficulty,
           ).withValues(alpha: 0.2),
           child: Icon(
             Icons.check_circle,
-            color: _getDifficultyColor(challenge.difficulty),
+            color: _getDifficultyColor(widget.challenge.difficulty),
           ),
         ),
         title: Text(
