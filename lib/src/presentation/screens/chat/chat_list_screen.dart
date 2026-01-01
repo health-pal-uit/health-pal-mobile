@@ -295,11 +295,17 @@ class _ChatListScreenState extends State<ChatListScreen> {
             radius: 28,
             backgroundColor: AppColors.primary.withValues(alpha: 0.1),
             backgroundImage:
-                otherUser.avatarUrl != null
+                !session.isGroup && otherUser.avatarUrl != null
                     ? NetworkImage(otherUser.avatarUrl!)
                     : null,
             child:
-                otherUser.avatarUrl == null
+                session.isGroup
+                    ? const Icon(
+                      LucideIcons.users,
+                      color: AppColors.primary,
+                      size: 28,
+                    )
+                    : otherUser.avatarUrl == null
                     ? Text(
                       otherUser.fullName?.substring(0, 1).toUpperCase() ?? 'U',
                       style: const TextStyle(
