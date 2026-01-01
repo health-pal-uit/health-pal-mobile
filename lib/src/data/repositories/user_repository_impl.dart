@@ -23,4 +23,22 @@ class UserRepositoryImpl implements UserRepository {
       return Left(ServerFailure('An error occurred: ${e.toString()}'));
     }
   }
+
+  @override
+  Future<Either<Exception, Map<String, dynamic>>> searchUsers({
+    required String query,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    try {
+      final result = await remoteDataSource.searchUsers(
+        query: query,
+        page: page,
+        limit: limit,
+      );
+      return Right(result);
+    } catch (e) {
+      return Left(Exception(e.toString()));
+    }
+  }
 }

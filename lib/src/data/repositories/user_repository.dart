@@ -4,4 +4,9 @@ import 'package:dartz/dartz.dart';
 
 abstract class UserRepository {
   Future<Either<Failure, User>> updateAvatar(String imagePath);
+  Future<Either<Exception, Map<String, dynamic>>> searchUsers({
+    required String query,
+    int page = 1,
+    int limit = 20,
+  });
 }

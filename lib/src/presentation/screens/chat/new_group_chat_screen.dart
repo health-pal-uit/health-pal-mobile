@@ -16,15 +16,19 @@ class _NewGroupChatScreenState extends State<NewGroupChatScreen> {
   List<User> users = [];
   List<User> filteredUsers = [];
   Set<String> selectedUserIds = {};
-  bool isLoading = true;
+  bool isLoading = false;
+  bool isLoadingMore = false;
+  bool hasMore = true;
+  int currentPage = 1;
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _groupNameController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _loadUsers();
-    _searchController.addListener(_filterUsers);
+    _searchController.addListener(_onSearchChanged);
+    _scrollController.addListener(_onScroll);
     _groupNameController.addListener(() {
       setState(() {}); // Rebuild to update Create button state
     });
@@ -34,23 +38,81 @@ class _NewGroupChatScreenState extends State<NewGroupChatScreen> {
   void dispose() {
     _searchController.dispose();
     _groupNameController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
+  void _onSearchChanged() {
+    // Reset pagination on search
+    currentPage = 1;
+    users = [];
+    hasMore = true;
+    _loadUsers();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      if (!isLoadingMore && hasMore) {
+        _loadMoreUsers();
+      }
+    }
+  }
+
   Future<void> _loadUsers() async {
+    if (isLoading) return;
+
     setState(() {
       isLoading = true;
     });
 
     try {
-      // TODO: Load users from repository
-      // final repository = AppRoutes.getUserRepository();
-      // final result = await repository.getUsers();
+      final repository = AppRoutes.getUserRepository();
+      if (repository == null) {
+        throw Exception('User repository not initialized');
+      }
 
-      setState(() {
-        filteredUsers = users;
-        isLoading = false;
-      });
+      final query = _searchController.text.trim();
+      if (query.isEmpty) {
+        setState(() {
+          users = [];
+          filteredUsers = [];
+          isLoading = false;
+          hasMore = false;
+        });
+        return;
+      }
+
+      final result = await repository.searchUsers(
+        query: query,
+        page: currentPage,
+        limit: 20,
+      );
+
+      result.fold(
+        (error) {
+          if (mounted) {
+            setState(() {
+              isLoading = false;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(error.toString().replaceAll('Exception: ', '')),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        (data) {
+          final newUsers = data['users'] as List<User>;
+          setState(() {
+            users = newUsers;
+            filteredUsers = newUsers;
+            hasMore = data['hasMore'] as bool;
+            isLoading = false;
+          });
+        },
+      );
     } catch (e) {
       setState(() {
         isLoading = false;
@@ -66,23 +128,53 @@ class _NewGroupChatScreenState extends State<NewGroupChatScreen> {
     }
   }
 
-  void _filterUsers() {
-    final query = _searchController.text.toLowerCase();
+  Future<void> _loadMoreUsers() async {
+    if (isLoadingMore || !hasMore) return;
+
     setState(() {
-      if (query.isEmpty) {
-        filteredUsers = users;
-      } else {
-        filteredUsers =
-            users.where((user) {
-              final name = user.fullName?.toLowerCase() ?? '';
-              final username = user.username?.toLowerCase() ?? '';
-              final email = user.email.toLowerCase();
-              return name.contains(query) ||
-                  username.contains(query) ||
-                  email.contains(query);
-            }).toList();
-      }
+      isLoadingMore = true;
     });
+
+    try {
+      final repository = AppRoutes.getUserRepository();
+      if (repository == null) {
+        throw Exception('User repository not initialized');
+      }
+
+      currentPage++;
+      final query = _searchController.text.trim();
+
+      final result = await repository.searchUsers(
+        query: query,
+        page: currentPage,
+        limit: 20,
+      );
+
+      result.fold(
+        (error) {
+          if (mounted) {
+            setState(() {
+              isLoadingMore = false;
+              currentPage--; // Revert page increment
+            });
+          }
+        },
+        (data) {
+          final newUsers = data['users'] as List<User>;
+          setState(() {
+            users.addAll(newUsers);
+            filteredUsers.addAll(newUsers);
+            hasMore = data['hasMore'] as bool;
+            isLoadingMore = false;
+          });
+        },
+      );
+    } catch (e) {
+      setState(() {
+        isLoadingMore = false;
+        currentPage--; // Revert page increment
+      });
+    }
   }
 
   void _toggleUserSelection(String userId) {
@@ -353,22 +445,39 @@ class _NewGroupChatScreenState extends State<NewGroupChatScreen> {
   }
 
   Widget _buildEmptyState() {
+    if (_searchController.text.trim().isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(LucideIcons.search, size: 80, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              'Search for users',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Enter a name, username, or email to find users',
+              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            _searchController.text.isEmpty
-                ? LucideIcons.users
-                : LucideIcons.searchX,
-            size: 80,
-            color: Colors.grey[400],
-          ),
+          Icon(LucideIcons.searchX, size: 80, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
-            _searchController.text.isEmpty
-                ? 'No users available'
-                : 'No users found',
+            'No users found',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -377,9 +486,7 @@ class _NewGroupChatScreenState extends State<NewGroupChatScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            _searchController.text.isEmpty
-                ? 'There are no users to add to the group'
-                : 'Try a different search term',
+            'Try a different search term',
             style: TextStyle(fontSize: 14, color: Colors.grey[500]),
           ),
         ],
@@ -389,9 +496,18 @@ class _NewGroupChatScreenState extends State<NewGroupChatScreen> {
 
   Widget _buildUserList() {
     return ListView.builder(
+      controller: _scrollController,
       padding: const EdgeInsets.only(top: 8),
-      itemCount: filteredUsers.length,
+      itemCount: filteredUsers.length + (isLoadingMore ? 1 : 0),
       itemBuilder: (context, index) {
+        if (index == filteredUsers.length) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: CircularProgressIndicator(color: AppColors.primary),
+            ),
+          );
+        }
         final user = filteredUsers[index];
         return _buildUserItem(user);
       },

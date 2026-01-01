@@ -36,6 +36,7 @@ import 'package:da1/src/data/repositories/activity_record_repository.dart';
 import 'package:da1/src/data/repositories/auth_repository.dart';
 import 'package:da1/src/data/repositories/chat_session_repository.dart';
 import 'package:da1/src/data/repositories/chat_message_repository.dart';
+import 'package:da1/src/data/repositories/user_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -51,6 +52,7 @@ class AppRoutes {
   static AuthRepository? _authRepository;
   static ChatSessionRepository? _chatSessionRepository;
   static ChatMessageRepository? _chatMessageRepository;
+  static UserRepository? _userRepository;
 
   static void setFitnessProfileRepository(FitnessProfileRepository repository) {
     _fitnessProfileRepository = repository;
@@ -138,6 +140,14 @@ class AppRoutes {
 
   static ChatMessageRepository? getChatMessageRepository() {
     return _chatMessageRepository;
+  }
+
+  static void setUserRepository(UserRepository repository) {
+    _userRepository = repository;
+  }
+
+  static UserRepository? getUserRepository() {
+    return _userRepository;
   }
 
   static final GoRouter router = GoRouter(

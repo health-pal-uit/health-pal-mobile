@@ -5,6 +5,11 @@ import 'package:dio/dio.dart';
 abstract class UserRemoteDataSource {
   Future<UserModel> updateAvatar(String imagePath);
   Future<UserModel> updateProfile({String? imagePath, String? fullname});
+  Future<Map<String, dynamic>> searchUsers({
+    required String query,
+    int page = 1,
+    int limit = 20,
+  });
 }
 
 class UserRemoteDataSourceImpl implements UserRemoteDataSource {
@@ -77,6 +82,34 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
         throw Exception('Network error: ${e.message}');
       }
       rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> searchUsers({
+    required String query,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    try {
+      final response = await dio.get(
+        '/users/search',
+        queryParameters: {'q': query, 'page': page, 'limit': limit},
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data['data'] as List<dynamic>;
+        final users =
+            data
+                .map((json) => UserModel.fromJson(json as Map<String, dynamic>))
+                .toList();
+
+        return {'users': users, 'hasMore': data.length >= limit};
+      }
+
+      throw Exception('Failed to search users');
+    } on DioException catch (e) {
+      throw Exception(e.response?.data['message'] ?? 'Failed to search users');
     }
   }
 }

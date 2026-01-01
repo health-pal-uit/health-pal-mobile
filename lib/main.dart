@@ -173,6 +173,7 @@ void main() async {
   AppRoutes.setActivityRecordRepository(activityRecordRepository);
   AppRoutes.setChatSessionRepository(chatSessionRepository);
   AppRoutes.setChatMessageRepository(chatMessageRepository);
+  AppRoutes.setUserRepository(userRepository);
 
   deepLinkService.initDeepLinks(
     onTokenReceived: (String token) async {
