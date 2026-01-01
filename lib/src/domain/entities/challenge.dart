@@ -7,6 +7,7 @@ class Challenge {
   final DateTime createdAt;
   final DateTime? deletedAt;
   final List<dynamic> activityRecords;
+  final double? progressPercent;
 
   const Challenge({
     required this.id,
@@ -17,6 +18,7 @@ class Challenge {
     required this.createdAt,
     this.deletedAt,
     required this.activityRecords,
+    this.progressPercent,
   });
 
   factory Challenge.fromJson(Map<String, dynamic> json) {
@@ -32,6 +34,10 @@ class Challenge {
               ? DateTime.parse(json['deleted_at'] as String)
               : null,
       activityRecords: json['activity_records'] as List<dynamic>? ?? [],
+      progressPercent:
+          json['progress_percent'] != null
+              ? (json['progress_percent'] as num).toDouble()
+              : null,
     );
   }
 }

@@ -13,7 +13,7 @@ class ChallengeRemoteDataSourceImpl implements ChallengeRemoteDataSource {
   @override
   Future<List<Challenge>> getChallenges() async {
     try {
-      final response = await dio.get('/challenges');
+      final response = await dio.get('/challenges/with-progress');
 
       if (response.statusCode == 200) {
         final data = response.data['data'] as List<dynamic>;
