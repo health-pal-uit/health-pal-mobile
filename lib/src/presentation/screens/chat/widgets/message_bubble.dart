@@ -73,10 +73,7 @@ class MessageBubble extends StatelessWidget {
                   ),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color:
-                        isOwnMessage
-                            ? AppColors.primary
-                            : Colors.white,
+                    color: isOwnMessage ? AppColors.primary : Colors.white,
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(16),
                       topRight: const Radius.circular(16),
@@ -117,7 +114,8 @@ class MessageBubble extends StatelessWidget {
                                       loadingProgress.expectedTotalBytes != null
                                           ? loadingProgress
                                                   .cumulativeBytesLoaded /
-                                              loadingProgress.expectedTotalBytes!
+                                              loadingProgress
+                                                  .expectedTotalBytes!
                                           : null,
                                   color:
                                       isOwnMessage

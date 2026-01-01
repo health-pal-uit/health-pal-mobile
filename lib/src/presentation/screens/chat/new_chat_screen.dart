@@ -64,14 +64,15 @@ class _NewChatScreenState extends State<NewChatScreen> {
       if (query.isEmpty) {
         filteredUsers = users;
       } else {
-        filteredUsers = users.where((user) {
-          final name = user.fullName?.toLowerCase() ?? '';
-          final username = user.username?.toLowerCase() ?? '';
-          final email = user.email.toLowerCase();
-          return name.contains(query) ||
-              username.contains(query) ||
-              email.contains(query);
-        }).toList();
+        filteredUsers =
+            users.where((user) {
+              final name = user.fullName?.toLowerCase() ?? '';
+              final username = user.username?.toLowerCase() ?? '';
+              final email = user.email.toLowerCase();
+              return name.contains(query) ||
+                  username.contains(query) ||
+                  email.contains(query);
+            }).toList();
       }
     });
   }
@@ -161,11 +162,14 @@ class _NewChatScreenState extends State<NewChatScreen> {
             ),
           ),
           Expanded(
-            child: isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
-                  )
-                : filteredUsers.isEmpty
+            child:
+                isLoading
+                    ? const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                      ),
+                    )
+                    : filteredUsers.isEmpty
                     ? _buildEmptyState()
                     : _buildUserList(),
           ),
@@ -202,10 +206,7 @@ class _NewChatScreenState extends State<NewChatScreen> {
             _searchController.text.isEmpty
                 ? 'There are no users to chat with yet'
                 : 'Try a different search term',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[500],
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
           ),
         ],
       ),
@@ -237,30 +238,25 @@ class _NewChatScreenState extends State<NewChatScreen> {
           backgroundColor: AppColors.primary.withValues(alpha: 0.1),
           backgroundImage:
               user.avatarUrl != null ? NetworkImage(user.avatarUrl!) : null,
-          child: user.avatarUrl == null
-              ? Text(
-                  user.fullName?.substring(0, 1).toUpperCase() ?? 'U',
-                  style: const TextStyle(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
-                )
-              : null,
+          child:
+              user.avatarUrl == null
+                  ? Text(
+                    user.fullName?.substring(0, 1).toUpperCase() ?? 'U',
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                    ),
+                  )
+                  : null,
         ),
         title: Text(
           user.fullName ?? user.username ?? 'Unknown',
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
         ),
         subtitle: Text(
           user.email,
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 14,
-          ),
+          style: TextStyle(color: Colors.grey[600], fontSize: 14),
         ),
         trailing: const Icon(
           LucideIcons.messageCircle,

@@ -7,11 +7,7 @@ class MessageInput extends StatefulWidget {
   final String sessionId;
   final VoidCallback? onMessageSent;
 
-  const MessageInput({
-    super.key,
-    required this.sessionId,
-    this.onMessageSent,
-  });
+  const MessageInput({super.key, required this.sessionId, this.onMessageSent});
 
   @override
   State<MessageInput> createState() => _MessageInputState();
@@ -159,22 +155,28 @@ class _MessageInputState extends State<MessageInput> {
           const SizedBox(width: 12),
           Container(
             decoration: BoxDecoration(
-              color: _messageController.text.trim().isEmpty || _isSending
-                  ? Colors.grey[300]
-                  : AppColors.primary,
+              color:
+                  _messageController.text.trim().isEmpty || _isSending
+                      ? Colors.grey[300]
+                      : AppColors.primary,
               shape: BoxShape.circle,
             ),
             child: IconButton(
-              icon: _isSending
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
+              icon:
+                  _isSending
+                      ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                      : const Icon(
+                        LucideIcons.send,
                         color: Colors.white,
+                        size: 20,
                       ),
-                    )
-                  : const Icon(LucideIcons.send, color: Colors.white, size: 20),
               onPressed:
                   _messageController.text.trim().isEmpty || _isSending
                       ? null

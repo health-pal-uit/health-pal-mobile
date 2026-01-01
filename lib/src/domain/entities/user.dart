@@ -33,9 +33,10 @@ class User extends Equatable {
       fullName: json['fullname'] as String?,
       phone: json['phone'] as String?,
       gender: json['gender'] as bool?,
-      birthDate: json['birth_date'] != null
-          ? DateTime.parse(json['birth_date'] as String)
-          : null,
+      birthDate:
+          json['birth_date'] != null
+              ? DateTime.parse(json['birth_date'] as String)
+              : null,
       avatarUrl: json['avatar_url'] as String?,
       isVerified: json['is_verified'] as bool?,
       role: json['role'] as String?,

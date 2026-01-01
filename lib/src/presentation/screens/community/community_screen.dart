@@ -217,13 +217,14 @@ class _CommunityScreenState extends State<CommunityScreen> {
         actions: [
           IconButton(icon: const Icon(Icons.search), onPressed: () {}),
           IconButton(
-            icon: const Icon(LucideIcons.messageCircle, color: AppColors.primary),
+            icon: const Icon(
+              LucideIcons.messageCircle,
+              color: AppColors.primary,
+            ),
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const ChatListScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => const ChatListScreen()),
               );
             },
           ),

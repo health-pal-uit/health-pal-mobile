@@ -67,11 +67,12 @@ class _ChatListScreenState extends State<ChatListScreen> {
           ),
         ],
       ),
-      body: isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            )
-          : sessions.isEmpty
+      body:
+          isLoading
+              ? const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              )
+              : sessions.isEmpty
               ? _buildEmptyState()
               : _buildChatList(),
     );
@@ -82,11 +83,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            LucideIcons.messageSquare,
-            size: 80,
-            color: Colors.grey[400],
-          ),
+          Icon(LucideIcons.messageSquare, size: 80, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
             'No messages yet',
@@ -99,10 +96,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
           const SizedBox(height: 8),
           Text(
             'Start a conversation with your friends',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[500],
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
@@ -140,12 +134,14 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
   Widget _buildChatItem(ChatSession session) {
     // Get other user info (for 1-1 chat)
-    final otherUser = session.participants
-        .firstWhere(
-          (p) => p.user.id != 'current-user-id', // TODO: Get current user ID
-          orElse: () => session.participants.first,
-        )
-        .user;
+    final otherUser =
+        session.participants
+            .firstWhere(
+              (p) =>
+                  p.user.id != 'current-user-id', // TODO: Get current user ID
+              orElse: () => session.participants.first,
+            )
+            .user;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -176,17 +172,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
         ),
         title: Text(
           session.title,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
         ),
         subtitle: Text(
           'Tap to open chat', // TODO: Show last message
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 14,
-          ),
+          style: TextStyle(color: Colors.grey[600], fontSize: 14),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -196,10 +186,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
           children: [
             Text(
               _formatTime(session.createdAt),
-              style: TextStyle(
-                color: Colors.grey[500],
-                fontSize: 12,
-              ),
+              style: TextStyle(color: Colors.grey[500], fontSize: 12),
             ),
             // TODO: Add unread count badge
           ],

@@ -25,7 +25,8 @@ class ChatSession {
       title: json['title'] as String,
       isGroup: json['is_group'] as bool? ?? false,
       status: json['status'] as String? ?? 'chat',
-      participants: (json['participants'] as List<dynamic>?)
+      participants:
+          (json['participants'] as List<dynamic>?)
               ?.map((p) => ChatParticipant.fromJson(p as Map<String, dynamic>))
               .toList() ??
           [],
