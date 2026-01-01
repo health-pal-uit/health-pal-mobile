@@ -91,9 +91,10 @@ class _NewChatScreenState extends State<NewChatScreen> {
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => const Center(
-            child: CircularProgressIndicator(color: AppColors.primary),
-          ),
+          builder:
+              (context) => const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
         );
       }
 

@@ -1,6 +1,8 @@
+import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/domain/entities/user_chat_message.dart';
 import 'package:da1/src/domain/entities/chat_session.dart';
+import 'package:da1/src/presentation/screens/chat/widgets/delete_chat_dialog.dart';
 import 'package:da1/src/presentation/screens/chat/widgets/message_bubble.dart';
 import 'package:da1/src/presentation/screens/chat/widgets/message_input.dart';
 import 'package:flutter/material.dart';
@@ -53,6 +55,129 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
       );
+    }
+  }
+
+  void _showOptionsMenu() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder:
+          (context) => Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 12),
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.delete_outline,
+                      color: Colors.red,
+                    ),
+                    title: const Text(
+                      'Delete Chat',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showDeleteConfirmation();
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+          ),
+    );
+  }
+
+  Future<void> _showDeleteConfirmation() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => const DeleteChatDialog(),
+    );
+
+    if (confirmed == true) {
+      _handleDeleteChat();
+    }
+  }
+
+  Future<void> _handleDeleteChat() async {
+    final repository = AppRoutes.getChatSessionRepository();
+    if (repository == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Chat service not available'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Show loading indicator
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (context) => const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          ),
+    );
+
+    try {
+      final result = await repository.deleteSession(widget.session.id);
+
+      // Close loading indicator
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+
+      result.fold(
+        (error) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(error.toString().replaceAll('Exception: ', '')),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        (_) {
+          if (mounted) {
+            // Pop back to previous screen
+            Navigator.of(context).pop(true); // Pass true to indicate deletion
+          }
+        },
+      );
+    } catch (e) {
+      // Ensure loading dialog is closed on any error
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete chat: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -124,9 +249,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
         actions: [
           IconButton(
             icon: const Icon(LucideIcons.ellipsisVertical, color: Colors.black),
-            onPressed: () {
-              // TODO: Show chat options (delete, mute, etc.)
-            },
+            onPressed: _showOptionsMenu,
           ),
         ],
       ),

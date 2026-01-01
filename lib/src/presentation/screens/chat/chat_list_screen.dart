@@ -3,6 +3,7 @@ import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/domain/entities/chat_session.dart';
 import 'package:da1/src/presentation/screens/chat/chat_thread_screen.dart';
 import 'package:da1/src/presentation/screens/chat/new_chat_screen.dart';
+import 'package:da1/src/presentation/screens/chat/widgets/delete_chat_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -53,6 +54,58 @@ class _ChatListScreenState extends State<ChatListScreen> {
           sessions = loadedSessions;
           isLoading = false;
         });
+      },
+    );
+  }
+
+  Future<bool> _handleDeleteChat(ChatSession session) async {
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => const DeleteChatDialog(),
+    );
+
+    if (confirmed != true) {
+      return false;
+    }
+
+    final repository = AppRoutes.getChatSessionRepository();
+    if (repository == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Chat service not available'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return false;
+    }
+
+    final result = await repository.deleteSession(session.id);
+
+    return result.fold(
+      (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(error.toString().replaceAll('Exception: ', '')),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return false;
+      },
+      (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Chat deleted successfully'),
+              backgroundColor: AppColors.primary,
+            ),
+          );
+        }
+        return true;
       },
     );
   }
@@ -213,62 +266,85 @@ class _ChatListScreenState extends State<ChatListScreen> {
             )
             .user;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+    return Dismissible(
+      key: Key(session.id),
+      direction: DismissDirection.endToStart,
+      confirmDismiss: (direction) => _handleDeleteChat(session),
+      background: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        child: const Icon(Icons.delete_outline, color: Colors.white, size: 28),
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          radius: 28,
-          backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-          backgroundImage:
-              otherUser.avatarUrl != null
-                  ? NetworkImage(otherUser.avatarUrl!)
-                  : null,
-          child:
-              otherUser.avatarUrl == null
-                  ? Text(
-                    otherUser.fullName?.substring(0, 1).toUpperCase() ?? 'U',
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                    ),
-                  )
-                  : null,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
         ),
-        title: Text(
-          session.title,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 8,
+          ),
+          leading: CircleAvatar(
+            radius: 28,
+            backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+            backgroundImage:
+                otherUser.avatarUrl != null
+                    ? NetworkImage(otherUser.avatarUrl!)
+                    : null,
+            child:
+                otherUser.avatarUrl == null
+                    ? Text(
+                      otherUser.fullName?.substring(0, 1).toUpperCase() ?? 'U',
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    )
+                    : null,
+          ),
+          title: Text(
+            session.title,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+          ),
+          subtitle: Text(
+            'Tap to open chat', // TODO: Show last message
+            style: TextStyle(color: Colors.grey[600], fontSize: 14),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          trailing: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                _formatTime(session.createdAt),
+                style: TextStyle(color: Colors.grey[500], fontSize: 12),
+              ),
+              // TODO: Add unread count badge
+            ],
+          ),
+          onTap: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ChatThreadScreen(session: session),
+              ),
+            );
+
+            // If chat was deleted (result == true), refresh the list
+            if (result == true) {
+              _loadChatSessions();
+            }
+          },
         ),
-        subtitle: Text(
-          'Tap to open chat', // TODO: Show last message
-          style: TextStyle(color: Colors.grey[600], fontSize: 14),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              _formatTime(session.createdAt),
-              style: TextStyle(color: Colors.grey[500], fontSize: 12),
-            ),
-            // TODO: Add unread count badge
-          ],
-        ),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ChatThreadScreen(session: session),
-            ),
-          );
-        },
       ),
     );
   }
