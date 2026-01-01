@@ -8,6 +8,7 @@ import 'package:da1/src/presentation/widgets/home_items/workout_card.dart';
 import 'package:da1/src/presentation/widgets/home_items/meal_diary_card.dart';
 import 'package:da1/src/presentation/widgets/diet_type_bottom_sheet.dart';
 import 'package:da1/src/domain/entities/diet_type.dart';
+import 'package:da1/src/presentation/screens/challenges_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -386,6 +387,16 @@ class _HomeScreenState extends State<HomeScreen> {
             Text('TODAY, $todayDate', style: AppTypography.body),
             Row(
               children: [
+                IconButton(
+                  icon: Icon(LucideIcons.medal, color: AppColors.textPrimary),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const ChallengesScreen(),
+                      ),
+                    );
+                  },
+                ),
                 IconButton(
                   icon: Icon(
                     LucideIcons.calendar,
