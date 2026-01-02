@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 abstract class GoogleFitRemoteDataSource {
   Future<String> connectGoogleFit();
   Future<bool> getConnectionStatus();
+  Future<bool> disconnectGoogleFit();
 }
 
 class GoogleFitRemoteDataSourceImpl implements GoogleFitRemoteDataSource {
@@ -81,6 +82,25 @@ class GoogleFitRemoteDataSourceImpl implements GoogleFitRemoteDataSource {
           final connected = innerData['connected'] as bool;
           return connected;
         }
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> disconnectGoogleFit() async {
+    try {
+      final response = await dio.delete('/google-fit/disconnect');
+
+      if (response.statusCode == 200) {
+        final data = response.data as Map<String, dynamic>;
+        if (data.containsKey('data')) {
+          final innerData = data['data'] as Map<String, dynamic>;
+          return innerData['success'] as bool? ?? true;
+        }
+        return true;
       }
       return false;
     } catch (e) {

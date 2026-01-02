@@ -96,21 +96,24 @@ class _GoogleFitSyncScreenState extends State<GoogleFitSyncScreen> {
           }
 
           if (launched && mounted) {
-            setState(() {
-              _isConnected = true;
-              _isSyncing = false;
-              _lastSyncTime = DateTime.now();
-            });
+            setState(() => _isSyncing = false);
 
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text(
-                  'Opening Google authentication. Please sign in and authorize the app.',
+                  'Opening Google authentication. Please sign in and authorize the app. Return to check connection status.',
                 ),
-                backgroundColor: Colors.green,
-                duration: Duration(seconds: 3),
+                backgroundColor: Colors.blue,
+                duration: Duration(seconds: 4),
               ),
             );
+
+            // Check status after a delay to allow user to complete OAuth
+            Future.delayed(const Duration(seconds: 5), () {
+              if (mounted) {
+                _checkConnectionStatus();
+              }
+            });
           } else {
             if (mounted) {
               setState(() => _isSyncing = false);
@@ -163,17 +166,63 @@ class _GoogleFitSyncScreenState extends State<GoogleFitSyncScreen> {
     );
 
     if (confirm == true && mounted) {
-      setState(() {
-        _isConnected = false;
-        _lastSyncTime = null;
-      });
+      setState(() => _isSyncing = true);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Disconnected from Google Fit'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      try {
+        final result = await widget.googleFitRepository.disconnectGoogleFit();
+
+        result.fold(
+          (failure) {
+            if (mounted) {
+              setState(() => _isSyncing = false);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Failed to disconnect: ${failure.message}'),
+                  backgroundColor: Colors.red,
+                  duration: const Duration(seconds: 3),
+                ),
+              );
+            }
+          },
+          (success) {
+            if (mounted && success) {
+              setState(() {
+                _isConnected = false;
+                _lastSyncTime = null;
+                _isSyncing = false;
+              });
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Disconnected from Google Fit'),
+                  backgroundColor: Colors.green,
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            } else if (mounted) {
+              setState(() => _isSyncing = false);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Failed to disconnect'),
+                  backgroundColor: Colors.red,
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+          },
+        );
+      } catch (e) {
+        if (mounted) {
+          setState(() => _isSyncing = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: $e'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
     }
   }
 

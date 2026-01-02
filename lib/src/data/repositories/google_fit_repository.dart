@@ -5,6 +5,7 @@ import 'package:dartz/dartz.dart';
 abstract class GoogleFitRepository {
   Future<Either<Failure, String>> connectGoogleFit();
   Future<Either<Failure, bool>> getConnectionStatus();
+  Future<Either<Failure, bool>> disconnectGoogleFit();
 }
 
 class GoogleFitRepositoryImpl implements GoogleFitRepository {
@@ -27,6 +28,16 @@ class GoogleFitRepositoryImpl implements GoogleFitRepository {
     try {
       final isConnected = await remoteDataSource.getConnectionStatus();
       return Right(isConnected);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> disconnectGoogleFit() async {
+    try {
+      final success = await remoteDataSource.disconnectGoogleFit();
+      return Right(success);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
