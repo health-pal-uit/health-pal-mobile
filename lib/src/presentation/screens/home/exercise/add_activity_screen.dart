@@ -4,6 +4,7 @@ import 'package:da1/src/domain/entities/activity.dart';
 import 'package:da1/src/presentation/screens/home/exercise/log_activity_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'dart:async';
 
 class AddActivityScreen extends StatefulWidget {
   const AddActivityScreen({super.key});
@@ -22,17 +23,19 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
   final int pageSize = 20;
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
     _loadActivities();
-    _searchController.addListener(_filterActivities);
+    _searchController.addListener(_onSearchChanged);
     _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -42,9 +45,12 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
     if (_scrollController.position.pixels >=
             _scrollController.position.maxScrollExtent * 0.8 &&
         !isLoadingMore &&
-        hasMore &&
-        _searchController.text.isEmpty) {
-      _loadMoreActivities();
+        hasMore) {
+      if (_searchController.text.isEmpty) {
+        _loadMoreActivities();
+      } else {
+        _searchMoreActivities();
+      }
     }
   }
 
@@ -152,20 +158,119 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
     }
   }
 
-  void _filterActivities() {
-    final query = _searchController.text.toLowerCase();
-    setState(() {
-      if (query.isEmpty) {
-        filteredActivities = activities;
+  void _onSearchChanged() {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      if (_searchController.text.isEmpty) {
+        _loadActivities();
       } else {
-        filteredActivities =
-            activities
-                .where(
-                  (activity) => activity.name.toLowerCase().contains(query),
-                )
-                .toList();
+        _searchActivities(_searchController.text);
       }
     });
+  }
+
+  Future<void> _searchActivities(String query) async {
+    if (isLoading) return;
+
+    setState(() {
+      isLoading = true;
+      currentPage = 1;
+      filteredActivities = [];
+      hasMore = true;
+    });
+
+    final repository = AppRoutes.getActivityRepository();
+    if (repository == null) {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+      return;
+    }
+
+    try {
+      final result = await repository.searchActivities(
+        name: query,
+        page: currentPage,
+        limit: pageSize,
+      );
+      result.fold(
+        (failure) {
+          if (mounted) {
+            setState(() {
+              isLoading = false;
+            });
+          }
+        },
+        (activityList) {
+          if (mounted) {
+            setState(() {
+              filteredActivities = activityList;
+              isLoading = false;
+              hasMore = activityList.length >= pageSize;
+            });
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _searchMoreActivities() async {
+    if (isLoadingMore || !hasMore) return;
+
+    setState(() {
+      isLoadingMore = true;
+    });
+
+    final repository = AppRoutes.getActivityRepository();
+    if (repository == null) {
+      if (mounted) {
+        setState(() {
+          isLoadingMore = false;
+        });
+      }
+      return;
+    }
+
+    try {
+      final result = await repository.searchActivities(
+        name: _searchController.text,
+        page: currentPage + 1,
+        limit: pageSize,
+      );
+      result.fold(
+        (failure) {
+          if (mounted) {
+            setState(() {
+              isLoadingMore = false;
+            });
+          }
+        },
+        (activityList) {
+          if (mounted) {
+            setState(() {
+              currentPage++;
+              filteredActivities.addAll(activityList);
+              isLoadingMore = false;
+              hasMore = activityList.length >= pageSize;
+            });
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          isLoadingMore = false;
+        });
+      }
+    }
   }
 
   @override
