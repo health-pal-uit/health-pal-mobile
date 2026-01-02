@@ -452,9 +452,10 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
               ),
             );
 
-            // Reload favorites when returning from meal detail
+            // Reload favorites and user recipes when returning from meal detail
             if (context.mounted) {
               _loadFavoriteMeals();
+              _loadUserRecipes();
             }
 
             if (result == true && context.mounted) {

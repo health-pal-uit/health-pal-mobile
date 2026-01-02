@@ -21,6 +21,7 @@ abstract class MealRepository {
     Map<String, dynamic> data,
     String? imagePath,
   );
+  Future<Either<Failure, void>> deleteContributedMeal(String contributionId);
 }
 
 class MealRepositoryImpl implements MealRepository {
@@ -142,6 +143,18 @@ class MealRepositoryImpl implements MealRepository {
         imagePath,
       );
       return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteContributedMeal(
+    String contributionId,
+  ) async {
+    try {
+      await remoteDataSource.deleteContributedMeal(contributionId);
+      return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

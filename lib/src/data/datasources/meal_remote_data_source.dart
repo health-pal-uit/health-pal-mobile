@@ -14,6 +14,7 @@ abstract class MealRemoteDataSource {
     Map<String, dynamic> data,
     String? imagePath,
   );
+  Future<void> deleteContributedMeal(String contributionId);
 }
 
 class MealRemoteDataSourceImpl implements MealRemoteDataSource {
@@ -281,6 +282,24 @@ class MealRemoteDataSourceImpl implements MealRemoteDataSource {
       throw Exception(
         'Failed to create contribution - Status: ${response.statusCode}',
       );
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception('Network error: ${e.message}');
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> deleteContributedMeal(String contributionId) async {
+    try {
+      final response = await dio.delete('/contribution-meals/$contributionId');
+
+      if (response.statusCode != 200) {
+        throw Exception(
+          'Failed to delete contributed meal - Status: ${response.statusCode}',
+        );
+      }
     } catch (e) {
       if (e is DioException) {
         throw Exception('Network error: ${e.message}');

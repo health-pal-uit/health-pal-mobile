@@ -35,6 +35,7 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
   String? _favId; // Store the favorite ID for deletion
   List<Map<String, dynamic>> _ingredientDetails = [];
   bool _isLoadingIngredients = false;
+  bool _isDeleting = false;
 
   // Common serving sizes
   final List<Map<String, dynamic>> _servingSizes = [
@@ -231,12 +232,84 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
     }
   }
 
+  Future<void> _deleteContributedMeal() async {
+    final contributionId = _contributionId;
+    if (contributionId == null) return;
+
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Delete Recipe'),
+            content: const Text(
+              'Are you sure you want to delete this recipe? This action cannot be undone.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isDeleting = true);
+
+    final repository = AppRoutes.getMealRepository();
+    if (repository == null) {
+      setState(() => _isDeleting = false);
+      return;
+    }
+
+    final result = await repository.deleteContributedMeal(contributionId);
+
+    if (mounted) {
+      setState(() => _isDeleting = false);
+
+      result.fold(
+        (failure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to delete recipe: ${failure.message}'),
+            ),
+          );
+        },
+        (_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Recipe deleted successfully')),
+          );
+          Navigator.pop(context, true); // Return to previous screen
+        },
+      );
+    }
+  }
+
   double get _portionSize {
     return double.tryParse(_portionController.text) ?? 100;
   }
 
   bool get _hasMealWithIngredients {
     return _ingredientDetails.isNotEmpty;
+  }
+
+  bool get _isUserContribution {
+    // Check if the meal has a user_id and author fields (contributed meals)
+    final userId = widget.meal['user_id'];
+    final author = widget.meal['author'];
+    return userId != null && author != null;
+  }
+
+  String? get _contributionId {
+    // For contributed meals, the 'id' field is the contribution ID
+    return widget.meal['id'] as String?;
   }
 
   double get _totalMealWeightInGrams {
@@ -373,7 +446,28 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child:
-                _isLoadingFavorite
+                _isUserContribution
+                    ? _isDeleting
+                        ? const Padding(
+                          padding: EdgeInsets.all(12.0),
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        )
+                        : IconButton(
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            color: Colors.red,
+                            size: 26,
+                          ),
+                          onPressed: _deleteContributedMeal,
+                        )
+                    : _isLoadingFavorite
                     ? const Padding(
                       padding: EdgeInsets.all(12.0),
                       child: SizedBox(
