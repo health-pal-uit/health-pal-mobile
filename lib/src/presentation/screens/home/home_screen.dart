@@ -36,6 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isLoadingDietTypes = true;
   Map<String, dynamic>? fitnessProfile;
   bool hasClaimableItems = false;
+  bool hasUnreadNotifications = false;
 
   @override
   void initState() {
@@ -46,6 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadFitnessGoal();
     _loadDietTypes();
     _checkClaimableItems();
+    _checkUnreadNotifications();
   }
 
   Future<void> _checkClaimableItems() async {
@@ -76,6 +78,26 @@ class _HomeScreenState extends State<HomeScreen> {
         hasClaimableItems = hasClaimable;
       });
     }
+  }
+
+  Future<void> _checkUnreadNotifications() async {
+    final notificationRepo = AppRoutes.getNotificationRepository();
+    if (notificationRepo == null) return;
+
+    final result = await notificationRepo.getNotifications(page: 1, limit: 10);
+    result.fold(
+      (error) {},
+      (data) {
+        final notifications =
+            (data['data'] as List).cast<Map<String, dynamic>>();
+        final hasUnread = notifications.any((n) => n['is_read'] == false);
+        if (mounted) {
+          setState(() {
+            hasUnreadNotifications = hasUnread;
+          });
+        }
+      },
+    );
   }
 
   Future<void> _loadDietTypes() async {
@@ -477,12 +499,34 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   onPressed: null,
                 ),
-                IconButton(
-                  icon: const Icon(
-                    Icons.notifications_none_outlined,
-                    color: AppColors.textPrimary,
-                  ),
-                  onPressed: () => context.push('/notifications'),
+                Stack(
+                  children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.notifications_none_outlined,
+                        color: AppColors.textPrimary,
+                      ),
+                      onPressed: () async {
+                        await context.push('/notifications');
+                        // Refresh notification status when returning
+                        _checkUnreadNotifications();
+                      },
+                    ),
+                    if (hasUnreadNotifications)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 1.5),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ),
