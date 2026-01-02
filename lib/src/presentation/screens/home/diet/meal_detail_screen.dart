@@ -33,6 +33,8 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
   bool _isLoadingFavorite = true;
   bool _isTogglingFavorite = false;
   String? _favId; // Store the favorite ID for deletion
+  List<Map<String, dynamic>> _ingredientDetails = [];
+  bool _isLoadingIngredients = false;
 
   // Common serving sizes
   final List<Map<String, dynamic>> _servingSizes = [
@@ -46,6 +48,14 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
   void initState() {
     super.initState();
     _checkFavoriteStatus();
+    _loadIngredients().then((_) {
+      // Update portion controller after ingredients are loaded
+      if (_hasMealWithIngredients && mounted) {
+        setState(() {
+          _portionController.text = _totalMealWeightInGrams.toInt().toString();
+        });
+      }
+    });
   }
 
   @override
@@ -180,8 +190,80 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
     }
   }
 
+  Future<void> _loadIngredients() async {
+    final ingredientsData = widget.meal['ingredients_data'] as List?;
+    if (ingredientsData == null || ingredientsData.isEmpty) {
+      return;
+    }
+
+    setState(() => _isLoadingIngredients = true);
+
+    final repository = AppRoutes.getMealRepository();
+    if (repository == null) {
+      setState(() => _isLoadingIngredients = false);
+      return;
+    }
+
+    final List<Map<String, dynamic>> loadedIngredients = [];
+
+    for (final ingredientData in ingredientsData) {
+      final ingredientId = ingredientData['ingredient_id'];
+      final quantityKg = ingredientData['quantity_kg'];
+
+      if (ingredientId != null) {
+        final result = await repository.getIngredientById(ingredientId);
+        result.fold(
+          (failure) {
+            // Silently fail for individual ingredients
+          },
+          (ingredient) {
+            loadedIngredients.add({...ingredient, 'quantity_kg': quantityKg});
+          },
+        );
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _ingredientDetails = loadedIngredients;
+        _isLoadingIngredients = false;
+      });
+    }
+  }
+
   double get _portionSize {
     return double.tryParse(_portionController.text) ?? 100;
+  }
+
+  bool get _hasMealWithIngredients {
+    return _ingredientDetails.isNotEmpty;
+  }
+
+  double get _totalMealWeightInGrams {
+    if (!_hasMealWithIngredients) return 100.0;
+    return _ingredientDetails.fold(0.0, (sum, ingredient) {
+      final quantityKg = (ingredient['quantity_kg'] ?? 0).toDouble();
+      return sum + (quantityKg * 1000);
+    });
+  }
+
+  double _calculateTotalNutrientFromIngredients(String nutrientKey) {
+    if (!_hasMealWithIngredients) return 0.0;
+
+    return _ingredientDetails.fold(0.0, (sum, ingredient) {
+      final nutrientPer100g = (ingredient[nutrientKey] ?? 0).toDouble();
+      final quantityKg = (ingredient['quantity_kg'] ?? 0).toDouble();
+      final quantityG = quantityKg * 1000;
+      return sum + ((nutrientPer100g * quantityG) / 100);
+    });
+  }
+
+  double _calculateNutrientPer100g(String nutrientKey) {
+    if (!_hasMealWithIngredients) return 0.0;
+    final totalNutrient = _calculateTotalNutrientFromIngredients(nutrientKey);
+    final totalWeight = _totalMealWeightInGrams;
+    if (totalWeight == 0) return 0.0;
+    return (totalNutrient / totalWeight) * 100;
   }
 
   double _calculateNutrient(double per100g) {
@@ -253,11 +335,28 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final name = widget.meal['name'] ?? 'Unknown';
-    final kcalPer100g = (widget.meal['kcal_per_100gr'] ?? 0).toDouble();
-    final proteinPer100g = (widget.meal['protein_per_100gr'] ?? 0).toDouble();
-    final fatPer100g = (widget.meal['fat_per_100gr'] ?? 0).toDouble();
-    final carbsPer100g = (widget.meal['carbs_per_100gr'] ?? 0).toDouble();
-    final fiberPer100g = (widget.meal['fiber_per_100gr'] ?? 0).toDouble();
+
+    // Calculate nutrition values - use ingredients if available, otherwise use meal values
+    final kcalPer100g =
+        _hasMealWithIngredients
+            ? _calculateNutrientPer100g('kcal_per_100gr')
+            : (widget.meal['kcal_per_100gr'] ?? 0).toDouble();
+    final proteinPer100g =
+        _hasMealWithIngredients
+            ? _calculateNutrientPer100g('protein_per_100gr')
+            : (widget.meal['protein_per_100gr'] ?? 0).toDouble();
+    final fatPer100g =
+        _hasMealWithIngredients
+            ? _calculateNutrientPer100g('fat_per_100gr')
+            : (widget.meal['fat_per_100gr'] ?? 0).toDouble();
+    final carbsPer100g =
+        _hasMealWithIngredients
+            ? _calculateNutrientPer100g('carbs_per_100gr')
+            : (widget.meal['carbs_per_100gr'] ?? 0).toDouble();
+    final fiberPer100g =
+        _hasMealWithIngredients
+            ? _calculateNutrientPer100g('fiber_per_100gr')
+            : (widget.meal['fiber_per_100gr'] ?? 0).toDouble();
     final imageUrl = widget.meal['image_url'] as String?;
 
     return Scaffold(
@@ -404,6 +503,97 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
+
+                  // Ingredients Section (if meal has ingredients)
+                  if (_ingredientDetails.isNotEmpty) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Ingredients',
+                            style: AppTypography.headline.copyWith(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          ..._ingredientDetails.map((ingredient) {
+                            final name = ingredient['name'] ?? 'Unknown';
+                            final quantityKg =
+                                (ingredient['quantity_kg'] ?? 0).toDouble();
+                            final quantityG = (quantityKg * 1000).toInt();
+                            final kcalPer100g =
+                                (ingredient['kcal_per_100gr'] ?? 0).toDouble();
+                            final totalKcal = (kcalPer100g * quantityKg * 10)
+                                .toStringAsFixed(0);
+
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(
+                                      color: AppColors.primary,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      name,
+                                      style: AppTypography.body.copyWith(
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    '${quantityG}g',
+                                    style: AppTypography.body.copyWith(
+                                      fontSize: 14,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '($totalKcal kcal)',
+                                    style: AppTypography.body.copyWith(
+                                      fontSize: 12,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  if (_isLoadingIngredients)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  if (_isLoadingIngredients) const SizedBox(height: 16),
 
                   // Portion Size Selection
                   Container(
