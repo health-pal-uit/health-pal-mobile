@@ -1,3 +1,4 @@
+import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
 import 'package:flutter/material.dart';
@@ -11,76 +12,215 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  final List<NotificationItem> _notifications = [
-    NotificationItem(
-      id: '1',
-      title: 'Great job on your workout!',
-      message: 'You burned 350 calories today. Keep up the good work!',
-      type: NotificationType.workout,
-      timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-      isRead: false,
-    ),
-    NotificationItem(
-      id: '2',
-      title: 'Meal reminder',
-      message: 'Don\'t forget to log your dinner for today.',
-      type: NotificationType.meal,
-      timestamp: DateTime.now().subtract(const Duration(hours: 5)),
-      isRead: false,
-    ),
-    NotificationItem(
-      id: '3',
-      title: 'Weekly progress update',
-      message:
-          'You\'ve logged meals for 5 days this week. Amazing consistency!',
-      type: NotificationType.achievement,
-      timestamp: DateTime.now().subtract(const Duration(days: 1)),
-      isRead: true,
-    ),
-    NotificationItem(
-      id: '4',
-      title: 'Hydration reminder',
-      message: 'Time to drink some water! Stay hydrated throughout the day.',
-      type: NotificationType.reminder,
-      timestamp: DateTime.now().subtract(const Duration(days: 1)),
-      isRead: true,
-    ),
-    NotificationItem(
-      id: '5',
-      title: 'New feature available',
-      message: 'Check out our new meal scanner feature to log food faster!',
-      type: NotificationType.system,
-      timestamp: DateTime.now().subtract(const Duration(days: 2)),
-      isRead: true,
-    ),
-  ];
+  final List<Map<String, dynamic>> _notifications = [];
+  bool _isLoading = true;
+  bool _isLoadingMore = false;
+  String? _errorMessage;
+  int _currentPage = 1;
+  final int _limit = 10;
+  bool _hasMoreData = true;
+  final ScrollController _scrollController = ScrollController();
 
-  void _markAsRead(String id) {
-    setState(() {
-      final index = _notifications.indexWhere((n) => n.id == id);
-      if (index != -1) {
-        _notifications[index] = _notifications[index].copyWith(isRead: true);
-      }
-    });
+  @override
+  void initState() {
+    super.initState();
+    _loadNotifications();
+    _scrollController.addListener(_onScroll);
   }
 
-  void _markAllAsRead() {
-    setState(() {
-      for (int i = 0; i < _notifications.length; i++) {
-        _notifications[i] = _notifications[i].copyWith(isRead: true);
-      }
-    });
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
   }
 
-  void _deleteNotification(String id) {
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      if (!_isLoadingMore && _hasMoreData) {
+        _loadMoreNotifications();
+      }
+    }
+  }
+
+  Future<void> _loadNotifications() async {
     setState(() {
-      _notifications.removeWhere((n) => n.id == id);
+      _isLoading = true;
+      _errorMessage = null;
+      _currentPage = 1;
+      _hasMoreData = true;
     });
+
+    final repository = AppRoutes.getNotificationRepository();
+    if (repository == null) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Repository not initialized';
+      });
+      return;
+    }
+
+    final result = await repository.getNotifications(
+      page: _currentPage,
+      limit: _limit,
+    );
+
+    if (mounted) {
+      result.fold(
+        (failure) {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = failure.message;
+          });
+        },
+        (data) {
+          final notifications =
+              (data['data'] as List).cast<Map<String, dynamic>>();
+          final total = data['total'] as int;
+
+          setState(() {
+            _isLoading = false;
+            _notifications.clear();
+            _notifications.addAll(notifications);
+            _hasMoreData = _notifications.length < total;
+          });
+        },
+      );
+    }
+  }
+
+  Future<void> _loadMoreNotifications() async {
+    if (_isLoadingMore || !_hasMoreData) return;
+
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    final repository = AppRoutes.getNotificationRepository();
+    if (repository == null) {
+      setState(() => _isLoadingMore = false);
+      return;
+    }
+
+    final nextPage = _currentPage + 1;
+    final result = await repository.getNotifications(
+      page: nextPage,
+      limit: _limit,
+    );
+
+    if (mounted) {
+      result.fold(
+        (failure) {
+          setState(() => _isLoadingMore = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to load more: ${failure.message}')),
+          );
+        },
+        (data) {
+          final notifications =
+              (data['data'] as List).cast<Map<String, dynamic>>();
+          final total = data['total'] as int;
+
+          setState(() {
+            _isLoadingMore = false;
+            _currentPage = nextPage;
+            _notifications.addAll(notifications);
+            _hasMoreData = _notifications.length < total;
+          });
+        },
+      );
+    }
+  }
+
+  Future<void> _markAsRead(String id) async {
+    final repository = AppRoutes.getNotificationRepository();
+    if (repository == null) return;
+
+    final result = await repository.markAsRead(id);
+
+    result.fold(
+      (failure) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to mark as read: ${failure.message}'),
+            ),
+          );
+        }
+      },
+      (_) {
+        setState(() {
+          final index = _notifications.indexWhere((n) => n['id'] == id);
+          if (index != -1) {
+            _notifications[index]['is_read'] = true;
+          }
+        });
+      },
+    );
+  }
+
+  Future<void> _markAllAsRead() async {
+    final repository = AppRoutes.getNotificationRepository();
+    if (repository == null) return;
+
+    final result = await repository.markAllAsRead();
+
+    result.fold(
+      (failure) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to mark all as read: ${failure.message}'),
+            ),
+          );
+        }
+      },
+      (_) {
+        setState(() {
+          for (int i = 0; i < _notifications.length; i++) {
+            _notifications[i]['is_read'] = true;
+          }
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('All notifications marked as read')),
+          );
+        }
+      },
+    );
+  }
+
+  Future<void> _deleteNotification(String id) async {
+    final repository = AppRoutes.getNotificationRepository();
+    if (repository == null) return;
+
+    final result = await repository.deleteNotification(id);
+
+    result.fold(
+      (failure) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Failed to delete notification: ${failure.message}',
+              ),
+            ),
+          );
+        }
+      },
+      (_) {
+        setState(() {
+          _notifications.removeWhere((n) => n['id'] == id);
+        });
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final unreadCount = _notifications.where((n) => !n.isRead).length;
+    final unreadCount =
+        _notifications.where((n) => n['is_read'] == false).length;
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
@@ -110,18 +250,70 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             ),
         ],
       ),
-      body:
-          _notifications.isEmpty
-              ? _buildEmptyState()
-              : ListView.separated(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                itemCount: _notifications.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 1),
-                itemBuilder: (context, index) {
-                  final notification = _notifications[index];
-                  return _buildNotificationItem(notification);
-                },
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                _errorMessage!,
+                style: AppTypography.body.copyWith(color: Colors.red),
+                textAlign: TextAlign.center,
               ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadNotifications,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+              ),
+              child: const Text('Retry', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_notifications.isEmpty) {
+      return _buildEmptyState();
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadNotifications,
+      color: AppColors.primary,
+      child: ListView.separated(
+        controller: _scrollController,
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        itemCount: _notifications.length + (_isLoadingMore ? 1 : 0),
+        separatorBuilder: (context, index) => const SizedBox(height: 1),
+        itemBuilder: (context, index) {
+          if (index == _notifications.length) {
+            return const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
+            );
+          }
+          final notification = _notifications[index];
+          return _buildNotificationItem(notification);
+        },
+      ),
     );
   }
 
@@ -149,24 +341,22 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  Widget _buildNotificationItem(NotificationItem notification) {
+  Widget _buildNotificationItem(Map<String, dynamic> notification) {
+    final id = notification['id'] as String;
+    final title = notification['title'] ?? '';
+    final content = notification['content'] ?? '';
+    final isRead = notification['is_read'] ?? false;
+    final createdAt = DateTime.parse(notification['created_at']);
+
     return Dismissible(
-      key: Key(notification.id),
+      key: Key(id),
       direction: DismissDirection.endToStart,
       onDismissed: (direction) {
-        _deleteNotification(notification.id);
+        _deleteNotification(id);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Notification deleted'),
-            duration: const Duration(seconds: 2),
-            action: SnackBarAction(
-              label: 'Undo',
-              onPressed: () {
-                setState(() {
-                  _notifications.add(notification);
-                });
-              },
-            ),
+          const SnackBar(
+            content: Text('Notification deleted'),
+            duration: Duration(seconds: 2),
           ),
         );
       },
@@ -178,21 +368,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       ),
       child: InkWell(
         onTap: () {
-          if (!notification.isRead) {
-            _markAsRead(notification.id);
+          if (!isRead) {
+            _markAsRead(id);
           }
           // TODO: Navigate to relevant screen based on notification type
         },
         child: Container(
           color:
-              notification.isRead
-                  ? Colors.white
-                  : AppColors.primary.withValues(alpha: 0.05),
+              isRead ? Colors.white : AppColors.primary.withValues(alpha: 0.05),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildNotificationIcon(notification.type),
+              _buildNotificationIcon(title),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -202,17 +390,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            notification.title,
+                            title,
                             style: AppTypography.headline.copyWith(
                               fontSize: 15,
                               fontWeight:
-                                  notification.isRead
-                                      ? FontWeight.w500
-                                      : FontWeight.bold,
+                                  isRead ? FontWeight.w500 : FontWeight.bold,
                             ),
                           ),
                         ),
-                        if (!notification.isRead)
+                        if (!isRead)
                           Container(
                             width: 8,
                             height: 8,
@@ -225,7 +411,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      notification.message,
+                      content,
                       style: AppTypography.body.copyWith(
                         fontSize: 14,
                         color: AppColors.textSecondary,
@@ -235,7 +421,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      _formatTimestamp(notification.timestamp),
+                      _formatTimestamp(createdAt),
                       style: AppTypography.body.copyWith(
                         fontSize: 12,
                         color: AppColors.textSecondary.withValues(alpha: 0.7),
@@ -251,31 +437,28 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  Widget _buildNotificationIcon(NotificationType type) {
+  Widget _buildNotificationIcon(String title) {
     IconData icon;
     Color color;
 
-    switch (type) {
-      case NotificationType.workout:
-        icon = Icons.fitness_center;
-        color = AppColors.primary;
-        break;
-      case NotificationType.meal:
-        icon = Icons.restaurant;
-        color = Colors.orange;
-        break;
-      case NotificationType.achievement:
-        icon = Icons.emoji_events;
-        color = Colors.amber;
-        break;
-      case NotificationType.reminder:
-        icon = Icons.notifications_active;
-        color = Colors.blue;
-        break;
-      case NotificationType.system:
-        icon = Icons.info_outline;
-        color = Colors.grey;
-        break;
+    // Determine icon and color based on title/content
+    if (title.contains('approved') || title.contains('✅')) {
+      icon = Icons.check_circle;
+      color = Colors.green;
+    } else if (title.contains('Lunch') ||
+        title.contains('🍽️') ||
+        title.contains('meal')) {
+      icon = Icons.restaurant;
+      color = Colors.orange;
+    } else if (title.contains('workout') || title.contains('exercise')) {
+      icon = Icons.fitness_center;
+      color = AppColors.primary;
+    } else if (title.contains('achievement') || title.contains('progress')) {
+      icon = Icons.emoji_events;
+      color = Colors.amber;
+    } else {
+      icon = Icons.notifications_active;
+      color = Colors.blue;
     }
 
     return Container(
@@ -302,43 +485,5 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     } else {
       return DateFormat('MMM d').format(timestamp);
     }
-  }
-}
-
-enum NotificationType { workout, meal, achievement, reminder, system }
-
-class NotificationItem {
-  final String id;
-  final String title;
-  final String message;
-  final NotificationType type;
-  final DateTime timestamp;
-  final bool isRead;
-
-  NotificationItem({
-    required this.id,
-    required this.title,
-    required this.message,
-    required this.type,
-    required this.timestamp,
-    required this.isRead,
-  });
-
-  NotificationItem copyWith({
-    String? id,
-    String? title,
-    String? message,
-    NotificationType? type,
-    DateTime? timestamp,
-    bool? isRead,
-  }) {
-    return NotificationItem(
-      id: id ?? this.id,
-      title: title ?? this.title,
-      message: message ?? this.message,
-      type: type ?? this.type,
-      timestamp: timestamp ?? this.timestamp,
-      isRead: isRead ?? this.isRead,
-    );
   }
 }

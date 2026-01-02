@@ -353,6 +353,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
     }
 
     return ListView.separated(
+      padding: EdgeInsets.only(bottom: _selectedTabIndex == 2 ? 80 : 0),
       itemCount: _filteredResults.length,
       itemBuilder: (context, index) {
         final meal = _filteredResults[index];
