@@ -6,6 +6,7 @@ abstract class GoogleFitRepository {
   Future<Either<Failure, String>> connectGoogleFit();
   Future<Either<Failure, bool>> getConnectionStatus();
   Future<Either<Failure, bool>> disconnectGoogleFit();
+  Future<Either<Failure, bool>> syncGoogleFit();
 }
 
 class GoogleFitRepositoryImpl implements GoogleFitRepository {
@@ -37,6 +38,16 @@ class GoogleFitRepositoryImpl implements GoogleFitRepository {
   Future<Either<Failure, bool>> disconnectGoogleFit() async {
     try {
       final success = await remoteDataSource.disconnectGoogleFit();
+      return Right(success);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> syncGoogleFit() async {
+    try {
+      final success = await remoteDataSource.syncGoogleFit();
       return Right(success);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

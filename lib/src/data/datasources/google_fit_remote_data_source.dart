@@ -4,6 +4,7 @@ abstract class GoogleFitRemoteDataSource {
   Future<String> connectGoogleFit();
   Future<bool> getConnectionStatus();
   Future<bool> disconnectGoogleFit();
+  Future<bool> syncGoogleFit();
 }
 
 class GoogleFitRemoteDataSourceImpl implements GoogleFitRemoteDataSource {
@@ -100,6 +101,20 @@ class GoogleFitRemoteDataSourceImpl implements GoogleFitRemoteDataSource {
           final innerData = data['data'] as Map<String, dynamic>;
           return innerData['success'] as bool? ?? true;
         }
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> syncGoogleFit() async {
+    try {
+      final response = await dio.get('/google-fit/sync');
+
+      if (response.statusCode == 200) {
         return true;
       }
       return false;

@@ -37,6 +37,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, dynamic>? fitnessProfile;
   bool hasClaimableItems = false;
   bool hasUnreadNotifications = false;
+  List<dynamic> activityRecords = [];
+  bool isLoadingActivityRecords = true;
 
   @override
   void initState() {
@@ -48,6 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadDietTypes();
     _checkClaimableItems();
     _checkUnreadNotifications();
+    _loadActivityRecords();
   }
 
   Future<void> _checkClaimableItems() async {
@@ -324,6 +327,10 @@ class _HomeScreenState extends State<HomeScreen> {
               dailyLog = log;
               isLoadingDailyLog = false;
             });
+            // Load activity records when daily log is loaded
+            if (log['id'] != null) {
+              _loadActivityRecords();
+            }
           }
         },
       );
@@ -331,6 +338,65 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) {
         setState(() {
           isLoadingDailyLog = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadActivityRecords() async {
+    if (dailyLog == null || dailyLog!['id'] == null) {
+      if (mounted) {
+        setState(() {
+          activityRecords = [];
+          isLoadingActivityRecords = false;
+        });
+      }
+      return;
+    }
+
+    final repository = AppRoutes.getActivityRecordRepository();
+    if (repository == null) {
+      if (mounted) {
+        setState(() {
+          isLoadingActivityRecords = false;
+        });
+      }
+      return;
+    }
+
+    if (mounted) {
+      setState(() {
+        isLoadingActivityRecords = true;
+      });
+    }
+
+    try {
+      final result = await repository.getActivityRecordsByDailyLog(
+        dailyLog!['id'],
+      );
+      result.fold(
+        (failure) {
+          if (mounted) {
+            setState(() {
+              activityRecords = [];
+              isLoadingActivityRecords = false;
+            });
+          }
+        },
+        (records) {
+          if (mounted) {
+            setState(() {
+              activityRecords = records;
+              isLoadingActivityRecords = false;
+            });
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          activityRecords = [];
+          isLoadingActivityRecords = false;
         });
       }
     }
@@ -415,6 +481,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   }
                 },
               ),
+              const SizedBox(height: 20),
+              _buildActivityDiaryCard(),
               const SizedBox(height: 20),
               _buildSmallCards(),
               const SizedBox(height: 30),
@@ -801,6 +869,145 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildActivityDiaryCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Activity Diary',
+                style: AppTypography.headline.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(LucideIcons.plus, size: 20),
+                onPressed: () async {
+                  final result = await context.push('/add-activity');
+                  if (result == true && mounted) {
+                    await _loadActivityRecords();
+                    setState(() {});
+                  }
+                },
+                style: IconButton.styleFrom(
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                  foregroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (isLoadingActivityRecords)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(20.0),
+                child: CircularProgressIndicator(),
+              ),
+            )
+          else if (activityRecords.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  children: [
+                    Icon(
+                      LucideIcons.activity,
+                      size: 48,
+                      color: Colors.grey[400],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'No activities recorded yet',
+                      style: AppTypography.body.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: activityRecords.length,
+              separatorBuilder: (context, index) => const Divider(height: 24),
+              itemBuilder: (context, index) {
+                final record = activityRecords[index] as Map<String, dynamic>;
+                final activity = record['activity'] as Map<String, dynamic>?;
+                final durationMinutes =
+                    (record['duration_minutes'] as num?)?.toInt() ?? 0;
+                final kcalBurned =
+                    (record['kcal_burned'] as num?)?.toDouble() ?? 0.0;
+
+                return Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        LucideIcons.activity,
+                        color: AppColors.primary,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            activity?['name'] ?? 'Unknown Activity',
+                            style: AppTypography.headline.copyWith(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '$durationMinutes min • ${kcalBurned.toStringAsFixed(1)} kcal',
+                            style: AppTypography.body.copyWith(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+        ],
+      ),
     );
   }
 }

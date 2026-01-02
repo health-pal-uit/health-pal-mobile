@@ -231,22 +231,50 @@ class _GoogleFitSyncScreenState extends State<GoogleFitSyncScreen> {
 
     setState(() => _isSyncing = true);
 
-    // Simulate sync process
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final result = await widget.googleFitRepository.syncGoogleFit();
 
-    if (mounted) {
-      setState(() {
-        _isSyncing = false;
-        _lastSyncTime = DateTime.now();
-      });
+      result.fold(
+        (failure) {
+          if (mounted) {
+            setState(() => _isSyncing = false);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to sync: ${failure.message}'),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+        },
+        (success) {
+          if (mounted) {
+            setState(() {
+              _isSyncing = false;
+              _lastSyncTime = DateTime.now();
+            });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Data synced successfully!'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Data synced successfully!'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        },
       );
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSyncing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
