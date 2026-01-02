@@ -24,7 +24,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
   List<Map<String, dynamic>> _favoriteResults = [];
   List<Map<String, dynamic>> _userRecipes = [];
   int _selectedTabIndex = 0;
-  final List<String> _tabs = ['All', 'Favorites', 'My Recipes'];
+  final List<String> _tabs = ['All', 'Favorites', 'My Meals'];
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -145,12 +145,18 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
         return name.contains(query);
       }).toList();
     } else if (_selectedTabIndex == 2) {
-      // My Recipes tab - show user recipes filtered by search if any
+      // My Meals tab - show only pending user recipes filtered by search if any
+      final pendingRecipes =
+          _userRecipes.where((recipe) {
+            final status = recipe['status'] as String?;
+            return status == 'PENDING';
+          }).toList();
+
       if (_searchController.text.trim().isEmpty) {
-        return _userRecipes;
+        return pendingRecipes;
       }
       final query = _searchController.text.trim().toLowerCase();
-      return _userRecipes.where((recipe) {
+      return pendingRecipes.where((recipe) {
         final name = (recipe['name'] ?? '').toString().toLowerCase();
         return name.contains(query);
       }).toList();
@@ -320,7 +326,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
           ),
         );
       } else if (_selectedTabIndex == 2) {
-        // My Recipes tab - no recipes
+        // My Meals tab - no pending recipes
         return Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -328,14 +334,14 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
               Icon(Icons.restaurant_menu, size: 64, color: Colors.grey[400]),
               const SizedBox(height: 16),
               Text(
-                'No recipes yet',
+                'No pending meals',
                 style: AppTypography.headline.copyWith(
                   color: AppColors.textSecondary,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                'Create your first recipe!',
+                'Create a meal to see it here!',
                 style: AppTypography.body.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -403,37 +409,49 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
                       size: 28,
                     ),
                   ),
-          title: Row(
+          title: Text(name),
+          subtitle: Row(
             children: [
-              Expanded(child: Text(name)),
-              if (isPending)
-                Container(
-                  margin: const EdgeInsets.only(left: 8),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.orange, width: 1),
-                  ),
-                  child: const Text(
-                    'Pending',
-                    style: TextStyle(
-                      color: Colors.orange,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+              const Text('per 100g'),
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 60,
+                child:
+                    isPending
+                        ? Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.orange, width: 1),
+                          ),
+                          child: const Text(
+                            'Pending',
+                            style: TextStyle(
+                              color: Colors.orange,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        )
+                        : const SizedBox.shrink(),
+              ),
             ],
           ),
-          subtitle: Text('per 100g'),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('${kcalPer100g.round()} cals'),
+              SizedBox(
+                width: 60,
+                child: Text(
+                  '${kcalPer100g.round()} cals',
+                  textAlign: TextAlign.right,
+                ),
+              ),
               const SizedBox(width: 8),
               const Icon(Icons.add_circle, color: AppColors.primary, size: 28),
             ],
