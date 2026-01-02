@@ -181,23 +181,27 @@ class MealRemoteDataSourceImpl implements MealRemoteDataSource {
       if (imagePath != null) {
         // Use FormData if image is provided
         final formDataMap = <String, dynamic>{};
+
+        // Add image first
         formDataMap['image'] = await MultipartFile.fromFile(imagePath);
 
-        // Add all other fields
+        // Add all other fields, handling arrays specially
         data.forEach((key, value) {
-          formDataMap[key] = value;
+          if (value is List) {
+            // For arrays like tags, just send the first value directly
+            if (value.isNotEmpty) {
+              formDataMap[key] = value.first;
+            }
+          } else {
+            formDataMap[key] = value;
+          }
         });
 
         requestData = FormData.fromMap(formDataMap);
       } else {
-        // Use regular JSON if no image
         requestData = data;
       }
-
-      final response = await dio.post(
-        '/food-vision/contributions',
-        data: requestData,
-      );
+      final response = await dio.post('/contribution-meals', data: requestData);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return response.data['data'] as Map<String, dynamic>;

@@ -359,6 +359,8 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
         final name = meal['name'] ?? 'Unknown';
         final kcalPer100g = meal['kcal_per_100gr'] ?? 0;
         final imageUrl = meal['image_url'] as String?;
+        final status = meal['status'] as String?;
+        final isPending = status == 'PENDING';
 
         return ListTile(
           leading:
@@ -400,7 +402,32 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
                       size: 28,
                     ),
                   ),
-          title: Text(name),
+          title: Row(
+            children: [
+              Expanded(child: Text(name)),
+              if (isPending)
+                Container(
+                  margin: const EdgeInsets.only(left: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.orange, width: 1),
+                  ),
+                  child: const Text(
+                    'Pending',
+                    style: TextStyle(
+                      color: Colors.orange,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+            ],
+          ),
           subtitle: Text('per 100g'),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,

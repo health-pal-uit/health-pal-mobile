@@ -28,21 +28,12 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
   final ImagePicker _picker = ImagePicker();
   File? _selectedImage;
   final List<String> _availableTags = [
-    'vegetarian',
-    'vegan',
-    'gluten-free',
-    'dairy-free',
-    'high-protein',
-    'low-carb',
-    'keto',
-    'paleo',
     'meat',
-    'seafood',
-    'dessert',
-    'snack',
-    'breakfast',
-    'lunch',
-    'dinner',
+    'vegetable',
+    'fruit',
+    'grain',
+    'dairy',
+    'vegan',
   ];
 
   @override
@@ -147,8 +138,6 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
       'fiber_per_100gr': double.parse(_fiberController.text),
       'notes': _notesController.text.trim(),
       'tags': _selectedTags,
-      'type': 'meal',
-      'opt': 'new',
     };
 
     final result = await repository.createMealContribution(
@@ -169,12 +158,28 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
           );
         },
         (recipe) {
+          final status = recipe['status'] as String? ?? 'UNKNOWN';
+          final statusMessage =
+              status == 'PENDING'
+                  ? 'Your recipe is pending review and will be available soon.'
+                  : 'Recipe created successfully!';
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                'Recipe "${_nameController.text}" created successfully!',
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Recipe "${_nameController.text}" submitted!',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(statusMessage, style: const TextStyle(fontSize: 12)),
+                ],
               ),
               backgroundColor: Colors.green,
+              duration: const Duration(seconds: 4),
             ),
           );
           Navigator.pop(context, true); // Return true to indicate success
