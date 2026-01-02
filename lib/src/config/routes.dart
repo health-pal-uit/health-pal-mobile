@@ -40,6 +40,7 @@ import 'package:da1/src/data/repositories/user_repository.dart';
 import 'package:da1/src/data/repositories/challenge_repository.dart';
 import 'package:da1/src/data/repositories/medal_repository.dart';
 import 'package:da1/src/data/repositories/notification_repository.dart';
+import 'package:da1/src/data/repositories/google_fit_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -59,6 +60,7 @@ class AppRoutes {
   static ChallengeRepository? _challengeRepository;
   static MedalRepository? _medalRepository;
   static NotificationRepository? _notificationRepository;
+  static GoogleFitRepository? _googleFitRepository;
 
   static void setFitnessProfileRepository(FitnessProfileRepository repository) {
     _fitnessProfileRepository = repository;
@@ -178,6 +180,14 @@ class AppRoutes {
 
   static NotificationRepository? getNotificationRepository() {
     return _notificationRepository;
+  }
+
+  static void setGoogleFitRepository(GoogleFitRepository repository) {
+    _googleFitRepository = repository;
+  }
+
+  static GoogleFitRepository? getGoogleFitRepository() {
+    return _googleFitRepository;
   }
 
   static final GoRouter router = GoRouter(
@@ -404,7 +414,9 @@ class AppRoutes {
       GoRoute(
         path: '/google-fit-sync',
         name: 'google-fit-sync',
-        builder: (context, state) => const GoogleFitSyncScreen(),
+        builder:
+            (context, state) =>
+                GoogleFitSyncScreen(googleFitRepository: _googleFitRepository!),
       ),
       ShellRoute(
         builder: (context, state, child) {

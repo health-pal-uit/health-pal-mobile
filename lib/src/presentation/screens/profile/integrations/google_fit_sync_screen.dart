@@ -1,11 +1,15 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/data/repositories/google_fit_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class GoogleFitSyncScreen extends StatefulWidget {
-  const GoogleFitSyncScreen({super.key});
+  final GoogleFitRepository googleFitRepository;
+
+  const GoogleFitSyncScreen({super.key, required this.googleFitRepository});
 
   @override
   State<GoogleFitSyncScreen> createState() => _GoogleFitSyncScreenState();
@@ -23,26 +27,115 @@ class _GoogleFitSyncScreenState extends State<GoogleFitSyncScreen> {
   bool _syncSleep = false;
   bool _autoSync = true;
 
+  @override
+  void initState() {
+    super.initState();
+    _checkConnectionStatus();
+  }
+
+  Future<void> _checkConnectionStatus() async {
+    final result = await widget.googleFitRepository.getConnectionStatus();
+    result.fold((failure) {}, (isConnected) {
+      if (mounted) {
+        setState(() {
+          _isConnected = isConnected;
+          if (isConnected) {
+            _lastSyncTime = DateTime.now();
+          }
+        });
+      }
+    });
+  }
+
   Future<void> _connectToGoogleFit() async {
     setState(() => _isSyncing = true);
 
-    // Simulate connection process
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // Get the OAuth URL from the backend
+      final result = await widget.googleFitRepository.connectGoogleFit();
 
-    if (mounted) {
-      setState(() {
-        _isConnected = true;
-        _isSyncing = false;
-        _lastSyncTime = DateTime.now();
-      });
+      result.fold(
+        (failure) {
+          // Handle error
+          if (mounted) {
+            setState(() => _isSyncing = false);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to connect: ${failure.message}'),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+        },
+        (authUrl) async {
+          // Launch the OAuth URL in browser
+          final uri = Uri.parse(authUrl);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Successfully connected to Google Fit!'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
+          bool launched = false;
+
+          // Try different launch modes
+          try {
+            // First try external application
+            launched = await launchUrl(
+              uri,
+              mode: LaunchMode.externalApplication,
+            );
+          } catch (e) {
+            try {
+              // Try platform default
+              launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
+            } catch (e2) {
+              try {
+                // Try in-app web view as last resort
+                launched = await launchUrl(uri, mode: LaunchMode.inAppWebView);
+              } catch (e3) {
+                // All launch modes failed, launched remains false
+              }
+            }
+          }
+
+          if (launched && mounted) {
+            setState(() {
+              _isConnected = true;
+              _isSyncing = false;
+              _lastSyncTime = DateTime.now();
+            });
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Opening Google authentication. Please sign in and authorize the app.',
+                ),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          } else {
+            if (mounted) {
+              setState(() => _isSyncing = false);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Could not open Google authentication'),
+                  backgroundColor: Colors.red,
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+          }
+        },
       );
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSyncing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
