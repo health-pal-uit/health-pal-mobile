@@ -201,33 +201,60 @@ class MealRemoteDataSourceImpl implements MealRemoteDataSource {
     String? imagePath,
   ) async {
     try {
+      final hasIngredients = data.containsKey('ingredients');
+      final endpoint =
+          hasIngredients
+              ? '/contribution-meals/ingredients'
+              : '/contribution-meals';
+
       dynamic requestData;
 
-      if (imagePath != null) {
-        // Use FormData if image is provided
+      if (imagePath != null || hasIngredients) {
         final formDataMap = <String, dynamic>{};
 
-        // Add image first
-        formDataMap['image'] = await MultipartFile.fromFile(imagePath);
+        // Add image if present
+        if (imagePath != null) {
+          formDataMap['image'] = await MultipartFile.fromFile(imagePath);
+        }
 
-        // Add all other fields, handling arrays specially
-        data.forEach((key, value) {
-          if (value is List) {
-            // For arrays like tags, just send the first value directly
-            if (value.isNotEmpty) {
-              formDataMap[key] = value.first;
-            }
-          } else {
-            formDataMap[key] = value;
+        // Handle ingredients mode
+        if (hasIngredients) {
+          final ingredients = data['ingredients'] as List;
+
+          // Add meal fields with 'meal.' prefix
+          formDataMap['meal.name'] = data['name'];
+          formDataMap['meal.notes'] = data['notes'] ?? '';
+          formDataMap['meal.opt'] = 'new';
+
+          // Add tag
+          final tags = data['tags'] as List?;
+          if (tags != null && tags.isNotEmpty) {
+            formDataMap['meal.tags[0]'] = tags.first;
           }
-        });
 
+          // Add ingredients with array notation
+          for (int i = 0; i < ingredients.length; i++) {
+            final ing = ingredients[i] as Map<String, dynamic>;
+            formDataMap['ingredients[$i].ingredient_id'] = ing['ingredient_id'];
+            formDataMap['ingredients[$i].quantity_kg'] =
+                (ing['amount'] as num) / 1000; // Convert g to kg
+          }
+        } else {
+          // Simple mode - add fields directly
+          data.forEach((key, value) {
+            if (key == 'tags' && value is List && value.isNotEmpty) {
+              formDataMap[key] = value.first;
+            } else if (value is! List) {
+              formDataMap[key] = value;
+            }
+          });
+        }
         requestData = FormData.fromMap(formDataMap);
       } else {
         requestData = data;
       }
-      final response = await dio.post('/contribution-meals', data: requestData);
 
+      final response = await dio.post(endpoint, data: requestData);
       if (response.statusCode == 200 || response.statusCode == 201) {
         return response.data['data'] as Map<String, dynamic>;
       }
