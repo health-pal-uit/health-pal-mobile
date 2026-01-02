@@ -1,4 +1,3 @@
-import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
 import 'package:flutter/material.dart';
@@ -20,14 +19,11 @@ class MealDiaryDetailScreen extends StatefulWidget {
 
 class _MealDiaryDetailScreenState extends State<MealDiaryDetailScreen> {
   final Map<String, List<Map<String, dynamic>>> _groupedMeals = {};
-  final Map<String, Map<String, dynamic>> _mealDetails = {};
-  bool _isLoadingDetails = true;
 
   @override
   void initState() {
     super.initState();
     _groupMealsByType();
-    _loadMealDetails();
   }
 
   void _groupMealsByType() {
@@ -42,37 +38,6 @@ class _MealDiaryDetailScreenState extends State<MealDiaryDetailScreen> {
       if (_groupedMeals.containsKey(mealType)) {
         _groupedMeals[mealType]!.add(meal as Map<String, dynamic>);
       }
-    }
-  }
-
-  Future<void> _loadMealDetails() async {
-    final repository = AppRoutes.getMealRepository();
-    if (repository == null) {
-      setState(() => _isLoadingDetails = false);
-      return;
-    }
-
-    for (final meal in widget.dailyMeals) {
-      final mealId = meal['meal_id'];
-      if (mealId != null && !_mealDetails.containsKey(mealId)) {
-        final result = await repository.getMealById(mealId);
-        result.fold(
-          (failure) {
-            // Failed to load meal details
-          },
-          (mealDetail) {
-            if (mounted) {
-              setState(() {
-                _mealDetails[mealId] = mealDetail;
-              });
-            }
-          },
-        );
-      }
-    }
-
-    if (mounted) {
-      setState(() => _isLoadingDetails = false);
     }
   }
 
@@ -179,23 +144,16 @@ class _MealDiaryDetailScreenState extends State<MealDiaryDetailScreen> {
 
           // Meals List by Type
           Expanded(
-            child:
-                _isLoadingDetails
-                    ? const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.primary,
-                      ),
-                    )
-                    : ListView(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      children: [
-                        _buildMealTypeSection('breakfast'),
-                        _buildMealTypeSection('lunch'),
-                        _buildMealTypeSection('dinner'),
-                        _buildMealTypeSection('snack'),
-                        const SizedBox(height: 24),
-                      ],
-                    ),
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              children: [
+                _buildMealTypeSection('breakfast'),
+                _buildMealTypeSection('lunch'),
+                _buildMealTypeSection('dinner'),
+                _buildMealTypeSection('snack'),
+                const SizedBox(height: 24),
+              ],
+            ),
           ),
         ],
       ),
@@ -251,9 +209,8 @@ class _MealDiaryDetailScreenState extends State<MealDiaryDetailScreen> {
   }
 
   Widget _buildMealItem(Map<String, dynamic> meal) {
-    final mealId = meal['meal_id'];
-    final mealDetail = _mealDetails[mealId];
-    final name = mealDetail?['name'] ?? 'Loading...';
+    final mealDetail = meal['meal'] as Map<String, dynamic>?;
+    final name = mealDetail?['name'] ?? 'Unknown';
     final imageUrl = mealDetail?['image_url'] as String?;
     final quantityKg = (meal['quantity_kg'] ?? 0) as num;
     final quantityG = (quantityKg.toDouble() * 1000).round();
