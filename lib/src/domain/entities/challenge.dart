@@ -8,6 +8,8 @@ class Challenge {
   final DateTime? deletedAt;
   final List<dynamic> activityRecords;
   final double? progressPercent;
+  final bool isFinished;
+  final bool canClaim;
 
   const Challenge({
     required this.id,
@@ -19,6 +21,8 @@ class Challenge {
     this.deletedAt,
     required this.activityRecords,
     this.progressPercent,
+    this.isFinished = false,
+    this.canClaim = false,
   });
 
   factory Challenge.fromJson(Map<String, dynamic> json) {
@@ -38,6 +42,8 @@ class Challenge {
           json['progress_percent'] != null
               ? (json['progress_percent'] as num).toDouble()
               : null,
+      isFinished: json['is_finished'] as bool? ?? false,
+      canClaim: json['can_claim'] as bool? ?? false,
     );
   }
 }

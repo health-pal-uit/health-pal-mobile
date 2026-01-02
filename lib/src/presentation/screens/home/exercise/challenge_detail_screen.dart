@@ -88,7 +88,8 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
   Widget build(BuildContext context) {
     final progress = _calculateProgress();
     final completedCount = widget.challenge.activityRecords.length;
-    final isCompleted = progress >= 1.0;
+    final canClaim = widget.challenge.canClaim;
+    final isFinished = widget.challenge.isFinished;
 
     return Scaffold(
       appBar: AppBar(
@@ -166,6 +167,79 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                       ),
                     ],
                   ),
+
+                  // Status badge
+                  if (isFinished) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.blue.shade200,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.check_circle,
+                            color: Colors.blue.shade700,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'FINISHED',
+                            style: TextStyle(
+                              color: Colors.blue.shade700,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ] else if (canClaim) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.green.shade200,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.emoji_events,
+                            color: Colors.green.shade700,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'READY TO CLAIM',
+                            style: TextStyle(
+                              color: Colors.green.shade700,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
 
                   if (widget.challenge.note != null) ...[
                     const SizedBox(height: 12),
@@ -252,17 +326,21 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                   ),
 
                   // Finish Challenge Button
-                  if (isCompleted) ...[
+                  if (!isFinished) ...[
                     const SizedBox(height: 20),
                     SizedBox(
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton(
-                        onPressed: _isFinishing ? null : _finishChallenge,
+                        onPressed:
+                            canClaim && !_isFinishing ? _finishChallenge : null,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _getDifficultyColor(
-                            widget.challenge.difficulty,
-                          ),
+                          backgroundColor:
+                              canClaim
+                                  ? _getDifficultyColor(
+                                    widget.challenge.difficulty,
+                                  )
+                                  : Colors.grey,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -280,14 +358,18 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                                 : Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    const Icon(
-                                      Icons.emoji_events,
+                                    Icon(
+                                      canClaim
+                                          ? Icons.emoji_events
+                                          : Icons.lock,
                                       color: Colors.white,
                                     ),
                                     const SizedBox(width: 8),
-                                    const Text(
-                                      'Finish Challenge',
-                                      style: TextStyle(
+                                    Text(
+                                      canClaim
+                                          ? 'Finish Challenge'
+                                          : 'Complete ${progress < 1.0 ? "${((1.0 - progress) * 100).toInt()}% more" : "Requirements"}',
+                                      style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white,
@@ -295,6 +377,40 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
                                     ),
                                   ],
                                 ),
+                      ),
+                    ),
+                  ] else ...[
+                    const SizedBox(height: 20),
+                    Container(
+                      width: double.infinity,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.blue.shade200,
+                          width: 2,
+                        ),
+                      ),
+                      child: Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.check_circle,
+                              color: Colors.blue.shade700,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Challenge Already Finished',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue.shade700,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
