@@ -40,7 +40,9 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
   @override
   Future<void> markAsRead(String notificationId) async {
     try {
-      final response = await dio.patch('/notifications/markAsRead/$notificationId');
+      final response = await dio.patch(
+        '/notifications/markAsRead/$notificationId',
+      );
 
       if (response.statusCode != 200) {
         throw Exception(

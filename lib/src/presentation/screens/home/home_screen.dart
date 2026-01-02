@@ -85,19 +85,15 @@ class _HomeScreenState extends State<HomeScreen> {
     if (notificationRepo == null) return;
 
     final result = await notificationRepo.getNotifications(page: 1, limit: 10);
-    result.fold(
-      (error) {},
-      (data) {
-        final notifications =
-            (data['data'] as List).cast<Map<String, dynamic>>();
-        final hasUnread = notifications.any((n) => n['is_read'] == false);
-        if (mounted) {
-          setState(() {
-            hasUnreadNotifications = hasUnread;
-          });
-        }
-      },
-    );
+    result.fold((error) {}, (data) {
+      final notifications = (data['data'] as List).cast<Map<String, dynamic>>();
+      final hasUnread = notifications.any((n) => n['is_read'] == false);
+      if (mounted) {
+        setState(() {
+          hasUnreadNotifications = hasUnread;
+        });
+      }
+    });
   }
 
   Future<void> _loadDietTypes() async {
