@@ -27,6 +27,16 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
   final List<String> _selectedTags = [];
   final ImagePicker _picker = ImagePicker();
   File? _selectedImage;
+
+  // Mode: 'simple' or 'ingredients'
+  String _mode = 'simple';
+
+  // For ingredient mode
+  final _ingredientSearchController = TextEditingController();
+  List<Map<String, dynamic>> _searchedIngredients = [];
+  final List<Map<String, dynamic>> _addedIngredients = [];
+  bool _isSearching = false;
+
   final List<String> _availableTags = [
     'meat',
     'vegetable',
@@ -45,6 +55,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
     _carbsController.dispose();
     _fiberController.dispose();
     _notesController.dispose();
+    _ingredientSearchController.dispose();
     super.dispose();
   }
 
@@ -111,8 +122,96 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
     );
   }
 
+  Future<void> _searchIngredients(String query) async {
+    if (query.trim().isEmpty) {
+      setState(() {
+        _searchedIngredients = [];
+        _isSearching = false;
+      });
+      return;
+    }
+
+    setState(() => _isSearching = true);
+
+    final repository = AppRoutes.getMealRepository();
+    if (repository == null) return;
+
+    final result = await repository.searchIngredients(query);
+
+    if (mounted) {
+      result.fold(
+        (failure) {
+          setState(() {
+            _searchedIngredients = [];
+            _isSearching = false;
+          });
+        },
+        (ingredients) {
+          setState(() {
+            _searchedIngredients = ingredients.cast<Map<String, dynamic>>();
+            _isSearching = false;
+          });
+        },
+      );
+    }
+  }
+
+  void _addIngredient(Map<String, dynamic> ingredient) {
+    // Show dialog to input amount
+    final amountController = TextEditingController(text: '100');
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text('Add ${ingredient['name']}'),
+            content: TextField(
+              controller: amountController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Amount (grams)',
+                suffixText: 'g',
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  final amount = double.tryParse(amountController.text) ?? 100;
+                  setState(() {
+                    _addedIngredients.add({...ingredient, 'amount': amount});
+                  });
+                  Navigator.pop(context);
+                },
+                child: const Text('Add'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _removeIngredient(int index) {
+    setState(() {
+      _addedIngredients.removeAt(index);
+    });
+  }
+
   Future<void> _createRecipe() async {
     if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    // Validate mode-specific requirements
+    if (_mode == 'ingredients' && _addedIngredients.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please add at least one ingredient'),
+          backgroundColor: Colors.orange,
+        ),
+      );
       return;
     }
 
@@ -129,16 +228,30 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
       return;
     }
 
-    final data = {
+    final data = <String, dynamic>{
       'name': _nameController.text.trim(),
-      'kcal_per_100gr': double.parse(_kcalController.text),
-      'protein_per_100gr': double.parse(_proteinController.text),
-      'fat_per_100gr': double.parse(_fatController.text),
-      'carbs_per_100gr': double.parse(_carbsController.text),
-      'fiber_per_100gr': double.parse(_fiberController.text),
       'notes': _notesController.text.trim(),
       'tags': _selectedTags,
     };
+
+    if (_mode == 'simple') {
+      // Add nutrition data for simple mode
+      data.addAll({
+        'kcal_per_100gr': double.parse(_kcalController.text),
+        'protein_per_100gr': double.parse(_proteinController.text),
+        'fat_per_100gr': double.parse(_fatController.text),
+        'carbs_per_100gr': double.parse(_carbsController.text),
+        'fiber_per_100gr': double.parse(_fiberController.text),
+      });
+    } else {
+      // Add ingredients data for ingredients mode
+      data['ingredients'] =
+          _addedIngredients
+              .map(
+                (ing) => {'ingredient_id': ing['id'], 'amount': ing['amount']},
+              )
+              .toList();
+    }
 
     final result = await repository.createMealContribution(
       data,
@@ -197,7 +310,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          'Create Recipe',
+          'Create Meal',
           style: AppTypography.headline.copyWith(fontSize: 20),
         ),
         leading: IconButton(
@@ -212,9 +325,81 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Mode Switcher
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => _mode = 'simple'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color:
+                                _mode == 'simple'
+                                    ? Colors.white
+                                    : Colors.transparent,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            'Simple Meal',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight:
+                                  _mode == 'simple'
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                              color:
+                                  _mode == 'simple'
+                                      ? AppColors.primary
+                                      : Colors.grey[600],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => _mode = 'ingredients'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color:
+                                _mode == 'ingredients'
+                                    ? Colors.white
+                                    : Colors.transparent,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            'With Ingredients',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight:
+                                  _mode == 'ingredients'
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                              color:
+                                  _mode == 'ingredients'
+                                      ? AppColors.primary
+                                      : Colors.grey[600],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
               // Image Section
               Text(
-                'Recipe Image (Optional)',
+                'Meal Image (Optional)',
                 style: AppTypography.body.copyWith(
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
@@ -287,9 +472,9 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
 
               const SizedBox(height: 24),
 
-              // Recipe Name
+              // Meal Name
               Text(
-                'Recipe Name',
+                'Meal Name',
                 style: AppTypography.body.copyWith(
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
@@ -321,71 +506,189 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
 
               const SizedBox(height: 24),
 
-              // Nutritional Information
-              Text(
-                'Nutritional Information (per 100g)',
-                style: AppTypography.body.copyWith(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
+              // Ingredient Search (only in ingredients mode)
+              if (_mode == 'ingredients') ...[
+                Text(
+                  'Ingredients',
+                  style: AppTypography.body.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _ingredientSearchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search ingredients...',
+                    filled: true,
+                    fillColor: Colors.white,
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                  ),
+                  onChanged: (value) {
+                    _searchIngredients(value);
+                  },
+                ),
+                const SizedBox(height: 12),
 
-              // Calories
-              _buildNutrientField(
-                controller: _kcalController,
-                label: 'Calories (kcal)',
-                hint: 'e.g., 120',
-                icon: Icons.local_fire_department,
-                color: Colors.orange,
-              ),
+                // Search results
+                if (_isSearching)
+                  const Center(child: CircularProgressIndicator())
+                else if (_searchedIngredients.isNotEmpty)
+                  Container(
+                    constraints: const BoxConstraints(maxHeight: 200),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey[300]!),
+                    ),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: _searchedIngredients.length,
+                      itemBuilder: (context, index) {
+                        final ingredient = _searchedIngredients[index];
+                        return ListTile(
+                          title: Text(ingredient['name'] ?? ''),
+                          subtitle: Text(
+                            '${ingredient['kcal_per_100gr']} kcal/100g',
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(
+                              Icons.add_circle,
+                              color: AppColors.primary,
+                            ),
+                            onPressed: () => _addIngredient(ingredient),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                const SizedBox(height: 16),
 
-              const SizedBox(height: 12),
+                // Added ingredients
+                if (_addedIngredients.isNotEmpty) ...[
+                  Text(
+                    'Added Ingredients',
+                    style: AppTypography.body.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ..._addedIngredients.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final ingredient = entry.value;
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey[300]!),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  ingredient['name'] ?? '',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  '${ingredient['amount']}g',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => _removeIngredient(index),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
+                const SizedBox(height: 24),
+              ],
 
-              // Protein
-              _buildNutrientField(
-                controller: _proteinController,
-                label: 'Protein (g)',
-                hint: 'e.g., 10',
-                icon: Icons.fitness_center,
-                color: Colors.red,
-              ),
+              // Nutritional Information (only in simple mode)
+              if (_mode == 'simple') ...[
+                Text(
+                  'Nutritional Information (per 100g)',
+                  style: AppTypography.body.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 16),
 
-              const SizedBox(height: 12),
+                // Calories
+                _buildNutrientField(
+                  controller: _kcalController,
+                  label: 'Calories (kcal)',
+                  hint: 'e.g., 120',
+                  icon: Icons.local_fire_department,
+                  color: Colors.orange,
+                ),
 
-              // Fat
-              _buildNutrientField(
-                controller: _fatController,
-                label: 'Fat (g)',
-                hint: 'e.g., 5',
-                icon: Icons.water_drop,
-                color: Colors.yellow[700]!,
-              ),
+                const SizedBox(height: 12),
 
-              const SizedBox(height: 12),
+                // Protein
+                _buildNutrientField(
+                  controller: _proteinController,
+                  label: 'Protein (g)',
+                  hint: 'e.g., 10',
+                  icon: Icons.fitness_center,
+                  color: Colors.red,
+                ),
 
-              // Carbs
-              _buildNutrientField(
-                controller: _carbsController,
-                label: 'Carbs (g)',
-                hint: 'e.g., 8',
-                icon: Icons.grain,
-                color: Colors.brown,
-              ),
+                const SizedBox(height: 12),
 
-              const SizedBox(height: 12),
+                // Fat
+                _buildNutrientField(
+                  controller: _fatController,
+                  label: 'Fat (g)',
+                  hint: 'e.g., 5',
+                  icon: Icons.water_drop,
+                  color: Colors.yellow[700]!,
+                ),
 
-              // Fiber
-              _buildNutrientField(
-                controller: _fiberController,
-                label: 'Fiber (g)',
-                hint: 'e.g., 2',
-                icon: Icons.eco,
-                color: Colors.green,
-              ),
+                const SizedBox(height: 12),
 
-              const SizedBox(height: 24),
+                // Carbs
+                _buildNutrientField(
+                  controller: _carbsController,
+                  label: 'Carbs (g)',
+                  hint: 'e.g., 8',
+                  icon: Icons.grain,
+                  color: Colors.brown,
+                ),
 
+                const SizedBox(height: 12),
+
+                // Fiber
+                _buildNutrientField(
+                  controller: _fiberController,
+                  label: 'Fiber (g)',
+                  hint: 'e.g., 2',
+                  icon: Icons.eco,
+                  color: Colors.green,
+                ),
+
+                const SizedBox(height: 24),
+              ], // End of simple mode nutrition fields
               // Tags
               Text(
                 'Tags',
@@ -438,7 +741,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                 controller: _notesController,
                 maxLines: 3,
                 decoration: InputDecoration(
-                  hintText: 'Add any additional notes about your recipe...',
+                  hintText: 'Add any additional notes about your meal...',
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
@@ -477,7 +780,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                             ),
                           )
                           : const Text(
-                            'Create Recipe',
+                            'Create Meal',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,

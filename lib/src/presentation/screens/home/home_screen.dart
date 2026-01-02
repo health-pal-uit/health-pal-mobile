@@ -366,7 +366,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     final String todayDate =
-        DateFormat('d MMMM').format(DateTime.now()).toUpperCase();
+        DateFormat('d MMMM').format(selectedDate).toUpperCase();
 
     return Scaffold(
       body: SafeArea(
@@ -409,6 +409,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeader(BuildContext context, User? user, String todayDate) {
+    final now = DateTime.now();
+    final isToday =
+        selectedDate.year == now.year &&
+        selectedDate.month == now.month &&
+        selectedDate.day == now.day;
+    final dateLabel =
+        isToday
+            ? 'TODAY'
+            : DateFormat('EEEE').format(selectedDate).toUpperCase();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -416,7 +426,13 @@ class _HomeScreenState extends State<HomeScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('TODAY, $todayDate', style: AppTypography.body),
+            Flexible(
+              child: Text(
+                '$dateLabel, $todayDate',
+                style: AppTypography.body,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
             Row(
               children: [
                 Stack(
@@ -516,6 +532,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   date.day == selectedDate.day &&
                   date.month == selectedDate.month &&
                   date.year == selectedDate.year;
+              final isToday =
+                  date.day == now.day &&
+                  date.month == now.month &&
+                  date.year == now.year;
 
               return GestureDetector(
                 onTap: () {
@@ -538,30 +558,59 @@ class _HomeScreenState extends State<HomeScreen> {
                       width: 1,
                     ),
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  child: Stack(
+                    alignment: Alignment.center,
                     children: [
-                      Text(
-                        DateFormat(
-                          'E',
-                        ).format(date).substring(0, 2).toUpperCase(),
-                        style: AppTypography.body.copyWith(
-                          fontSize: 11,
-                          color:
-                              isSelected
-                                  ? Colors.white
-                                  : AppColors.textSecondary,
+                      SizedBox(
+                        width: 45,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              DateFormat(
+                                'E',
+                              ).format(date).substring(0, 2).toUpperCase(),
+                              style: AppTypography.body.copyWith(
+                                fontSize: 11,
+                                color:
+                                    isSelected
+                                        ? Colors.white
+                                        : AppColors.textSecondary,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${date.day}',
+                              style: AppTypography.headline.copyWith(
+                                fontSize: 16,
+                                color:
+                                    isSelected
+                                        ? Colors.white
+                                        : AppColors.textPrimary,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${date.day}',
-                        style: AppTypography.headline.copyWith(
-                          fontSize: 16,
-                          color:
-                              isSelected ? Colors.white : AppColors.textPrimary,
+                      if (isToday && !isSelected)
+                        Positioned(
+                          bottom: 8,
+                          left: 0,
+                          right: 0,
+                          child: Center(
+                            child: Container(
+                              width: 6,
+                              height: 6,
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
