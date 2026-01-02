@@ -17,6 +17,7 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
   List<Challenge> _challenges = [];
   bool _isLoading = true;
   String? _errorMessage;
+  bool _hasChanges = false;
 
   @override
   void initState() {
@@ -84,6 +85,7 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
 
     // Refresh if challenge was finished
     if (result == true) {
+      _hasChanges = true;
       _loadChallenges();
     }
   }
@@ -142,7 +144,7 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(context, _hasChanges),
         ),
       ),
       body:

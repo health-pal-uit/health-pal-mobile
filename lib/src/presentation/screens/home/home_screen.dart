@@ -35,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<DietType> dietTypes = [];
   bool isLoadingDietTypes = true;
   Map<String, dynamic>? fitnessProfile;
+  bool hasClaimableItems = false;
 
   @override
   void initState() {
@@ -44,6 +45,37 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadDailyLog();
     _loadFitnessGoal();
     _loadDietTypes();
+    _checkClaimableItems();
+  }
+
+  Future<void> _checkClaimableItems() async {
+    bool hasClaimable = false;
+
+    // Check challenges
+    final challengeRepo = AppRoutes.getChallengeRepository();
+    if (challengeRepo != null) {
+      final challengeResult = await challengeRepo.getChallenges();
+      challengeResult.fold((error) {}, (challenges) {
+        hasClaimable = challenges.any((c) => c.canClaim);
+      });
+    }
+
+    // Check medals if no claimable challenge found
+    if (!hasClaimable) {
+      final medalRepo = AppRoutes.getMedalRepository();
+      if (medalRepo != null) {
+        final medalResult = await medalRepo.getMedals();
+        medalResult.fold((error) {}, (medals) {
+          hasClaimable = medals.any((m) => m.canClaim);
+        });
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        hasClaimableItems = hasClaimable;
+      });
+    }
   }
 
   Future<void> _loadDietTypes() async {
@@ -387,15 +419,40 @@ class _HomeScreenState extends State<HomeScreen> {
             Text('TODAY, $todayDate', style: AppTypography.body),
             Row(
               children: [
-                IconButton(
-                  icon: Icon(LucideIcons.medal, color: AppColors.textPrimary),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const ChallengesScreen(),
+                Stack(
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        LucideIcons.medal,
+                        color: AppColors.textPrimary,
                       ),
-                    );
-                  },
+                      onPressed: () async {
+                        final result = await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const ChallengesScreen(),
+                          ),
+                        );
+                        // Refresh notification status when returning
+                        if (result == true || result == null) {
+                          _checkClaimableItems();
+                        }
+                      },
+                    ),
+                    if (hasClaimableItems)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 1.5),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
                 IconButton(
                   icon: Icon(
