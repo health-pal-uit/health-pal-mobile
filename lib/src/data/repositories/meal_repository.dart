@@ -12,6 +12,11 @@ abstract class MealRepository {
   Future<Either<Failure, void>> addFavorite(String userId, String mealId);
   Future<Either<Failure, void>> removeFavorite(String favId);
   Future<Either<Failure, Map<String, dynamic>>> getMealById(String mealId);
+  Future<Either<Failure, List<dynamic>>> getUserContributions();
+  Future<Either<Failure, Map<String, dynamic>>> createMealContribution(
+    Map<String, dynamic> data,
+    String? imagePath,
+  );
 }
 
 class MealRepositoryImpl implements MealRepository {
@@ -85,6 +90,32 @@ class MealRepositoryImpl implements MealRepository {
     try {
       final meal = await remoteDataSource.getMealById(mealId);
       return Right(meal);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<dynamic>>> getUserContributions() async {
+    try {
+      final contributions = await remoteDataSource.getUserContributions();
+      return Right(contributions);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> createMealContribution(
+    Map<String, dynamic> data,
+    String? imagePath,
+  ) async {
+    try {
+      final result = await remoteDataSource.createMealContribution(
+        data,
+        imagePath,
+      );
+      return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

@@ -7,6 +7,11 @@ abstract class MealRemoteDataSource {
   Future<void> addFavorite(String userId, String mealId);
   Future<void> removeFavorite(String favId);
   Future<Map<String, dynamic>> getMealById(String mealId);
+  Future<List<dynamic>> getUserContributions();
+  Future<Map<String, dynamic>> createMealContribution(
+    Map<String, dynamic> data,
+    String? imagePath,
+  );
 }
 
 class MealRemoteDataSourceImpl implements MealRemoteDataSource {
@@ -135,6 +140,70 @@ class MealRemoteDataSourceImpl implements MealRemoteDataSource {
       }
       throw Exception(
         'Failed to get meal details - Status: ${response.statusCode}',
+      );
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception('Network error: ${e.message}');
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<dynamic>> getUserContributions() async {
+    try {
+      final response = await dio.get('/food-vision/contributions/me');
+
+      if (response.statusCode == 200) {
+        final outerData = response.data['data'];
+        final contributions = outerData['data'] as List<dynamic>;
+        return contributions;
+      }
+      throw Exception(
+        'Failed to get user contributions - Status: ${response.statusCode}',
+      );
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception('Network error: ${e.message}');
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> createMealContribution(
+    Map<String, dynamic> data,
+    String? imagePath,
+  ) async {
+    try {
+      dynamic requestData;
+
+      if (imagePath != null) {
+        // Use FormData if image is provided
+        final formDataMap = <String, dynamic>{};
+        formDataMap['image'] = await MultipartFile.fromFile(imagePath);
+
+        // Add all other fields
+        data.forEach((key, value) {
+          formDataMap[key] = value;
+        });
+
+        requestData = FormData.fromMap(formDataMap);
+      } else {
+        // Use regular JSON if no image
+        requestData = data;
+      }
+
+      final response = await dio.post(
+        '/food-vision/contributions',
+        data: requestData,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return response.data['data'] as Map<String, dynamic>;
+      }
+      throw Exception(
+        'Failed to create contribution - Status: ${response.statusCode}',
       );
     } catch (e) {
       if (e is DioException) {

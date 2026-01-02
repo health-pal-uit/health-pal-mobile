@@ -2,6 +2,7 @@ import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
 import 'package:da1/src/presentation/screens/home/diet/meal_detail_screen.dart';
+import 'package:da1/src/presentation/screens/home/diet/create_recipe_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -21,6 +22,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
 
   List<Map<String, dynamic>> _searchResults = [];
   List<Map<String, dynamic>> _favoriteResults = [];
+  List<Map<String, dynamic>> _userRecipes = [];
   int _selectedTabIndex = 0;
   final List<String> _tabs = ['All', 'Favorites', 'My Recipes'];
   bool _isLoading = false;
@@ -32,6 +34,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
     _selectedMealType = widget.initialMealType ?? 'Breakfast';
     _searchController.addListener(_onSearchChanged);
     _loadFavoriteMeals();
+    _loadUserRecipes();
   }
 
   Future<void> _loadFavoriteMeals() async {
@@ -47,6 +50,25 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
         (meals) {
           setState(() {
             _favoriteResults = meals.cast<Map<String, dynamic>>();
+          });
+        },
+      );
+    }
+  }
+
+  Future<void> _loadUserRecipes() async {
+    final repository = AppRoutes.getMealRepository();
+    if (repository == null) return;
+
+    final result = await repository.getUserContributions();
+    if (mounted) {
+      result.fold(
+        (failure) {
+          // Silently fail for user recipes
+        },
+        (recipes) {
+          setState(() {
+            _userRecipes = recipes.cast<Map<String, dynamic>>();
           });
         },
       );
@@ -122,8 +144,17 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
         final name = (meal['name'] ?? '').toString().toLowerCase();
         return name.contains(query);
       }).toList();
+    } else if (_selectedTabIndex == 2) {
+      // My Recipes tab - show user recipes filtered by search if any
+      if (_searchController.text.trim().isEmpty) {
+        return _userRecipes;
+      }
+      final query = _searchController.text.trim().toLowerCase();
+      return _userRecipes.where((recipe) {
+        final name = (recipe['name'] ?? '').toString().toLowerCase();
+        return name.contains(query);
+      }).toList();
     }
-    // My Recipes tab - not implemented yet
     return [];
   }
 
@@ -221,6 +252,29 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
             ],
           ),
         ),
+        floatingActionButton:
+            _selectedTabIndex == 2
+                ? FloatingActionButton.extended(
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CreateRecipeScreen(),
+                      ),
+                    );
+                    // Reload user recipes if a new recipe was created
+                    if (result == true && mounted) {
+                      _loadUserRecipes();
+                    }
+                  },
+                  backgroundColor: AppColors.primary,
+                  icon: const Icon(Icons.add, color: Colors.white),
+                  label: const Text(
+                    'Create Recipe',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                )
+                : null,
       ),
     );
   }
@@ -263,6 +317,30 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
           child: Text(
             'No favorite meals yet',
             style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+          ),
+        );
+      } else if (_selectedTabIndex == 2) {
+        // My Recipes tab - no recipes
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.restaurant_menu, size: 64, color: Colors.grey[400]),
+              const SizedBox(height: 16),
+              Text(
+                'No recipes yet',
+                style: AppTypography.headline.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Create your first recipe!',
+                style: AppTypography.body.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
           ),
         );
       }
