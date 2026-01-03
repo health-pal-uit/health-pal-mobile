@@ -369,7 +369,6 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
 
                                       const SizedBox(height: 12),
 
-                                      // Status badge
                                       if (challenge.isFinished)
                                         Container(
                                           padding: const EdgeInsets.symmetric(
@@ -465,23 +464,10 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                                               ),
                                             ],
                                           ),
-                                          Row(
-                                            children: [
-                                              Text(
-                                                'Tap to view',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: difficultyColor,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 4),
-                                              Icon(
-                                                Icons.arrow_forward_ios,
-                                                size: 12,
-                                                color: difficultyColor,
-                                              ),
-                                            ],
+                                          Icon(
+                                            Icons.arrow_forward_ios,
+                                            size: 12,
+                                            color: difficultyColor,
                                           ),
                                         ],
                                       ),

@@ -356,7 +356,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
             style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
           ),
           subtitle: Text(
-            'Tap to open chat', // TODO: Show last message
+            'Tap to open chat',
             style: TextStyle(color: Colors.grey[600], fontSize: 14),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -369,7 +369,6 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 _formatTime(session.createdAt),
                 style: TextStyle(color: Colors.grey[500], fontSize: 12),
               ),
-              // TODO: Add unread count badge
             ],
           ),
           onTap: () async {
