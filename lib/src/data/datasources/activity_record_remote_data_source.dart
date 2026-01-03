@@ -3,6 +3,11 @@ import 'package:dio/dio.dart';
 abstract class ActivityRecordRemoteDataSource {
   Future<Map<String, dynamic>> createActivityRecord(Map<String, dynamic> data);
   Future<List<dynamic>> getActivityRecordsByDailyLog(String dailyLogId);
+  Future<Map<String, dynamic>> updateActivityRecord({
+    required String activityRecordId,
+    required int durationMinutes,
+  });
+  Future<Map<String, dynamic>> deleteActivityRecord(String activityRecordId);
 }
 
 class ActivityRecordRemoteDataSourceImpl
@@ -47,6 +52,56 @@ class ActivityRecordRemoteDataSourceImpl
       }
       throw Exception(
         'Failed to fetch activity records - Status: ${response.statusCode}',
+      );
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception('Network error: ${e.message}');
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> updateActivityRecord({
+    required String activityRecordId,
+    required int durationMinutes,
+  }) async {
+    try {
+      final requestData = {'duration_minutes': durationMinutes};
+
+      final response = await dio.patch(
+        '/activity-records/daily-logs/$activityRecordId',
+        data: requestData,
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      }
+      throw Exception(
+        'Failed to update activity record - Status: ${response.statusCode}',
+      );
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception('Network error: ${e.message}');
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> deleteActivityRecord(
+    String activityRecordId,
+  ) async {
+    try {
+      final response = await dio.delete(
+        '/activity-records/daily-logs/$activityRecordId',
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      }
+      throw Exception(
+        'Failed to delete activity record - Status: ${response.statusCode}',
       );
     } catch (e) {
       if (e is DioException) {

@@ -9,6 +9,13 @@ abstract class ActivityRecordRepository {
   Future<Either<Failure, List<dynamic>>> getActivityRecordsByDailyLog(
     String dailyLogId,
   );
+  Future<Either<Failure, Map<String, dynamic>>> updateActivityRecord({
+    required String activityRecordId,
+    required int durationMinutes,
+  });
+  Future<Either<Failure, Map<String, dynamic>>> deleteActivityRecord(
+    String activityRecordId,
+  );
 }
 
 class ActivityRecordRepositoryImpl implements ActivityRecordRepository {
@@ -35,6 +42,36 @@ class ActivityRecordRepositoryImpl implements ActivityRecordRepository {
     try {
       final result = await remoteDataSource.getActivityRecordsByDailyLog(
         dailyLogId,
+      );
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> updateActivityRecord({
+    required String activityRecordId,
+    required int durationMinutes,
+  }) async {
+    try {
+      final result = await remoteDataSource.updateActivityRecord(
+        activityRecordId: activityRecordId,
+        durationMinutes: durationMinutes,
+      );
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> deleteActivityRecord(
+    String activityRecordId,
+  ) async {
+    try {
+      final result = await remoteDataSource.deleteActivityRecord(
+        activityRecordId,
       );
       return Right(result);
     } catch (e) {

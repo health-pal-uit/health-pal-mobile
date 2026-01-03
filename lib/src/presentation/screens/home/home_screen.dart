@@ -1,6 +1,7 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
 import 'package:da1/src/config/routes.dart';
+import 'package:da1/src/core/services/local_notification_service.dart';
 import 'package:da1/src/presentation/widgets/charts/kcal_circular_progress.dart';
 import 'package:da1/src/presentation/widgets/charts/steps_progress.dart';
 import 'package:da1/src/presentation/widgets/charts/water_intake.dart';
@@ -39,6 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool hasUnreadNotifications = false;
   List<dynamic> activityRecords = [];
   bool isLoadingActivityRecords = true;
+  bool isDeletingActivity = false;
 
   @override
   void initState() {
@@ -399,6 +401,334 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _showActivityOptions(Map<String, dynamic> record) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder:
+          (context) => Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 8),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ListTile(
+                  leading: const Icon(
+                    LucideIcons.pencil,
+                    color: AppColors.primary,
+                  ),
+                  title: const Text('Edit Duration'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _editActivityDuration(record);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(LucideIcons.trash2, color: Colors.red),
+                  title: const Text(
+                    'Delete Activity',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _deleteActivityRecord(record);
+                  },
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+    );
+  }
+
+  Future<void> _editActivityDuration(Map<String, dynamic> record) async {
+    final recordId = record['id'] as String?;
+    final activity = record['activity'] as Map<String, dynamic>?;
+    final currentDuration = (record['duration_minutes'] as num?)?.toInt() ?? 0;
+
+    if (recordId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cannot edit activity: missing ID'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    final controller = TextEditingController(text: currentDuration.toString());
+
+    final newDuration = await showDialog<int>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text('Edit ${activity?['name'] ?? 'Activity'}'),
+            content: TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Duration (minutes)',
+                suffixText: 'min',
+              ),
+              autofocus: true,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  final duration = int.tryParse(controller.text);
+                  if (duration != null && duration > 0) {
+                    Navigator.pop(context, duration);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please enter a valid duration'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          ),
+    );
+
+    if (newDuration != null && newDuration != currentDuration) {
+      await _updateActivityDuration(
+        recordId,
+        newDuration,
+        activity?['name'] ?? 'Activity',
+      );
+    }
+  }
+
+  Future<void> _updateActivityDuration(
+    String recordId,
+    int durationMinutes,
+    String activityName,
+  ) async {
+    setState(() {
+      isDeletingActivity = true;
+    });
+
+    final repository = AppRoutes.getActivityRecordRepository();
+    if (repository == null) {
+      if (mounted) {
+        setState(() {
+          isDeletingActivity = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Activity record repository not available'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    try {
+      final result = await repository.updateActivityRecord(
+        activityRecordId: recordId,
+        durationMinutes: durationMinutes,
+      );
+
+      result.fold(
+        (failure) {
+          if (mounted) {
+            setState(() {
+              isDeletingActivity = false;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to update activity: ${failure.message}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+
+            LocalNotificationService().showErrorNotification(
+              title: 'Update Failed',
+              body: 'Failed to update $activityName',
+            );
+          }
+        },
+        (response) {
+          if (mounted) {
+            setState(() {
+              isDeletingActivity = false;
+            });
+
+            LocalNotificationService().showSuccessNotification(
+              title: 'Activity Updated',
+              body:
+                  '$activityName duration updated to $durationMinutes minutes',
+            );
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Activity updated successfully'),
+                backgroundColor: Colors.green,
+              ),
+            );
+
+            _loadActivityRecords();
+            _loadDailyLog();
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          isDeletingActivity = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error updating activity: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+
+        LocalNotificationService().showErrorNotification(
+          title: 'Update Failed',
+          body: 'Error updating $activityName',
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteActivityRecord(Map<String, dynamic> record) async {
+    final recordId = record['id'] as String?;
+    if (recordId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cannot delete activity: missing ID'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Delete Activity'),
+            content: const Text(
+              'Are you sure you want to delete this activity?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() {
+      isDeletingActivity = true;
+    });
+
+    final repository = AppRoutes.getActivityRecordRepository();
+    if (repository == null) {
+      if (mounted) {
+        setState(() {
+          isDeletingActivity = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Activity record repository not available'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    try {
+      final result = await repository.deleteActivityRecord(recordId);
+      result.fold(
+        (failure) {
+          if (mounted) {
+            setState(() {
+              isDeletingActivity = false;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to delete activity: ${failure.message}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        (response) {
+          if (mounted) {
+            setState(() {
+              activityRecords.removeWhere((r) => r['id'] == recordId);
+              isDeletingActivity = false;
+            });
+
+            final activity = record['activity'] as Map<String, dynamic>?;
+            final activityName = activity?['name'] ?? 'Activity';
+
+            LocalNotificationService().showSuccessNotification(
+              title: 'Activity Deleted',
+              body: '$activityName has been removed from your diary',
+            );
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Activity deleted successfully'),
+                backgroundColor: Colors.green,
+              ),
+            );
+
+            _loadDailyLog();
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          isDeletingActivity = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error deleting activity: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _loadFitnessGoal() async {
     final repository = AppRoutes.getFitnessGoalRepository();
     if (repository == null) {
@@ -449,45 +779,54 @@ class _HomeScreenState extends State<HomeScreen> {
     final String todayDate =
         DateFormat('d MMMM').format(selectedDate).toUpperCase();
 
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(context, user, todayDate),
-              const SizedBox(height: 20),
-              _buildDaysList(),
-              const SizedBox(height: 30),
-              _buildKcalCard(),
-              const SizedBox(height: 20),
-              MealDiaryCard(
-                dailyMeals: dailyLog?['daily_meals'] as List<dynamic>?,
-                selectedDate:
-                    '${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}',
-                onAddMeal: (mealType) async {
-                  final dateStr =
-                      '${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}';
-                  final result = await context.push(
-                    '/foodSearch?mealType=$mealType&date=$dateStr',
-                  );
-                  if (result == true && mounted) {
-                    await _loadDailyLog();
-                    setState(() {});
-                  }
-                },
+    return Stack(
+      children: [
+        Scaffold(
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(context, user, todayDate),
+                  const SizedBox(height: 20),
+                  _buildDaysList(),
+                  const SizedBox(height: 30),
+                  _buildKcalCard(),
+                  const SizedBox(height: 20),
+                  MealDiaryCard(
+                    dailyMeals: dailyLog?['daily_meals'] as List<dynamic>?,
+                    selectedDate:
+                        '${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}',
+                    onAddMeal: (mealType) async {
+                      final dateStr =
+                          '${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}';
+                      final result = await context.push(
+                        '/foodSearch?mealType=$mealType&date=$dateStr',
+                      );
+                      if (result == true && mounted) {
+                        await _loadDailyLog();
+                        setState(() {});
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  _buildActivityDiaryCard(),
+                  const SizedBox(height: 20),
+                  _buildSmallCards(),
+                  const SizedBox(height: 30),
+                  _buildWorkoutSection(context),
+                ],
               ),
-              const SizedBox(height: 20),
-              _buildActivityDiaryCard(),
-              const SizedBox(height: 20),
-              _buildSmallCards(),
-              const SizedBox(height: 30),
-              _buildWorkoutSection(context),
-            ],
+            ),
           ),
         ),
-      ),
+        if (isDeletingActivity)
+          Container(
+            color: Colors.black.withValues(alpha: 0.3),
+            child: const Center(child: CircularProgressIndicator()),
+          ),
+      ],
     );
   }
 
@@ -962,47 +1301,50 @@ class _HomeScreenState extends State<HomeScreen> {
                 final kcalBurned =
                     (record['kcal_burned'] as num?)?.toDouble() ?? 0.0;
 
-                return Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
+                return GestureDetector(
+                  onLongPress: () => _showActivityOptions(record),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          LucideIcons.activity,
+                          color: AppColors.primary,
+                          size: 24,
+                        ),
                       ),
-                      child: const Icon(
-                        LucideIcons.activity,
-                        color: AppColors.primary,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            activity?['name'] ?? 'Unknown Activity',
-                            style: AppTypography.headline.copyWith(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              activity?['name'] ?? 'Unknown Activity',
+                              style: AppTypography.headline.copyWith(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '$durationMinutes min • ${kcalBurned.toStringAsFixed(1)} kcal',
-                            style: AppTypography.body.copyWith(
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
+                            const SizedBox(height: 4),
+                            Text(
+                              '$durationMinutes min • ${kcalBurned.toStringAsFixed(1)} kcal',
+                              style: AppTypography.body.copyWith(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 );
               },
             ),
