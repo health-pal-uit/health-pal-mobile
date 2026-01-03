@@ -11,7 +11,8 @@
       "Bash(rm:*)",
       "Bash(git add:*)",
       "Bash(flutter analyze:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(flutter pub get:*)"
     ]
   }
 }

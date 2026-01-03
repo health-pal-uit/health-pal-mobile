@@ -35,6 +35,7 @@ import 'package:da1/src/data/datasources/notification_remote_data_source.dart';
 import 'package:da1/src/data/repositories/google_fit_repository.dart';
 import 'package:da1/src/data/datasources/google_fit_remote_data_source.dart';
 import 'package:da1/src/core/services/deep_link_service.dart';
+import 'package:da1/src/core/services/local_notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -58,6 +59,10 @@ void main() async {
 
   await dotenv.load(fileName: ".env");
   await Supabase.initialize(url: Env.supabaseUrl, anonKey: Env.supabaseAnonKey);
+
+  // Initialize local notifications
+  await LocalNotificationService().initialize();
+
   SystemChrome.setPreferredOrientations(<DeviceOrientation>[
     DeviceOrientation.portraitUp,
   ]);

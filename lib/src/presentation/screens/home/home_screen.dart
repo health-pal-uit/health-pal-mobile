@@ -256,12 +256,10 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         (response) {
           if (mounted) {
-            // Handle both single profile and array of profiles
             dynamic profileData = response['data'];
             Map<String, dynamic>? profile;
 
             if (profileData is List && profileData.isNotEmpty) {
-              // If data is a list, get the most recent profile (sorted by created_at)
               final profiles = List<Map<String, dynamic>>.from(profileData);
               profiles.sort((a, b) {
                 final dateA = DateTime.parse(a['created_at'] as String);
@@ -327,7 +325,6 @@ class _HomeScreenState extends State<HomeScreen> {
               dailyLog = log;
               isLoadingDailyLog = false;
             });
-            // Load activity records when daily log is loaded
             if (log['id'] != null) {
               _loadActivityRecords();
             }
