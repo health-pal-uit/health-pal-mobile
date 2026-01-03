@@ -645,33 +645,35 @@ class _HomeScreenState extends State<HomeScreen> {
                   date.month == now.month &&
                   date.year == now.year;
 
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    selectedDate = date;
-                  });
-                  _loadDailyLog();
-                },
-                child: Container(
-                  width: 45,
-                  height: 65,
-                  decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primary : Colors.transparent,
-                    borderRadius: BorderRadius.circular(35),
-                    border: Border.all(
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      selectedDate = date;
+                    });
+                    _loadDailyLog();
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 2),
+                    height: 65,
+                    decoration: BoxDecoration(
                       color:
-                          isSelected
-                              ? AppColors.primary
-                              : AppColors.textSecondary.withValues(alpha: 0.3),
-                      width: 1,
+                          isSelected ? AppColors.primary : Colors.transparent,
+                      borderRadius: BorderRadius.circular(35),
+                      border: Border.all(
+                        color:
+                            isSelected
+                                ? AppColors.primary
+                                : AppColors.textSecondary.withValues(
+                                  alpha: 0.3,
+                                ),
+                        width: 1,
+                      ),
                     ),
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      SizedBox(
-                        width: 45,
-                        child: Column(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
@@ -702,24 +704,24 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ],
                         ),
-                      ),
-                      if (isToday && !isSelected)
-                        Positioned(
-                          bottom: 8,
-                          left: 0,
-                          right: 0,
-                          child: Center(
-                            child: Container(
-                              width: 6,
-                              height: 6,
-                              decoration: BoxDecoration(
-                                color: AppColors.primary,
-                                shape: BoxShape.circle,
+                        if (isToday && !isSelected)
+                          Positioned(
+                            bottom: 8,
+                            left: 0,
+                            right: 0,
+                            child: Center(
+                              child: Container(
+                                width: 6,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary,
+                                  shape: BoxShape.circle,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -809,9 +811,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildSmallCards() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: const [
-        WaterIntakeWidget(),
-        StepsWidget(goal: 10000, steps: 6000),
+      children: [
+        Expanded(child: WaterIntakeWidget()),
+        const SizedBox(width: 20),
+        Expanded(child: StepsWidget(goal: 10000, steps: 6000)),
       ],
     );
   }

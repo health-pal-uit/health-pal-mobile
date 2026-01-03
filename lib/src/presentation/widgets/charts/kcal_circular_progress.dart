@@ -90,61 +90,65 @@ class KcalCircularProgressCard extends StatelessWidget {
                 flex: 2,
                 child: Column(
                   children: [
-                    SizedBox(
-                      width: 120,
-                      height: 120,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          SizedBox(
-                            width: 120,
-                            height: 120,
-                            child: CircularProgressIndicator(
-                              value: 1.0,
-                              strokeWidth: 12,
-                              backgroundColor: Colors.transparent,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.grey[300]!,
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            width: 120,
-                            height: 120,
-                            child: CircularProgressIndicator(
-                              value:
-                                  needed > 0
-                                      ? (consumed / needed).clamp(0.0, 1.0)
-                                      : 0.0,
-                              strokeWidth: 12,
-                              backgroundColor: Colors.transparent,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.orange,
-                              ),
-                            ),
-                          ),
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                    AspectRatio(
+                      aspectRatio: 1.0,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final size = constraints.maxWidth.clamp(100.0, 150.0);
+                          return Stack(
+                            alignment: Alignment.center,
                             children: [
-                              Text(
-                                'Consumed',
-                                style: AppTypography.body.copyWith(
-                                  fontSize: 11,
-                                  color: AppColors.textSecondary,
+                              SizedBox(
+                                width: size,
+                                height: size,
+                                child: CircularProgressIndicator(
+                                  value: 1.0,
+                                  strokeWidth: 12,
+                                  backgroundColor: Colors.transparent,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.grey[300]!,
+                                  ),
                                 ),
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '$consumed',
-                                style: AppTypography.headline.copyWith(
-                                  fontSize: 28,
-                                  color: Colors.orange,
-                                  fontWeight: FontWeight.bold,
+                              SizedBox(
+                                width: size,
+                                height: size,
+                                child: CircularProgressIndicator(
+                                  value:
+                                      needed > 0
+                                          ? (consumed / needed).clamp(0.0, 1.0)
+                                          : 0.0,
+                                  strokeWidth: 12,
+                                  backgroundColor: Colors.transparent,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.orange,
+                                  ),
                                 ),
+                              ),
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Consumed',
+                                    style: AppTypography.body.copyWith(
+                                      fontSize: 11,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '$consumed',
+                                    style: AppTypography.headline.copyWith(
+                                      fontSize: 28,
+                                      color: Colors.orange,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
-                          ),
-                        ],
+                          );
+                        },
                       ),
                     ),
                   ],

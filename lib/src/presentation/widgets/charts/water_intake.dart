@@ -30,7 +30,7 @@ class _WaterIntakeWidgetState extends State<WaterIntakeWidget> {
     return GestureDetector(
       onTap: null,
       child: Container(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(12.0),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -43,61 +43,94 @@ class _WaterIntakeWidgetState extends State<WaterIntakeWidget> {
             ),
           ],
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final glassHeight = (constraints.maxWidth * 0.8).clamp(80.0, 120.0);
+            final iconSize = (constraints.maxWidth * 0.18).clamp(22.0, 28.0);
+
+            return Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                IconButton(
-                  onPressed: _decrease,
-                  icon: const Icon(Icons.remove_circle, color: Colors.blueGrey),
-                  iconSize: 32,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      onPressed: _decrease,
+                      icon: const Icon(
+                        Icons.remove_circle,
+                        color: Colors.blueGrey,
+                      ),
+                      iconSize: iconSize,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                    SizedBox(width: constraints.maxWidth * 0.05),
+                    Flexible(
+                      child: Container(
+                        constraints: BoxConstraints(
+                          maxWidth: constraints.maxWidth * 0.5,
+                        ),
+                        height: glassHeight,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.grey.shade400,
+                            width: 2,
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children:
+                              List.generate(_maxGlasses, (index) {
+                                final isFilled = index < _glasses;
+                                return Expanded(
+                                  child: Container(
+                                    margin: const EdgeInsets.symmetric(
+                                      vertical: 1,
+                                      horizontal: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          isFilled
+                                              ? Colors.teal
+                                              : Colors.grey.shade300,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                  ),
+                                );
+                              }).reversed.toList(),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: constraints.maxWidth * 0.05),
+                    IconButton(
+                      onPressed: _increase,
+                      icon: const Icon(Icons.add_circle, color: Colors.teal),
+                      iconSize: iconSize,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
                 ),
-                Container(
-                  width: 60,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade400, width: 2),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children:
-                        List.generate(_maxGlasses, (index) {
-                          final isFilled = index < _glasses;
-                          return Expanded(
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(
-                                vertical: 1,
-                                horizontal: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color:
-                                    isFilled
-                                        ? Colors.teal
-                                        : Colors.grey.shade300,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                            ),
-                          );
-                        }).reversed.toList(),
+                const SizedBox(height: 8),
+                Text(
+                  "${liters.toStringAsFixed(1)} liters",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: (constraints.maxWidth * 0.09).clamp(12.0, 14.0),
                   ),
                 ),
-                IconButton(
-                  onPressed: _increase,
-                  icon: const Icon(Icons.add_circle, color: Colors.teal),
-                  iconSize: 32,
+                Text(
+                  "Daily Water Intake",
+                  style: TextStyle(
+                    fontSize: (constraints.maxWidth * 0.075).clamp(10.0, 12.0),
+                  ),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              "${liters.toStringAsFixed(1)} liters",
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const Text("Daily Water Intake"),
-          ],
+            );
+          },
         ),
       ),
     );

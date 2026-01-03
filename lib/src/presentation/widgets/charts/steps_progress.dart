@@ -14,7 +14,7 @@ class StepsWidget extends StatelessWidget {
     return GestureDetector(
       onTap: () => context.push('/steps'),
       child: Container(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(12.0),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -27,50 +27,75 @@ class StepsWidget extends StatelessWidget {
             ),
           ],
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 130,
-              height: 140,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  FractionallySizedBox(
-                    widthFactor: 0.7,
-                    heightFactor: 0.7,
-                    child: CircularProgressIndicator(
-                      value: 1,
-                      strokeWidth: 14,
-                      valueColor: AlwaysStoppedAnimation(Colors.grey.shade300),
-                    ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final circularSize = (constraints.maxWidth * 0.8).clamp(
+              80.0,
+              120.0,
+            );
+            final fontSize = (constraints.maxWidth * 0.14).clamp(18.0, 22.0);
+
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: circularSize,
+                  height: circularSize,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      FractionallySizedBox(
+                        widthFactor: 0.7,
+                        heightFactor: 0.7,
+                        child: CircularProgressIndicator(
+                          value: 1,
+                          strokeWidth: 14,
+                          valueColor: AlwaysStoppedAnimation(
+                            Colors.grey.shade300,
+                          ),
+                        ),
+                      ),
+                      FractionallySizedBox(
+                        widthFactor: 0.7,
+                        heightFactor: 0.7,
+                        child: CircularProgressIndicator(
+                          value: progress.clamp(0.0, 1.0),
+                          strokeWidth: 14,
+                          valueColor: const AlwaysStoppedAnimation(
+                            Colors.orange,
+                          ),
+                          backgroundColor: Colors.transparent,
+                        ),
+                      ),
+                      Text(
+                        steps.toString(),
+                        style: TextStyle(
+                          fontSize: fontSize,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
-                  FractionallySizedBox(
-                    widthFactor: 0.7,
-                    heightFactor: 0.7,
-                    child: CircularProgressIndicator(
-                      value: progress.clamp(0.0, 1.0),
-                      strokeWidth: 14,
-                      valueColor: const AlwaysStoppedAnimation(Colors.orange),
-                      backgroundColor: Colors.transparent,
-                    ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "$steps / $goal",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: (constraints.maxWidth * 0.09).clamp(12.0, 14.0),
                   ),
-                  Text(
-                    steps.toString(),
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
+                ),
+                Text(
+                  "Steps Walked",
+                  style: TextStyle(
+                    fontSize: (constraints.maxWidth * 0.075).clamp(10.0, 12.0),
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              "Steps Walked",
-              style: TextStyle(fontWeight: FontWeight.w500),
-            ),
-          ],
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

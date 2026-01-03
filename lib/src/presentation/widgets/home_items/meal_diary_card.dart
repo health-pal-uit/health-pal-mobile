@@ -69,35 +69,43 @@ class MealDiaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildMealButton(
-                icon: '🌮',
-                label: 'Breakfast',
-                color: const Color(0xFFFFE5C2),
-                count: _getMealCount('breakfast'),
-                kcal: _getMealKcal('breakfast'),
+              Expanded(
+                child: _buildMealButton(
+                  icon: '🌮',
+                  label: 'Breakfast',
+                  color: const Color(0xFFFFE5C2),
+                  count: _getMealCount('breakfast'),
+                  kcal: _getMealKcal('breakfast'),
+                ),
               ),
-              _buildMealButton(
-                icon: '🍱',
-                label: 'Lunch',
-                color: const Color(0xFFFFE5C2),
-                count: _getMealCount('lunch'),
-                kcal: _getMealKcal('lunch'),
+              Expanded(
+                child: _buildMealButton(
+                  icon: '🍱',
+                  label: 'Lunch',
+                  color: const Color(0xFFFFE5C2),
+                  count: _getMealCount('lunch'),
+                  kcal: _getMealKcal('lunch'),
+                ),
               ),
-              _buildMealButton(
-                icon: '🍽️',
-                label: 'Dinner',
-                color: const Color(0xFFFFE5C2),
-                count: _getMealCount('dinner'),
-                kcal: _getMealKcal('dinner'),
+              Expanded(
+                child: _buildMealButton(
+                  icon: '🍽️',
+                  label: 'Dinner',
+                  color: const Color(0xFFFFE5C2),
+                  count: _getMealCount('dinner'),
+                  kcal: _getMealKcal('dinner'),
+                ),
               ),
-              _buildMealButton(
-                icon: '🥤',
-                label: 'Snack',
-                color: const Color(0xFFFFE5C2),
-                count: _getMealCount('snack'),
-                kcal: _getMealKcal('snack'),
+              Expanded(
+                child: _buildMealButton(
+                  icon: '🥤',
+                  label: 'Snack',
+                  color: const Color(0xFFFFE5C2),
+                  count: _getMealCount('snack'),
+                  kcal: _getMealKcal('snack'),
+                ),
               ),
             ],
           ),
@@ -161,69 +169,81 @@ class MealDiaryCard extends StatelessWidget {
     required int count,
     required int kcal,
   }) {
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: () => onAddMeal?.call(label),
-          child: Container(
-            width: 70,
-            height: 70,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Stack(
-              children: [
-                Center(child: Text(icon, style: const TextStyle(fontSize: 32))),
-                if (kcal > 0)
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(16),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final buttonSize = constraints.maxWidth * 0.85;
+        return Column(
+          children: [
+            GestureDetector(
+              onTap: () => onAddMeal?.call(label),
+              child: Container(
+                width: buttonSize,
+                height: buttonSize,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Stack(
+                  children: [
+                    Center(
+                      child: Text(icon, style: const TextStyle(fontSize: 32)),
                     ),
-                    child: Center(
-                      child: Text(
-                        '$kcal',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
+                    if (kcal > 0)
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '$kcal',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ),
+                    Positioned(
+                      bottom: 4,
+                      right: 4,
+                      child: Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
                           color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppColors.primary,
+                            width: 2,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.add,
+                          size: 16,
+                          color: AppColors.primary,
                         ),
                       ),
                     ),
-                  ),
-                Positioned(
-                  bottom: 4,
-                  right: 4,
-                  child: Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.primary, width: 2),
-                    ),
-                    child: const Icon(
-                      Icons.add,
-                      size: 16,
-                      color: AppColors.primary,
-                    ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: AppTypography.body.copyWith(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: AppTypography.body.copyWith(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        );
+      },
     );
   }
 }
