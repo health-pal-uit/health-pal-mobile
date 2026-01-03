@@ -1,6 +1,7 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
 import 'package:da1/src/config/routes.dart';
+import 'package:da1/src/core/services/local_notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -124,6 +125,15 @@ class _MealDiaryDetailScreenState extends State<MealDiaryDetailScreen> {
               _groupMealsByType();
               _isDeleting = false;
             });
+
+            final mealDetail = meal['meal'] as Map<String, dynamic>?;
+            final mealName = mealDetail?['name'] ?? 'Meal';
+
+            LocalNotificationService().showSuccessNotification(
+              title: 'Meal Deleted',
+              body: '$mealName has been removed from your diary',
+            );
+
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Meal deleted successfully'),
@@ -380,13 +390,187 @@ class _MealDiaryDetailScreenState extends State<MealDiaryDetailScreen> {
     );
   }
 
-  void _editMeal(Map<String, dynamic> meal) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Edit functionality coming soon'),
-        backgroundColor: Colors.orange,
-      ),
+  Future<void> _editMeal(Map<String, dynamic> meal) async {
+    final mealDetail = meal['meal'] as Map<String, dynamic>?;
+    final mealName = mealDetail?['name'] ?? 'Unknown';
+    final currentQuantityKg = (meal['quantity_kg'] ?? 0) as num;
+    final currentQuantityG = (currentQuantityKg.toDouble() * 1000).round();
+
+    final quantityController = TextEditingController(
+      text: currentQuantityG.toString(),
     );
+
+    final result = await showDialog<double>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text('Edit $mealName'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Adjust the portion size',
+                  style: AppTypography.body.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: quantityController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Quantity (grams)',
+                    suffixText: 'g',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  autofocus: true,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final newQuantityG = double.tryParse(quantityController.text);
+                  if (newQuantityG != null && newQuantityG > 0) {
+                    Navigator.pop(context, newQuantityG);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please enter a valid quantity'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Update'),
+              ),
+            ],
+          ),
+    );
+
+    if (result == null) return;
+
+    final newQuantityKg = result / 1000;
+    if ((newQuantityKg - currentQuantityKg.toDouble()).abs() < 0.001) {
+      return;
+    }
+
+    await _updateMealQuantity(meal, newQuantityKg);
+  }
+
+  Future<void> _updateMealQuantity(
+    Map<String, dynamic> meal,
+    double newQuantityKg,
+  ) async {
+    final mealId = meal['id'] as String?;
+    if (mealId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cannot update meal: missing ID'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    setState(() {
+      _isDeleting = true;
+    });
+
+    final repository = AppRoutes.getDailyMealRepository();
+    if (repository == null) {
+      if (mounted) {
+        setState(() {
+          _isDeleting = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Daily meal repository not available'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    try {
+      final result = await repository.updateDailyMeal(
+        dailyMealId: mealId,
+        quantityKg: newQuantityKg,
+      );
+
+      result.fold(
+        (failure) {
+          if (mounted) {
+            setState(() {
+              _isDeleting = false;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to update meal: ${failure.message}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        (response) {
+          if (mounted) {
+            final index = _currentMeals.indexWhere((m) => m['id'] == mealId);
+            if (index != -1) {
+              _currentMeals[index] = response;
+            }
+
+            setState(() {
+              _groupMealsByType();
+              _isDeleting = false;
+            });
+
+            final mealDetail = meal['meal'] as Map<String, dynamic>?;
+            final mealName = mealDetail?['name'] ?? 'Meal';
+            final quantityG = (newQuantityKg * 1000).round();
+
+            LocalNotificationService().showSuccessNotification(
+              title: 'Meal Updated',
+              body: '$mealName quantity updated to ${quantityG}g',
+            );
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('$mealName updated to ${quantityG}g'),
+                backgroundColor: Colors.green,
+              ),
+            );
+
+            Navigator.pop(context, true);
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isDeleting = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error updating meal: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildMealItem(Map<String, dynamic> meal) {

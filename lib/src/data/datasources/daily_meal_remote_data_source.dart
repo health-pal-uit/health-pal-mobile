@@ -8,6 +8,11 @@ abstract class DailyMealRemoteDataSource {
     required String loggedAt,
   });
 
+  Future<Map<String, dynamic>> updateDailyMeal({
+    required String dailyMealId,
+    required double quantityKg,
+  });
+
   Future<Map<String, dynamic>> deleteDailyMeal({required String dailyMealId});
 }
 
@@ -38,6 +43,33 @@ class DailyMealRemoteDataSourceImpl implements DailyMealRemoteDataSource {
       }
       throw Exception(
         'Failed to add daily meal - Status: ${response.statusCode}',
+      );
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception('Network error: ${e.message}');
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> updateDailyMeal({
+    required String dailyMealId,
+    required double quantityKg,
+  }) async {
+    try {
+      final requestData = {'quantity_kg': quantityKg};
+
+      final response = await dio.patch(
+        '/daily-meals/$dailyMealId',
+        data: requestData,
+      );
+
+      if (response.statusCode == 200) {
+        return response.data['data'] as Map<String, dynamic>;
+      }
+      throw Exception(
+        'Failed to update daily meal - Status: ${response.statusCode}',
       );
     } catch (e) {
       if (e is DioException) {

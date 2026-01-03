@@ -10,6 +10,11 @@ abstract class DailyMealRepository {
     required String loggedAt,
   });
 
+  Future<Either<Failure, Map<String, dynamic>>> updateDailyMeal({
+    required String dailyMealId,
+    required double quantityKg,
+  });
+
   Future<Either<Failure, Map<String, dynamic>>> deleteDailyMeal({
     required String dailyMealId,
   });
@@ -33,6 +38,22 @@ class DailyMealRepositoryImpl implements DailyMealRepository {
         mealType: mealType,
         quantityKg: quantityKg,
         loggedAt: loggedAt,
+      );
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> updateDailyMeal({
+    required String dailyMealId,
+    required double quantityKg,
+  }) async {
+    try {
+      final result = await remoteDataSource.updateDailyMeal(
+        dailyMealId: dailyMealId,
+        quantityKg: quantityKg,
       );
       return Right(result);
     } catch (e) {
