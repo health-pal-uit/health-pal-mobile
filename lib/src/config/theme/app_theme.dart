@@ -21,10 +21,10 @@ class AppTheme {
     ),
   );
 
-  static ThemeData get dark => ThemeData.dark().copyWith(
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: AppColors.primary,
-      brightness: Brightness.dark,
-    ),
-  );
+  // static ThemeData get dark => ThemeData.dark().copyWith(
+  //   colorScheme: ColorScheme.fromSeed(
+  //     seedColor: AppColors.primary,
+  //     brightness: Brightness.dark,
+  //   ),
+  // );
 }
