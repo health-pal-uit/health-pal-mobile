@@ -32,4 +32,7 @@ class ApiConfig {
 
   // Device endpoints
   static const String registerDevice = "/users/me/device";
+
+  // Fitness Profile endpoints
+  static const String calculateBodyFat = "/fitness-profiles/calculate-bfp";
 }

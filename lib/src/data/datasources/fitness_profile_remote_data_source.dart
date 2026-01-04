@@ -5,6 +5,7 @@ abstract class FitnessProfileRemoteDataSource {
   Future<Map<String, dynamic>> createFitnessProfile(Map<String, dynamic> data);
   Future<Map<String, dynamic>> getMyFitnessProfile();
   Future<Map<String, dynamic>> updateFitnessProfile(Map<String, dynamic> data);
+  Future<Map<String, dynamic>> calculateBodyFat(Map<String, dynamic> data);
 }
 
 class FitnessProfileRemoteDataSourceImpl
@@ -88,6 +89,26 @@ class FitnessProfileRemoteDataSourceImpl
       }
     } catch (e) {
       throw Exception('Failed to update fitness profile: $e');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> calculateBodyFat(
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final cleanData = Map<String, dynamic>.from(data)
+        ..removeWhere((key, value) => value == null);
+
+      final response = await dio.patch('/fitness-profiles/calculate-bfp', data: cleanData);
+
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        throw Exception('Failed to calculate body fat percentage');
+      }
+    } catch (e) {
+      throw Exception('Failed to calculate body fat percentage: $e');
     }
   }
 }

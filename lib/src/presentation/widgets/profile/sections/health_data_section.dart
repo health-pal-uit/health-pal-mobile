@@ -1,3 +1,4 @@
+import 'package:da1/src/presentation/screens/profile/body_fat_calculator_screen.dart';
 import 'package:da1/src/presentation/screens/profile/fitness_profile_screen.dart';
 import 'package:da1/src/presentation/widgets/profile/profile_item.dart';
 import 'package:da1/src/presentation/widgets/profile/profile_section.dart';
@@ -31,10 +32,15 @@ class HealthDataSection extends StatelessWidget {
           onTap: () => context.push('/google-fit-sync'),
         ),
         ProfileItem(
-          icon: LucideIcons.shield,
-          text: "Privacy & Data",
+          icon: LucideIcons.calculator,
+          text: "Body Fat Percentage Calculator",
           onTap: () {
-            // TODO: Navigate to privacy settings
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const BodyFatCalculatorScreen(),
+              ),
+            );
           },
         ),
       ],
