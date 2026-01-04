@@ -11,9 +11,12 @@ class LocalNotificationService {
       FlutterLocalNotificationsPlugin();
 
   bool _isInitialized = false;
+  Function(String?)? _onNotificationTapCallback;
 
-  Future<void> initialize() async {
+  Future<void> initialize({Function(String?)? onNotificationTap}) async {
     if (_isInitialized) return;
+
+    _onNotificationTapCallback = onNotificationTap;
 
     const AndroidInitializationSettings androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -39,8 +42,14 @@ class LocalNotificationService {
   }
 
   void _onNotificationTapped(NotificationResponse response) {
-    // Handle notification tap
-    // You can navigate to specific screens based on payload
+    // Handle notification tap with payload (post_id)
+    if (response.payload != null && _onNotificationTapCallback != null) {
+      _onNotificationTapCallback!(response.payload);
+    }
+  }
+
+  void setNotificationTapCallback(Function(String?)? callback) {
+    _onNotificationTapCallback = callback;
   }
 
   Future<bool> requestPermission() async {

@@ -74,8 +74,15 @@ void main() async {
     DeviceRegistrationService.backgroundMessageHandler,
   );
 
-  // Initialize local notifications
-  await LocalNotificationService().initialize();
+  // Initialize local notifications with tap handler
+  await LocalNotificationService().initialize(
+    onNotificationTap: (postId) {
+      // Navigate to community screen when notification is tapped
+      if (postId != null) {
+        AppRoutes.router.go('/community');
+      }
+    },
+  );
 
   SystemChrome.setPreferredOrientations(<DeviceOrientation>[
     DeviceOrientation.portraitUp,
@@ -230,6 +237,20 @@ void main() async {
       );
       await deviceService.registerDevice();
       deviceService.setupForegroundMessageHandler();
+
+      // Handle notification taps when app is in background
+      deviceService.setupNotificationTapHandler((postId) {
+        if (postId != null) {
+          AppRoutes.router.go('/community');
+        }
+      });
+
+      // Handle notification when app was terminated
+      await deviceService.handleInitialMessage((postId) {
+        if (postId != null) {
+          AppRoutes.router.go('/community');
+        }
+      });
     }
   });
 

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:da1/src/config/api_config.dart';
 
 abstract class DeviceRemoteDataSource {
   Future<void> registerDevice({
@@ -18,9 +19,11 @@ class DeviceRemoteDataSourceImpl implements DeviceRemoteDataSource {
     required String pushToken,
   }) async {
     try {
+      final requestData = {'device_id': deviceId, 'push_token': pushToken};
+
       final response = await dio.post(
-        '/devices',
-        data: {'device_id': deviceId, 'push_token': pushToken},
+        ApiConfig.registerDevice,
+        data: requestData,
       );
 
       if (response.statusCode != 200 && response.statusCode != 201) {
