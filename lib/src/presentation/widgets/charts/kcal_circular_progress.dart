@@ -105,10 +105,7 @@ class _KcalCircularProgressCardState extends State<KcalCircularProgressCard>
 
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: AppColors.backgroundLight,
-      ),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -127,31 +124,21 @@ class _KcalCircularProgressCardState extends State<KcalCircularProgressCard>
                       scale: _scaleAnimation.value,
                       child: GestureDetector(
                         onTap: widget.onRecommendationsPressed,
-                        child: Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.pink.shade300,
-                                Colors.blue.shade200,
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.pink.withValues(alpha: 0.3),
-                                blurRadius: 8,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
+                        child: ShaderMask(
+                          shaderCallback:
+                              (bounds) => LinearGradient(
+                                colors: [
+                                  Colors.pink.shade300,
+                                  Colors.blue.shade300,
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                stops: const [0.2, 0.9],
+                              ).createShader(bounds),
                           child: const Icon(
                             Icons.auto_awesome,
                             color: Colors.white,
-                            size: 20,
+                            size: 28,
                           ),
                         ),
                       ),
