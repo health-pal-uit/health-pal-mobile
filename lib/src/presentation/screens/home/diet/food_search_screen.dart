@@ -411,34 +411,31 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
           title: Text(name),
           subtitle: Row(
             children: [
-              const Text('per 100g'),
-              const SizedBox(width: 8),
-              SizedBox(
-                width: 60,
-                child:
-                    isPending
-                        ? Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.orange.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.orange, width: 1),
-                          ),
-                          child: const Text(
-                            'Pending',
-                            style: TextStyle(
-                              color: Colors.orange,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        )
-                        : const SizedBox.shrink(),
+              const Flexible(
+                child: Text('per 100g', overflow: TextOverflow.ellipsis),
               ),
+              if (isPending) ...[
+                const SizedBox(width: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.orange, width: 1),
+                  ),
+                  child: const Text(
+                    'Pending',
+                    style: TextStyle(
+                      color: Colors.orange,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
           trailing: Row(

@@ -34,8 +34,13 @@ import 'package:da1/src/data/repositories/notification_repository.dart';
 import 'package:da1/src/data/datasources/notification_remote_data_source.dart';
 import 'package:da1/src/data/repositories/google_fit_repository.dart';
 import 'package:da1/src/data/datasources/google_fit_remote_data_source.dart';
+import 'package:da1/src/data/repositories/device_repository.dart';
+import 'package:da1/src/data/datasources/device_remote_data_source.dart';
 import 'package:da1/src/core/services/deep_link_service.dart';
 import 'package:da1/src/core/services/local_notification_service.dart';
+import 'package:da1/src/core/services/device_registration_service.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -50,6 +55,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:da1/src/domain/entities/user.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide User;
+import 'firebase_options.dart';
 
 final deepLinkService = DeepLinkService();
 String? _pendingResetPasswordDeepLink;
@@ -59,6 +65,14 @@ void main() async {
 
   await dotenv.load(fileName: ".env");
   await Supabase.initialize(url: Env.supabaseUrl, anonKey: Env.supabaseAnonKey);
+
+  // Initialize Firebase
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Set up background message handler
+  FirebaseMessaging.onBackgroundMessage(
+    DeviceRegistrationService.backgroundMessageHandler,
+  );
 
   // Initialize local notifications
   await LocalNotificationService().initialize();
@@ -194,11 +208,30 @@ void main() async {
     remoteDataSource: googleFitRemoteDataSource,
   );
 
+  final DeviceRemoteDataSource deviceRemoteDataSource =
+      DeviceRemoteDataSourceImpl(dio: dio);
+  final DeviceRepository deviceRepository = DeviceRepositoryImpl(
+    remoteDataSource: deviceRemoteDataSource,
+  );
+
   final AuthBloc authBloc = AuthBloc(authRepository: authRepository);
   final UserBloc userBloc = UserBloc(userRepository: userRepository);
 
   // Check authentication status on app startup
   authBloc.add(CheckAuthStatus());
+
+  // Register device for push notifications after a short delay
+  // to ensure user is authenticated
+  Future.delayed(const Duration(seconds: 2), () async {
+    final token = await secureStorage.read(key: 'auth_token');
+    if (token != null) {
+      final deviceService = DeviceRegistrationService(
+        deviceRepository: deviceRepository,
+      );
+      await deviceService.registerDevice();
+      deviceService.setupForegroundMessageHandler();
+    }
+  });
 
   // Set repositories for routing
   AppRoutes.setAuthRepository(authRepository);

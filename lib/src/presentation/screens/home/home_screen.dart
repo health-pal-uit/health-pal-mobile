@@ -3,8 +3,6 @@ import 'package:da1/src/config/theme/typography.dart';
 import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/core/services/local_notification_service.dart';
 import 'package:da1/src/presentation/widgets/charts/kcal_circular_progress.dart';
-import 'package:da1/src/presentation/widgets/charts/steps_progress.dart';
-import 'package:da1/src/presentation/widgets/charts/water_intake.dart';
 import 'package:da1/src/presentation/widgets/home_items/workout_card.dart';
 import 'package:da1/src/presentation/widgets/home_items/meal_diary_card.dart';
 import 'package:da1/src/presentation/widgets/diet_type_bottom_sheet.dart';
@@ -828,8 +826,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 20),
                   _buildActivityDiaryCard(),
-                  const SizedBox(height: 20),
-                  _buildSmallCards(),
                   const SizedBox(height: 30),
                   _buildWorkoutSection(context),
                 ],
@@ -1158,17 +1154,6 @@ class _HomeScreenState extends State<HomeScreen> {
       carbsPercentages: carbsPercentages,
       onDietTypePressed: _showDietTypeBottomSheet,
       onRecommendationsPressed: _navigateToRecommendations,
-    );
-  }
-
-  Widget _buildSmallCards() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(child: WaterIntakeWidget()),
-        const SizedBox(width: 20),
-        Expanded(child: StepsWidget(goal: 10000, steps: 6000)),
-      ],
     );
   }
 

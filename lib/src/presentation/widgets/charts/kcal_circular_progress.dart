@@ -105,7 +105,10 @@ class _KcalCircularProgressCardState extends State<KcalCircularProgressCard>
 
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundLight,
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
