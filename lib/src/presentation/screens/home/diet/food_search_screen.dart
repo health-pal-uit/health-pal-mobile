@@ -145,7 +145,6 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
         return name.contains(query);
       }).toList();
     } else if (_selectedTabIndex == 2) {
-      // My Meals tab - show only pending user recipes filtered by search if any
       final pendingRecipes =
           _userRecipes.where((recipe) {
             final status = recipe['status'] as String?;

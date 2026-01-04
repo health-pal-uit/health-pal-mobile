@@ -22,6 +22,7 @@ abstract class MealRepository {
     String? imagePath,
   );
   Future<Either<Failure, void>> deleteContributedMeal(String contributionId);
+  Future<Either<Failure, List<String>>> analyzeMealImage(String imagePath);
 }
 
 class MealRepositoryImpl implements MealRepository {
@@ -155,6 +156,18 @@ class MealRepositoryImpl implements MealRepository {
     try {
       await remoteDataSource.deleteContributedMeal(contributionId);
       return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<String>>> analyzeMealImage(
+    String imagePath,
+  ) async {
+    try {
+      final foods = await remoteDataSource.analyzeMealImage(imagePath);
+      return Right(foods);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

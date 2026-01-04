@@ -1,5 +1,7 @@
+import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/presentation/screens/home/diet/meal_analysis_results_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:camera/camera.dart';
@@ -112,22 +114,65 @@ class _MealScanScreenState extends State<MealScanScreen> {
       _isAnalyzing = true;
     });
 
-    // Simulate API call for meal analysis
-    // TODO: Replace with actual API call to analyze meal
-    await Future.delayed(const Duration(seconds: 2));
+    final mealRepository = AppRoutes.getMealRepository();
+    if (mealRepository == null) {
+      if (mounted) {
+        setState(() {
+          _isAnalyzing = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Meal repository not available'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
 
-    if (mounted) {
-      setState(() {
-        _isAnalyzing = false;
-      });
+    try {
+      final result = await mealRepository.analyzeMealImage(_capturedImage!.path);
 
-      // Navigate to results screen or show results dialog
-      // TODO: Navigate to meal analysis results screen
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Meal analysis complete! (Feature coming soon)'),
-        ),
-      );
+      if (mounted) {
+        setState(() {
+          _isAnalyzing = false;
+        });
+
+        result.fold(
+          (failure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Analysis failed: ${failure.message}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          },
+          (detectedFoods) {
+            // Navigate to results screen
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MealAnalysisResultsScreen(
+                  detectedFoods: detectedFoods,
+                  imageFile: _capturedImage,
+                ),
+              ),
+            );
+          },
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isAnalyzing = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error analyzing meal: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -164,21 +209,176 @@ class _MealScanScreenState extends State<MealScanScreen> {
       );
     }
 
-    return SizedBox.expand(
-      child: FittedBox(
-        fit: BoxFit.cover,
-        child: SizedBox(
-          width: _cameraController!.value.previewSize!.height,
-          height: _cameraController!.value.previewSize!.width,
-          child: CameraPreview(_cameraController!),
+    return Stack(
+      children: [
+        // Full camera preview
+        SizedBox.expand(
+          child: FittedBox(
+            fit: BoxFit.cover,
+            child: SizedBox(
+              width: _cameraController!.value.previewSize!.height,
+              height: _cameraController!.value.previewSize!.width,
+              child: CameraPreview(_cameraController!),
+            ),
+          ),
+        ),
+        // Overlay with square cutout
+        _buildSquareOverlay(),
+      ],
+    );
+  }
+
+  Widget _buildSquareOverlay() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
+        final screenHeight = constraints.maxHeight;
+
+        // Square size is full screen width
+        final squareSize = screenWidth;
+        final left = 0.0;
+        final top = (screenHeight - squareSize) / 2;
+
+        return Stack(
+          children: [
+            // Dark overlay
+            ColorFiltered(
+              colorFilter: ColorFilter.mode(
+                Colors.black.withValues(alpha: 0.6),
+                BlendMode.srcOut,
+              ),
+              child: Stack(
+                children: [
+                  Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.black,
+                      backgroundBlendMode: BlendMode.dstOut,
+                    ),
+                  ),
+                  Positioned(
+                    left: left,
+                    top: top,
+                    child: Container(
+                      height: squareSize,
+                      width: squareSize,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Square border frame
+            Positioned(
+              left: left,
+              top: top,
+              child: Container(
+                height: squareSize,
+                width: squareSize,
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.primary, width: 3),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Stack(
+                  children: [
+                    // Corner decorations
+                    _buildCorner(Alignment.topLeft),
+                    _buildCorner(Alignment.topRight),
+                    _buildCorner(Alignment.bottomLeft),
+                    _buildCorner(Alignment.bottomRight),
+                  ],
+                ),
+              ),
+            ),
+            // Instruction text
+            Positioned(
+              left: 0,
+              right: 0,
+              top: top - 60,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    'Position your meal in the frame',
+                    style: AppTypography.body.copyWith(
+                      color: Colors.white,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildCorner(Alignment alignment) {
+    return Align(
+      alignment: alignment,
+      child: Container(
+        width: 30,
+        height: 30,
+        decoration: BoxDecoration(
+          border: Border(
+            top: alignment == Alignment.topLeft || alignment == Alignment.topRight
+                ? const BorderSide(color: Colors.white, width: 4)
+                : BorderSide.none,
+            bottom:
+                alignment == Alignment.bottomLeft ||
+                        alignment == Alignment.bottomRight
+                    ? const BorderSide(color: Colors.white, width: 4)
+                    : BorderSide.none,
+            left: alignment == Alignment.topLeft || alignment == Alignment.bottomLeft
+                ? const BorderSide(color: Colors.white, width: 4)
+                : BorderSide.none,
+            right:
+                alignment == Alignment.topRight ||
+                        alignment == Alignment.bottomRight
+                    ? const BorderSide(color: Colors.white, width: 4)
+                    : BorderSide.none,
+          ),
         ),
       ),
     );
   }
 
   Widget _buildImagePreview() {
-    return SizedBox.expand(
-      child: Image.file(_capturedImage!, fit: BoxFit.cover),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
+        final screenHeight = constraints.maxHeight;
+        final squareSize = screenWidth;
+        final top = (screenHeight - squareSize) / 2;
+
+        return Stack(
+          children: [
+            // Black background
+            Container(color: Colors.black),
+            // Square image preview centered
+            Positioned(
+              left: 0,
+              top: top,
+              width: squareSize,
+              height: squareSize,
+              child: Image.file(
+                _capturedImage!,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

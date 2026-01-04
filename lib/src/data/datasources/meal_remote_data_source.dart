@@ -15,6 +15,7 @@ abstract class MealRemoteDataSource {
     String? imagePath,
   );
   Future<void> deleteContributedMeal(String contributionId);
+  Future<List<String>> analyzeMealImage(String imagePath);
 }
 
 class MealRemoteDataSourceImpl implements MealRemoteDataSource {
@@ -300,6 +301,35 @@ class MealRemoteDataSourceImpl implements MealRemoteDataSource {
           'Failed to delete contributed meal - Status: ${response.statusCode}',
         );
       }
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception('Network error: ${e.message}');
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<String>> analyzeMealImage(String imagePath) async {
+    try {
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(imagePath),
+      });
+
+      final response = await dio.post(
+        '/food-vision/analyze',
+        data: formData,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data['data'] as List<dynamic>;
+        // Remove duplicates and convert to List<String>
+        final uniqueFoods = data.map((e) => e.toString()).toSet().toList();
+        return uniqueFoods;
+      }
+      throw Exception(
+        'Failed to analyze meal image - Status: ${response.statusCode}',
+      );
     } catch (e) {
       if (e is DioException) {
         throw Exception('Network error: ${e.message}');
