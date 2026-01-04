@@ -100,7 +100,10 @@ class FitnessProfileRemoteDataSourceImpl
       final cleanData = Map<String, dynamic>.from(data)
         ..removeWhere((key, value) => value == null);
 
-      final response = await dio.patch('/fitness-profiles/calculate-bfp', data: cleanData);
+      final response = await dio.patch(
+        '/fitness-profiles/calculate-bfp',
+        data: cleanData,
+      );
 
       if (response.statusCode == 200) {
         return response.data;

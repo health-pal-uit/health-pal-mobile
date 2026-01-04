@@ -16,7 +16,7 @@
     </queries>
     
     <application
-        android:label="da1"
+        android:label="HealthPal"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

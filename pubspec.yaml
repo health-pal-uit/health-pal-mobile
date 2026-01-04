@@ -44,6 +44,7 @@ dev_dependencies:
         sdk: flutter
 
     flutter_lints: ^5.0.0
+    flutter_launcher_icons: ^0.14.2
 
 flutter:
     uses-material-design: true
@@ -53,3 +54,11 @@ flutter:
         - assets/images/welcome2.jpeg
         - assets/images/welcome3.jpeg
         - assets/icons/google_fit.svg
+
+flutter_launcher_icons:
+    android: true
+    ios: true
+    image_path: "assets/icons/health-pal-logo.png"
+    adaptive_icon_background: "#FFFFFF"
+    adaptive_icon_foreground: "assets/icons/health-pal-logo.png"
+    remove_alpha_ios: true

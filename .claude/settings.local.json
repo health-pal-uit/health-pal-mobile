@@ -13,7 +13,9 @@
       "Bash(flutter analyze:*)",
       "Bash(find:*)",
       "Bash(flutter pub get:*)",
-      "Bash(flutter clean:*)"
+      "Bash(flutter clean:*)",
+      "Bash(dart run:*)",
+      "Bash(findstr:*)"
     ]
   }
 }

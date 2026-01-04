@@ -73,10 +73,11 @@ class _BodyFatCalculatorScreenState extends State<BodyFatCalculatorScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => BodyFatCalculatorResultsScreen(
-                    result: resultData,
-                    calculationMethod: _selectedMethod,
-                  ),
+                  builder:
+                      (context) => BodyFatCalculatorResultsScreen(
+                        result: resultData,
+                        calculationMethod: _selectedMethod,
+                      ),
                 ),
               );
             }
@@ -86,10 +87,7 @@ class _BodyFatCalculatorScreenState extends State<BodyFatCalculatorScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -219,7 +217,11 @@ class _BodyFatCalculatorScreenState extends State<BodyFatCalculatorScreen> {
         children: [
           Row(
             children: [
-              const Icon(LucideIcons.settings, color: AppColors.primary, size: 20),
+              const Icon(
+                LucideIcons.settings,
+                color: AppColors.primary,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Text(
                 'Calculation Method',
@@ -243,11 +245,7 @@ class _BodyFatCalculatorScreenState extends State<BodyFatCalculatorScreen> {
             'Alternative calculation approach',
           ),
           const SizedBox(height: 12),
-          _buildMethodOption(
-            'bmi',
-            'BMI Method',
-            'Based on Body Mass Index',
-          ),
+          _buildMethodOption('bmi', 'BMI Method', 'Based on Body Mass Index'),
         ],
       ),
     );
@@ -266,14 +264,16 @@ class _BodyFatCalculatorScreenState extends State<BodyFatCalculatorScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary.withValues(alpha: 0.1)
-              : Colors.grey[100],
+          color:
+              isSelected
+                  ? AppColors.primary.withValues(alpha: 0.1)
+                  : Colors.grey[100],
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected
-                ? AppColors.primary
-                : Colors.grey.withValues(alpha: 0.3),
+            color:
+                isSelected
+                    ? AppColors.primary
+                    : Colors.grey.withValues(alpha: 0.3),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -290,9 +290,10 @@ class _BodyFatCalculatorScreenState extends State<BodyFatCalculatorScreen> {
                 ),
                 color: isSelected ? AppColors.primary : Colors.transparent,
               ),
-              child: isSelected
-                  ? const Icon(Icons.check, size: 14, color: Colors.white)
-                  : null,
+              child:
+                  isSelected
+                      ? const Icon(Icons.check, size: 14, color: Colors.white)
+                      : null,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -465,35 +466,34 @@ class _BodyFatCalculatorScreenState extends State<BodyFatCalculatorScreen> {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 2,
       ),
-      child: _isCalculating
-          ? const SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              ),
-            )
-          : Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(LucideIcons.calculator, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  'Calculate Body Fat',
-                  style: AppTypography.headline.copyWith(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+      child:
+          _isCalculating
+              ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
-              ],
-            ),
+              )
+              : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(LucideIcons.calculator, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Calculate Body Fat',
+                    style: AppTypography.headline.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
     );
   }
 }
