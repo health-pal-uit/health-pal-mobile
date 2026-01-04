@@ -10,6 +10,7 @@ import 'package:da1/src/presentation/widgets/home_items/meal_diary_card.dart';
 import 'package:da1/src/presentation/widgets/diet_type_bottom_sheet.dart';
 import 'package:da1/src/domain/entities/diet_type.dart';
 import 'package:da1/src/presentation/screens/home/exercise/challenges_screen.dart';
+import 'package:da1/src/presentation/screens/home/fitness_recommendations_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -197,6 +198,23 @@ class _HomeScreenState extends State<HomeScreen> {
         _updateFitnessGoalDietType(selectedDietType);
       }
     });
+  }
+
+  Future<void> _navigateToRecommendations() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) =>
+                const FitnessRecommendationsScreen(),
+      ),
+    );
+
+    // Reload fitness goal if recommendations were applied
+    if (result == true && mounted) {
+      _loadFitnessGoal();
+      _loadDailyLog();
+    }
   }
 
   Future<void> _updateFitnessGoalDietType(DietType dietType) async {
@@ -1141,6 +1159,7 @@ class _HomeScreenState extends State<HomeScreen> {
       fatPercentages: fatPercentages,
       carbsPercentages: carbsPercentages,
       onDietTypePressed: _showDietTypeBottomSheet,
+      onRecommendationsPressed: _navigateToRecommendations,
     );
   }
 

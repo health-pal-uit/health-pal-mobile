@@ -2,7 +2,7 @@ import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
 import 'package:flutter/material.dart';
 
-class KcalCircularProgressCard extends StatelessWidget {
+class KcalCircularProgressCard extends StatefulWidget {
   final int consumed;
   final int needed;
   final int burned;
@@ -20,6 +20,7 @@ class KcalCircularProgressCard extends StatelessWidget {
   final int? fatPercentages;
   final int? carbsPercentages;
   final VoidCallback? onDietTypePressed;
+  final VoidCallback? onRecommendationsPressed;
 
   const KcalCircularProgressCard({
     super.key,
@@ -40,34 +41,70 @@ class KcalCircularProgressCard extends StatelessWidget {
     this.fatPercentages,
     this.carbsPercentages,
     this.onDietTypePressed,
+    this.onRecommendationsPressed,
   });
 
   @override
+  State<KcalCircularProgressCard> createState() =>
+      _KcalCircularProgressCardState();
+}
+
+class _KcalCircularProgressCardState extends State<KcalCircularProgressCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final remaining = needed - consumed;
-    final carbsCurrent = carbs?.round() ?? 0;
-    final proteinCurrent = protein?.round() ?? 0;
-    final fatCurrent = fat?.round() ?? 0;
-    final fiberCurrent = fiber?.round() ?? 0;
-    final dietTypeDisplay = dietTypeName ?? 'Balanced';
+    final remaining = widget.needed - widget.consumed;
+    final carbsCurrent = widget.carbs?.round() ?? 0;
+    final proteinCurrent = widget.protein?.round() ?? 0;
+    final fatCurrent = widget.fat?.round() ?? 0;
+    final fiberCurrent = widget.fiber?.round() ?? 0;
+    final dietTypeDisplay = widget.dietTypeName ?? 'Balanced';
 
     int carbsGoalValue;
     int proteinGoalValue;
     int fatGoalValue;
 
-    if (proteinPercentages != null &&
-        fatPercentages != null &&
-        carbsPercentages != null) {
-      proteinGoalValue = ((needed * proteinPercentages! / 100) / 4).round();
-      fatGoalValue = ((needed * fatPercentages! / 100) / 9).round();
-      carbsGoalValue = ((needed * carbsPercentages! / 100) / 4).round();
+    if (widget.proteinPercentages != null &&
+        widget.fatPercentages != null &&
+        widget.carbsPercentages != null) {
+      proteinGoalValue =
+          ((widget.needed * widget.proteinPercentages! / 100) / 4).round();
+      fatGoalValue =
+          ((widget.needed * widget.fatPercentages! / 100) / 9).round();
+      carbsGoalValue =
+          ((widget.needed * widget.carbsPercentages! / 100) / 4).round();
     } else {
-      carbsGoalValue = carbsGoal ?? 301;
-      proteinGoalValue = proteinGoal ?? 138;
-      fatGoalValue = fatGoal ?? 72;
+      carbsGoalValue = widget.carbsGoal ?? 301;
+      proteinGoalValue = widget.proteinGoal ?? 138;
+      fatGoalValue = widget.fatGoal ?? 72;
     }
 
-    final fiberGoalValue = fiberGoal ?? 32;
+    final fiberGoalValue = widget.fiberGoal ?? 32;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -78,9 +115,53 @@ class KcalCircularProgressCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Calories & Nutrition',
-            style: AppTypography.headline.copyWith(fontSize: 18),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Calories & Nutrition',
+                style: AppTypography.headline.copyWith(fontSize: 18),
+              ),
+              if (widget.onRecommendationsPressed != null)
+                AnimatedBuilder(
+                  animation: _animationController,
+                  builder: (context, child) {
+                    return Transform.scale(
+                      scale: _scaleAnimation.value,
+                      child: GestureDetector(
+                        onTap: widget.onRecommendationsPressed,
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.pink.shade300,
+                                Colors.blue.shade200,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.pink.withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.auto_awesome,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+            ],
           ),
           const SizedBox(height: 20),
 
@@ -115,8 +196,9 @@ class KcalCircularProgressCard extends StatelessWidget {
                                 height: size,
                                 child: CircularProgressIndicator(
                                   value:
-                                      needed > 0
-                                          ? (consumed / needed).clamp(0.0, 1.0)
+                                      widget.needed > 0
+                                          ? (widget.consumed / widget.needed)
+                                              .clamp(0.0, 1.0)
                                           : 0.0,
                                   strokeWidth: 12,
                                   backgroundColor: Colors.transparent,
@@ -137,7 +219,7 @@ class KcalCircularProgressCard extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    '$consumed',
+                                    '${widget.consumed}',
                                     style: AppTypography.headline.copyWith(
                                       fontSize: 28,
                                       color: Colors.orange,
@@ -162,7 +244,7 @@ class KcalCircularProgressCard extends StatelessWidget {
                     _buildStatRow(
                       Icons.bolt,
                       'Required',
-                      needed.toString(),
+                      widget.needed.toString(),
                       AppColors.primary,
                     ),
                     const SizedBox(height: 12),
@@ -176,7 +258,7 @@ class KcalCircularProgressCard extends StatelessWidget {
                     _buildStatRow(
                       Icons.local_fire_department,
                       'Burned',
-                      burned.toString(),
+                      widget.burned.toString(),
                       Colors.pink,
                     ),
                   ],
@@ -237,7 +319,7 @@ class KcalCircularProgressCard extends StatelessWidget {
 
           Center(
             child: GestureDetector(
-              onTap: onDietTypePressed,
+              onTap: widget.onDietTypePressed,
               child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
