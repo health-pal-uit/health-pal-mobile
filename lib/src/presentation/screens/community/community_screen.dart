@@ -351,6 +351,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
             onCommentPressed: () => _showComments(context, post),
             userId: post.user.id,
             onUserTap: () => _navigateToUserProfile(post.user),
+            attachType: post.attachType,
+            attachMeal: post.attachMeal,
+            attachChallenge: post.attachChallenge,
+            attachMedal: post.attachMedal,
+            attachIngredient: post.attachIngredient,
           );
         },
       ),
@@ -475,6 +480,10 @@ class _CommunityScreenState extends State<CommunityScreen> {
             likeCount:
                 isCurrentlyLiked ? post.likeCount - 1 : post.likeCount + 1,
             isLikedByUser: !isCurrentlyLiked,
+            attachMeal: post.attachMeal,
+            attachChallenge: post.attachChallenge,
+            attachMedal: post.attachMedal,
+            attachIngredient: post.attachIngredient,
           );
         }
       });
@@ -514,6 +523,10 @@ class _CommunityScreenState extends State<CommunityScreen> {
             user: post.user,
             likeCount: post.likeCount,
             isLikedByUser: isCurrentlyLiked,
+            attachMeal: post.attachMeal,
+            attachChallenge: post.attachChallenge,
+            attachMedal: post.attachMedal,
+            attachIngredient: post.attachIngredient,
           );
         }
       });

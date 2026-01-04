@@ -11,6 +11,10 @@ class PostModel {
   final UserInfo user;
   final int likeCount;
   final bool isLikedByUser;
+  final Map<String, dynamic>? attachMeal;
+  final Map<String, dynamic>? attachChallenge;
+  final Map<String, dynamic>? attachMedal;
+  final Map<String, dynamic>? attachIngredient;
 
   PostModel({
     required this.id,
@@ -22,6 +26,10 @@ class PostModel {
     required this.user,
     this.likeCount = 0,
     this.isLikedByUser = false,
+    this.attachMeal,
+    this.attachChallenge,
+    this.attachMedal,
+    this.attachIngredient,
   });
 
   factory PostModel.fromJson(Map<String, dynamic> json) {
@@ -38,6 +46,10 @@ class PostModel {
       user: UserInfo.fromJson(json['user'] as Map<String, dynamic>),
       likeCount: (json['like_count'] as num?)?.toInt() ?? 0,
       isLikedByUser: json['is_liked_by_user'] as bool? ?? false,
+      attachMeal: json['attach_meal'] as Map<String, dynamic>?,
+      attachChallenge: json['attach_challenge'] as Map<String, dynamic>?,
+      attachMedal: json['attach_medal'] as Map<String, dynamic>?,
+      attachIngredient: json['attach_ingredient'] as Map<String, dynamic>?,
     );
   }
 
