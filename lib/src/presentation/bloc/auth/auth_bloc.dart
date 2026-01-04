@@ -32,6 +32,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         username: event.username,
         password: event.password,
         email: event.email,
+        gender: event.gender,
+        birthDate: event.birthDate,
       );
 
       result.fold(

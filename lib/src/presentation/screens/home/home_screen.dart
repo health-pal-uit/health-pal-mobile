@@ -25,7 +25,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  DateTime selectedDate = DateTime.now();
+  DateTime selectedDate = DateTime.now().toUtc();
   double? tdeeKcal;
   bool isLoadingTdee = true;
   Map<String, dynamic>? dailyLog;
@@ -809,6 +809,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   _buildKcalCard(),
                   const SizedBox(height: 20),
                   MealDiaryCard(
+                    key: ValueKey(dailyLog?['id'] ?? 'no-log'),
                     dailyMeals: dailyLog?['daily_meals'] as List<dynamic>?,
                     selectedDate:
                         '${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}',
@@ -818,9 +819,30 @@ class _HomeScreenState extends State<HomeScreen> {
                       final result = await context.push(
                         '/foodSearch?mealType=$mealType&date=$dateStr',
                       );
-                      if (result == true && mounted) {
+
+                      if (result is Map &&
+                          result['success'] == true &&
+                          mounted) {
+                        // Get the date that was logged
+                        final loggedDate = result['date'] as String?;
+
+                        if (loggedDate != null) {
+                          // Parse the date DD/MM/YYYY
+                          final parts = loggedDate.split('/');
+                          if (parts.length == 3) {
+                            final day = int.parse(parts[0]);
+                            final month = int.parse(parts[1]);
+                            final year = int.parse(parts[2]);
+
+                            // Navigate to that day in UTC
+                            setState(() {
+                              selectedDate = DateTime.utc(year, month, day);
+                            });
+                          }
+                        }
+
+                        // Reload daily log to refresh the meal list
                         await _loadDailyLog();
-                        setState(() {});
                       }
                     },
                   ),
@@ -843,7 +865,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeader(BuildContext context, User? user, String todayDate) {
-    final now = DateTime.now();
+    final now = DateTime.now().toUtc();
     final isToday =
         selectedDate.year == now.year &&
         selectedDate.month == now.month &&
@@ -962,7 +984,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildDaysList() {
-    final now = DateTime.now();
+    final now = DateTime.now().toUtc();
     final currentWeekStart = now.subtract(Duration(days: now.weekday - 1));
     final totalWeeks = 41;
     final initialWeek = 20;

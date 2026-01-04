@@ -7,6 +7,8 @@ abstract class AuthRemoteDataSource {
     required String username,
     required String password,
     required String email,
+    required String gender,
+    required String birthDate,
   });
 
   Future<LoginResponseModel> login({
@@ -52,10 +54,18 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String username,
     required String password,
     required String email,
+    required String gender,
+    required String birthDate,
   }) async {
     await dio.post(
       ApiConfig.signup,
-      data: {'username': username, 'password': password, 'email': email},
+      data: {
+        'username': username,
+        'password': password,
+        'email': email,
+        'gender': gender,
+        'birth_date': birthDate,
+      },
     );
   }
 

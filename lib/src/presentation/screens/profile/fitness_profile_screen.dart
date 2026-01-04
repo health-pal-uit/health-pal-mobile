@@ -382,7 +382,7 @@ class _FitnessProfileScreenState extends State<FitnessProfileScreen> {
                         _buildInfoChip(genderText, LucideIcons.user),
                         if (age != null) ...[
                           const SizedBox(width: 8),
-                          _buildInfoChip('$age years', LucideIcons.calendar),
+                          _buildInfoChip('$age', LucideIcons.calendar),
                         ],
                       ],
                     ),

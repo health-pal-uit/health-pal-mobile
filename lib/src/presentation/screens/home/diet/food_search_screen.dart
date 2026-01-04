@@ -473,8 +473,9 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
               _loadUserRecipes();
             }
 
-            if (result == true && context.mounted) {
-              Navigator.pop(context, true);
+            if (result is Map && result['success'] == true && context.mounted) {
+              // Pass the result back to home screen with date info
+              Navigator.pop(context, result);
             }
           },
         );

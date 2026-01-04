@@ -2,7 +2,7 @@ class ApiConfig {
   // emulator debug
   // static const String baseUrl = "http://10.0.2.2:3001/";
   // wireless mobile debug
-  static const String baseUrl = "http://192.168.1.148:3001/";
+  static const String baseUrl = "http://192.168.11.15:3001/";
 
   // Auth endpoints
   static const String login = "/auth/login";

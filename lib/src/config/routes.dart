@@ -317,19 +317,9 @@ class AppRoutes {
       GoRoute(
         path: '/onboarding-goal',
         name: 'onboarding-goal',
-        redirect: (context, state) async {
-          // Prevent access if user already has fitness profile
-          if (_fitnessProfileRepository != null) {
-            final result = await _fitnessProfileRepository!.hasFitnessProfile();
-            return result.fold(
-              (failure) => null,
-              (hasProfile) => hasProfile ? '/' : null,
-            );
-          }
-          return null;
-        },
+        // Remove redirect - allow access during onboarding flow even after profile created
         builder: (context, state) {
-          final data = state.extra as Map<String, dynamic>;
+          final data = state.extra as Map<String, dynamic>? ?? {};
           return OnboardingGoalTypeScreen(previousData: data);
         },
       ),

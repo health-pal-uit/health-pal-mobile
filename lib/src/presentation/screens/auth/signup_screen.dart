@@ -28,6 +28,7 @@ class SignUpScreenState extends State<SignUpScreen> {
 
   bool _isPasswordObscured = true;
   DateTime? _selectedDate;
+  String _selectedGender = 'true'; // true for male, false for female
 
   @override
   void initState() {
@@ -74,6 +75,7 @@ class SignUpScreenState extends State<SignUpScreen> {
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
+        // Format as displayed: MM/DD/YYYY
         _dateOfBirthController.text =
             '${picked.month.toString().padLeft(2, '0')}/${picked.day.toString().padLeft(2, '0')}/${picked.year}';
       });
@@ -84,11 +86,20 @@ class SignUpScreenState extends State<SignUpScreen> {
     if (isLoading) return;
 
     if (_formKey.currentState!.validate()) {
+      // Format date as DD/MM/YYYY for API
+      String formattedDate = '';
+      if (_selectedDate != null) {
+        formattedDate =
+            '${_selectedDate!.day.toString().padLeft(2, '0')}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.year}';
+      }
+
       context.read<AuthBloc>().add(
         SignUpRequested(
           username: _usernameController.text.trim(),
           password: _passwordController.text.trim(),
           email: _emailController.text.trim(),
+          gender: _selectedGender,
+          birthDate: formattedDate,
         ),
       );
     }
@@ -210,7 +221,42 @@ class SignUpScreenState extends State<SignUpScreen> {
                               ),
                               const SizedBox(height: 20),
 
-                              // --- FIELD 3: DATE OF BIRTH ---
+                              // --- FIELD 3: GENDER ---
+                              Container(
+                                decoration: _fieldBoxDecoration(),
+                                child: DropdownButtonFormField<String>(
+                                  initialValue: _selectedGender,
+                                  style: AppTypography.body,
+                                  decoration: _fieldInputDecoration(
+                                    hintText: "Select your gender",
+                                    icon: Icons.person_outline,
+                                    hasFocus: false,
+                                  ),
+                                  items: const [
+                                    DropdownMenuItem(
+                                      value: 'true',
+                                      child: Text('Male'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'false',
+                                      child: Text('Female'),
+                                    ),
+                                  ],
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _selectedGender = value!;
+                                    });
+                                  },
+                                  validator:
+                                      (value) =>
+                                          value == null || value.isEmpty
+                                              ? "Gender is required"
+                                              : null,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+
+                              // --- FIELD 4: DATE OF BIRTH ---
                               Container(
                                 decoration: _fieldBoxDecoration(),
                                 child: TextFormField(
