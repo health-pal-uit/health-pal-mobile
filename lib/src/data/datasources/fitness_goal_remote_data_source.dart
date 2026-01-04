@@ -5,6 +5,7 @@ abstract class FitnessGoalRemoteDataSource {
   Future<Map<String, dynamic>> getFitnessGoal();
   Future<Map<String, dynamic>> updateFitnessGoal(Map<String, dynamic> data);
   Future<Map<String, dynamic>> getRecommendations();
+  Future<Map<String, dynamic>> applyRecommendations();
 }
 
 class FitnessGoalRemoteDataSourceImpl implements FitnessGoalRemoteDataSource {
@@ -77,6 +78,21 @@ class FitnessGoalRemoteDataSourceImpl implements FitnessGoalRemoteDataSource {
       }
     } catch (e) {
       throw Exception('Failed to get recommendations: $e');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> applyRecommendations() async {
+    try {
+      final response = await dio.post('/recommendations/apply-to-fitness-goal');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return response.data;
+      } else {
+        throw Exception('Failed to apply recommendations');
+      }
+    } catch (e) {
+      throw Exception('Failed to apply recommendations: $e');
     }
   }
 }

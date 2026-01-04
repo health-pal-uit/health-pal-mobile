@@ -83,16 +83,7 @@ class _FitnessRecommendationsScreenState
       return;
     }
 
-    final updateData = {
-      'goal_type': _recommendations!['goal_type'],
-      'target_kcal': _recommendations!['target_kcal'],
-      'target_protein_gr': _recommendations!['target_protein_gr'],
-      'target_fat_gr': _recommendations!['target_fat_gr'],
-      'target_carbs_gr': _recommendations!['target_carbs_gr'],
-      'target_fiber_gr': _recommendations!['target_fiber_gr'],
-    };
-
-    final result = await repository.updateFitnessGoal(updateData);
+    final result = await repository.applyRecommendations();
 
     if (mounted) {
       setState(() {
@@ -163,54 +154,53 @@ class _FitnessRecommendationsScreenState
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            )
-          : _errorMessage != null
+      body:
+          _isLoading
+              ? const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              )
+              : _errorMessage != null
               ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          LucideIcons.circleAlert,
-                          size: 64,
-                          color: Colors.grey[400],
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        LucideIcons.circleAlert,
+                        size: 64,
+                        color: Colors.grey[400],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        _errorMessage!,
+                        style: AppTypography.body.copyWith(
+                          color: Colors.red,
+                          fontSize: 14,
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          _errorMessage!,
-                          style: AppTypography.body.copyWith(
-                            color: Colors.red,
-                            fontSize: 14,
-                          ),
-                          textAlign: TextAlign.center,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: _loadRecommendations,
+                        icon: const Icon(LucideIcons.refreshCw),
+                        label: const Text('Retry'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
                         ),
-                        const SizedBox(height: 24),
-                        ElevatedButton.icon(
-                          onPressed: _loadRecommendations,
-                          icon: const Icon(LucideIcons.refreshCw),
-                          label: const Text('Retry'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                )
+                ),
+              )
               : _buildRecommendationsContent(),
     );
   }
 
   Widget _buildRecommendationsContent() {
     if (_recommendations == null) {
-      return const Center(
-        child: Text('No recommendations available'),
-      );
+      return const Center(child: Text('No recommendations available'));
     }
 
     final goalType = _recommendations!['goal_type'] as String? ?? 'maintain';
@@ -231,10 +221,7 @@ class _FitnessRecommendationsScreenState
             margin: const EdgeInsets.only(bottom: 24),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  Colors.pink.shade300,
-                  Colors.blue.shade200,
-                ],
+                colors: [Colors.pink.shade300, Colors.blue.shade200],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -242,11 +229,7 @@ class _FitnessRecommendationsScreenState
             ),
             child: Row(
               children: [
-                const Icon(
-                  LucideIcons.sparkles,
-                  color: Colors.white,
-                  size: 28,
-                ),
+                const Icon(LucideIcons.sparkles, color: Colors.white, size: 28),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -451,32 +434,30 @@ class _FitnessRecommendationsScreenState
                 ),
                 elevation: 2,
               ),
-              child: _isApplying
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          LucideIcons.check,
+              child:
+                  _isApplying
+                      ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
                           color: Colors.white,
+                          strokeWidth: 2,
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Apply Recommendations',
-                          style: AppTypography.headline.copyWith(
-                            fontSize: 16,
-                            color: Colors.white,
+                      )
+                      : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(LucideIcons.check, color: Colors.white),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Apply Recommendations',
+                            style: AppTypography.headline.copyWith(
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
             ),
           ),
 

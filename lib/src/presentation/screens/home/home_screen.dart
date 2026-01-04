@@ -204,9 +204,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder:
-            (context) =>
-                const FitnessRecommendationsScreen(),
+        builder: (context) => const FitnessRecommendationsScreen(),
       ),
     );
 
