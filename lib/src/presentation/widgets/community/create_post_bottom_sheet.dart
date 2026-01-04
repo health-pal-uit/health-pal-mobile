@@ -1,6 +1,8 @@
+import 'package:da1/src/config/api_config.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/data/datasources/post_remote_data_source.dart';
 import 'package:da1/src/data/models/user_model.dart';
+import 'package:da1/src/presentation/widgets/community/attachment_selection_screen.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -39,6 +41,8 @@ class CreatePostBottomSheet extends StatefulWidget {
 class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
   final _contentController = TextEditingController();
   String? _selectedAttachType;
+  String? _selectedAttachId;
+  String? _selectedAttachName;
   bool _isCreating = false;
 
   @override
@@ -170,7 +174,7 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Post Type (Optional)',
+          'Attach Content (Optional)',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -184,12 +188,85 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
           children: [
             _buildTypeChip('meal', 'Meal', Icons.restaurant),
             _buildTypeChip('challenge', 'Challenge', Icons.emoji_events),
-            _buildTypeChip('medal', 'Achievement', Icons.military_tech),
+            _buildTypeChip('medal', 'Medal', Icons.military_tech),
             _buildTypeChip('ingredient', 'Ingredient', Icons.set_meal),
           ],
         ),
+        if (_selectedAttachName != null) ...[
+          const SizedBox(height: 12),
+          _buildSelectedAttachment(),
+        ],
       ],
     );
+  }
+
+  Widget _buildSelectedAttachment() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            _getIconForType(_selectedAttachType),
+            color: AppColors.primary,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Selected ${_selectedAttachType?.replaceAll('_', ' ').toUpperCase()}',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _selectedAttachName!,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, size: 20),
+            onPressed: () {
+              setState(() {
+                _selectedAttachId = null;
+                _selectedAttachName = null;
+                _selectedAttachType = null;
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getIconForType(String? type) {
+    switch (type) {
+      case 'meal':
+        return Icons.restaurant;
+      case 'challenge':
+        return Icons.emoji_events;
+      case 'medal':
+        return Icons.military_tech;
+      case 'ingredient':
+        return Icons.set_meal;
+      default:
+        return Icons.attach_file;
+    }
   }
 
   Widget _buildTypeChip(String value, String label, IconData icon) {
@@ -208,10 +285,31 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
         ],
       ),
       selected: isSelected,
-      onSelected: (selected) {
-        setState(() {
-          _selectedAttachType = selected ? value : null;
-        });
+      onSelected: (selected) async {
+        if (selected) {
+          // Navigate to selection screen
+          final result = await Navigator.push<Map<String, dynamic>>(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (context) => AttachmentSelectionScreen(attachmentType: value),
+            ),
+          );
+
+          if (result != null && mounted) {
+            setState(() {
+              _selectedAttachType = value;
+              _selectedAttachId = result['id'];
+              _selectedAttachName = result['name'];
+            });
+          }
+        } else {
+          setState(() {
+            _selectedAttachType = null;
+            _selectedAttachId = null;
+            _selectedAttachName = null;
+          });
+        }
       },
       selectedColor: AppColors.primary,
       backgroundColor: const Color(0x19FA9500),
@@ -286,7 +384,7 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
 
       final dio = Dio(
         BaseOptions(
-          baseUrl: 'http://10.0.2.2:3001/',
+          baseUrl: ApiConfig.baseUrl,
           headers: {'Authorization': 'Bearer $token'},
         ),
       );
@@ -295,6 +393,7 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
       await dataSource.createPost(
         content: content,
         attachType: _selectedAttachType,
+        attachId: _selectedAttachId,
       );
 
       if (mounted) {

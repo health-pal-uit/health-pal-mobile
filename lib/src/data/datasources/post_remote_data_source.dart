@@ -6,7 +6,11 @@ import 'package:dio/dio.dart';
 abstract class PostRemoteDataSource {
   Future<PostsResponse> getPosts({required int page, required int limit});
   Future<PostsResponse> getUserPosts(String userId);
-  Future<PostModel> createPost({required String content, String? attachType});
+  Future<PostModel> createPost({
+    required String content,
+    String? attachType,
+    String? attachId,
+  });
   Future<void> reportPost(String postId);
   Future<void> likePost(String postId);
   Future<void> unlikePost(String postId);
@@ -81,12 +85,16 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
   Future<PostModel> createPost({
     required String content,
     String? attachType,
+    String? attachId,
   }) async {
     try {
-      final response = await dio.post(
-        ApiConfig.createPost,
-        data: {'content': content, 'attach_type': attachType ?? 'none'},
-      );
+      final data = {'content': content, 'attach_type': attachType ?? 'none'};
+
+      if (attachId != null) {
+        data['attach_id'] = attachId;
+      }
+
+      final response = await dio.post(ApiConfig.createPost, data: data);
       return PostModel.fromJson(response.data['data']);
     } on DioException catch (e) {
       if (e.response != null) {
