@@ -1,9 +1,10 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
 import 'package:da1/src/presentation/screens/home/diet/meal_diary_detail_screen.dart';
+import 'package:da1/src/presentation/screens/home/meal_recommendations_input_screen.dart';
 import 'package:flutter/material.dart';
 
-class MealDiaryCard extends StatelessWidget {
+class MealDiaryCard extends StatefulWidget {
   final List<dynamic>? dailyMeals;
   final Function(String mealType)? onAddMeal;
   final String? selectedDate; // Format: "DD/MM/YYYY"
@@ -15,9 +16,37 @@ class MealDiaryCard extends StatelessWidget {
     this.selectedDate,
   });
 
+  @override
+  State<MealDiaryCard> createState() => _MealDiaryCardState();
+}
+
+class _MealDiaryCardState extends State<MealDiaryCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
   int _getMealCount(String mealType) {
-    if (dailyMeals == null) return 0;
-    return dailyMeals!
+    if (widget.dailyMeals == null) return 0;
+    return widget.dailyMeals!
         .where(
           (meal) =>
               meal['meal_type']?.toString().toLowerCase() ==
@@ -27,8 +56,8 @@ class MealDiaryCard extends StatelessWidget {
   }
 
   int _getMealKcal(String mealType) {
-    if (dailyMeals == null) return 0;
-    final meals = dailyMeals!.where(
+    if (widget.dailyMeals == null) return 0;
+    final meals = widget.dailyMeals!.where(
       (meal) =>
           meal['meal_type']?.toString().toLowerCase() == mealType.toLowerCase(),
     );
@@ -60,12 +89,54 @@ class MealDiaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Meal Diary',
-            style: AppTypography.headline.copyWith(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Meal Diary',
+                style: AppTypography.headline.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              AnimatedBuilder(
+                animation: _animationController,
+                builder: (context, child) {
+                  return Transform.scale(
+                    scale: _scaleAnimation.value,
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) =>
+                                    const MealRecommendationsInputScreen(),
+                          ),
+                        );
+                      },
+                      child: ShaderMask(
+                        shaderCallback:
+                            (bounds) => LinearGradient(
+                              colors: [
+                                Colors.pink.shade300,
+                                Colors.blue.shade300,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              stops: const [0.2, 0.9],
+                            ).createShader(bounds),
+                        child: const Icon(
+                          Icons.auto_awesome,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
           const SizedBox(height: 20),
           Row(
@@ -112,9 +183,9 @@ class MealDiaryCard extends StatelessWidget {
           const SizedBox(height: 16),
           InkWell(
             onTap: () {
-              if (dailyMeals != null && dailyMeals!.isNotEmpty) {
+              if (widget.dailyMeals != null && widget.dailyMeals!.isNotEmpty) {
                 final dateStr =
-                    selectedDate ??
+                    widget.selectedDate ??
                     (() {
                       final now = DateTime.now();
                       return '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
@@ -124,7 +195,7 @@ class MealDiaryCard extends StatelessWidget {
                   MaterialPageRoute(
                     builder:
                         (context) => MealDiaryDetailScreen(
-                          dailyMeals: dailyMeals!,
+                          dailyMeals: widget.dailyMeals!,
                           selectedDate: dateStr,
                         ),
                   ),
@@ -175,7 +246,7 @@ class MealDiaryCard extends StatelessWidget {
         return Column(
           children: [
             GestureDetector(
-              onTap: () => onAddMeal?.call(label),
+              onTap: () => widget.onAddMeal?.call(label),
               child: Container(
                 width: buttonSize,
                 height: buttonSize,
