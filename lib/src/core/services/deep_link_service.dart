@@ -9,10 +9,17 @@ class DeepLinkService {
     required Function(String token) onTokenReceived,
     required Function(String error) onError,
     Function(Uri uri)? onPasswordResetLink,
+    Function(Uri uri)? onGoogleFitCallback,
   }) async {
     _linkSubscription = _appLinks.uriLinkStream.listen(
       (Uri uri) {
-        _handleDeepLink(uri, onTokenReceived, onError, onPasswordResetLink);
+        _handleDeepLink(
+          uri,
+          onTokenReceived,
+          onError,
+          onPasswordResetLink,
+          onGoogleFitCallback,
+        );
       },
       onError: (error) {
         onError(error.toString());
@@ -28,6 +35,7 @@ class DeepLinkService {
           onTokenReceived,
           onError,
           onPasswordResetLink,
+          onGoogleFitCallback,
         );
       }
     } catch (e) {
@@ -40,6 +48,7 @@ class DeepLinkService {
     Function(String token) onTokenReceived,
     Function(String error) onError,
     Function(Uri uri)? onPasswordResetLink,
+    Function(Uri uri)? onGoogleFitCallback,
   ) {
     // Check if this is the OAuth callback
     if (uri.scheme == 'da1' && uri.host == 'login-callback') {
@@ -54,6 +63,12 @@ class DeepLinkService {
     else if (uri.scheme == 'da1' && uri.host == 'reset-callback') {
       if (onPasswordResetLink != null) {
         onPasswordResetLink(uri);
+      }
+    }
+    // Check if this is the Google Fit callback
+    else if (uri.scheme == 'da1' && uri.host == 'google-fit-callback') {
+      if (onGoogleFitCallback != null) {
+        onGoogleFitCallback(uri);
       }
     }
   }

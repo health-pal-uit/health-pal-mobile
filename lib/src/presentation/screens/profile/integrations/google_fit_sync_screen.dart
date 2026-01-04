@@ -3,7 +3,6 @@ import 'package:da1/src/config/theme/typography.dart';
 import 'package:da1/src/data/repositories/google_fit_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class GoogleFitSyncScreen extends StatefulWidget {
@@ -20,11 +19,6 @@ class _GoogleFitSyncScreenState extends State<GoogleFitSyncScreen> {
   bool _isSyncing = false;
   DateTime? _lastSyncTime;
 
-  bool _syncSteps = true;
-  bool _syncWorkouts = true;
-  bool _syncWeight = true;
-  bool _syncWater = false;
-  bool _syncSleep = false;
   bool _autoSync = true;
 
   @override
@@ -305,7 +299,6 @@ class _GoogleFitSyncScreenState extends State<GoogleFitSyncScreen> {
             if (_isConnected) ...[
               _buildSyncSettingsCard(),
               const SizedBox(height: 20),
-              _buildDataTypesCard(),
               const SizedBox(height: 20),
               _buildInfoCard(),
             ] else
@@ -540,127 +533,6 @@ class _GoogleFitSyncScreenState extends State<GoogleFitSyncScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildDataTypesCard() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Data Types',
-            style: AppTypography.headline.copyWith(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Choose what data to sync from Google Fit',
-            style: AppTypography.body.copyWith(
-              color: AppColors.textSecondary,
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildDataTypeToggle(
-            icon: LucideIcons.footprints,
-            title: 'Steps',
-            subtitle: 'Daily step count',
-            value: _syncSteps,
-            onChanged: (value) => setState(() => _syncSteps = value),
-          ),
-          const Divider(height: 32),
-          _buildDataTypeToggle(
-            icon: Icons.fitness_center,
-            title: 'Workouts',
-            subtitle: 'Exercise activities and calories burned',
-            value: _syncWorkouts,
-            onChanged: (value) => setState(() => _syncWorkouts = value),
-          ),
-          const Divider(height: 32),
-          _buildDataTypeToggle(
-            icon: LucideIcons.weight,
-            title: 'Weight',
-            subtitle: 'Body weight measurements',
-            value: _syncWeight,
-            onChanged: (value) => setState(() => _syncWeight = value),
-          ),
-          const Divider(height: 32),
-          _buildDataTypeToggle(
-            icon: LucideIcons.droplet,
-            title: 'Water Intake',
-            subtitle: 'Daily hydration tracking',
-            value: _syncWater,
-            onChanged: (value) => setState(() => _syncWater = value),
-          ),
-          const Divider(height: 32),
-          _buildDataTypeToggle(
-            icon: LucideIcons.moon,
-            title: 'Sleep',
-            subtitle: 'Sleep duration and quality',
-            value: _syncSleep,
-            onChanged: (value) => setState(() => _syncSleep = value),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDataTypeToggle({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return Row(
-      children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, color: AppColors.primary, size: 24),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: AppTypography.headline.copyWith(fontSize: 16)),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: AppTypography.body.copyWith(
-                  color: AppColors.textSecondary,
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Switch(
-          value: value,
-          onChanged: onChanged,
-          activeTrackColor: AppColors.primary,
-        ),
-      ],
     );
   }
 

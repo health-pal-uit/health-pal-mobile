@@ -246,6 +246,21 @@ void main() async {
         }
       });
     },
+    onGoogleFitCallback: (Uri uri) {
+      // Google Fit OAuth callback - connection is handled server-side
+      // Navigate back to the Google Fit sync screen after checking auth
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Check if user is authenticated
+        final currentState = authBloc.state;
+        if (currentState is Authenticated) {
+          // User is signed in, navigate to Google Fit sync screen
+          AppRoutes.router.go('/google-fit-sync');
+        } else {
+          // User is not signed in, navigate to home
+          AppRoutes.router.go('/');
+        }
+      });
+    },
   );
 
   runApp(
