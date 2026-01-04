@@ -316,10 +316,7 @@ class MealRemoteDataSourceImpl implements MealRemoteDataSource {
         'file': await MultipartFile.fromFile(imagePath),
       });
 
-      final response = await dio.post(
-        '/food-vision/analyze',
-        data: formData,
-      );
+      final response = await dio.post('/food-vision/analyze', data: formData);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data['data'] as List<dynamic>;

@@ -67,31 +67,27 @@ class _MealAnalysisResultsScreenState extends State<MealAnalysisResultsScreen> {
     try {
       // Search both meals and ingredients
       final mealsResult = await mealRepository.searchMeals(foodName);
-      final ingredientsResult = await mealRepository.searchIngredients(foodName);
+      final ingredientsResult = await mealRepository.searchIngredients(
+        foodName,
+      );
 
       final List<Map<String, dynamic>> combinedResults = [];
 
-      mealsResult.fold(
-        (failure) {},
-        (meals) {
-          for (final meal in meals) {
-            final mealMap = meal as Map<String, dynamic>;
-            mealMap['_isMeal'] = true;
-            combinedResults.add(mealMap);
-          }
-        },
-      );
+      mealsResult.fold((failure) {}, (meals) {
+        for (final meal in meals) {
+          final mealMap = meal as Map<String, dynamic>;
+          mealMap['_isMeal'] = true;
+          combinedResults.add(mealMap);
+        }
+      });
 
-      ingredientsResult.fold(
-        (failure) {},
-        (ingredients) {
-          for (final ing in ingredients) {
-            final ingMap = ing as Map<String, dynamic>;
-            ingMap['_isMeal'] = false;
-            combinedResults.add(ingMap);
-          }
-        },
-      );
+      ingredientsResult.fold((failure) {}, (ingredients) {
+        for (final ing in ingredients) {
+          final ingMap = ing as Map<String, dynamic>;
+          ingMap['_isMeal'] = false;
+          combinedResults.add(ingMap);
+        }
+      });
 
       if (mounted) {
         setState(() {
@@ -118,17 +114,18 @@ class _MealAnalysisResultsScreenState extends State<MealAnalysisResultsScreen> {
         centerTitle: true,
         title: DropdownButton<String>(
           value: _selectedMealType,
-          items: <String>[
-            'Breakfast',
-            'Lunch',
-            'Dinner',
-            'Snack',
-          ].map<DropdownMenuItem<String>>((String value) {
-            return DropdownMenuItem<String>(
-              value: value,
-              child: Text(value),
-            );
-          }).toList(),
+          items:
+              <String>[
+                'Breakfast',
+                'Lunch',
+                'Dinner',
+                'Snack',
+              ].map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
           onChanged: (String? newValue) {
             if (newValue != null) {
               setState(() {
@@ -167,7 +164,10 @@ class _MealAnalysisResultsScreenState extends State<MealAnalysisResultsScreen> {
             if (widget.detectedFoods.length > 1)
               Container(
                 margin: const EdgeInsets.only(top: 8, bottom: 16),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
@@ -178,30 +178,31 @@ class _MealAnalysisResultsScreenState extends State<MealAnalysisResultsScreen> {
                     value: _selectedFood,
                     isExpanded: true,
                     icon: const Icon(LucideIcons.chevronDown),
-                    items: widget.detectedFoods.map((String foodName) {
-                      return DropdownMenuItem<String>(
-                        value: foodName,
-                        child: Row(
-                          children: [
-                            const Icon(
-                              LucideIcons.utensils,
-                              size: 18,
-                              color: AppColors.primary,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                foodName,
-                                style: AppTypography.headline.copyWith(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
+                    items:
+                        widget.detectedFoods.map((String foodName) {
+                          return DropdownMenuItem<String>(
+                            value: foodName,
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  LucideIcons.utensils,
+                                  size: 18,
+                                  color: AppColors.primary,
                                 ),
-                              ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    foodName,
+                                    style: AppTypography.headline.copyWith(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
+                          );
+                        }).toList(),
                     onChanged: (String? newValue) {
                       if (newValue != null && newValue != _selectedFood) {
                         setState(() {
@@ -277,35 +278,34 @@ class _MealAnalysisResultsScreenState extends State<MealAnalysisResultsScreen> {
               child: Container(
                 decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(20),
-                  ),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                 ),
-                child: _selectedFood == null
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              LucideIcons.packageX,
-                              size: 64,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No food detected',
-                              style: AppTypography.headline.copyWith(
-                                fontSize: 16,
-                                color: AppColors.textSecondary,
+                child:
+                    _selectedFood == null
+                        ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                LucideIcons.packageX,
+                                size: 64,
+                                color: Colors.grey[400],
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 16),
+                              Text(
+                                'No food detected',
+                                style: AppTypography.headline.copyWith(
+                                  fontSize: 16,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                        : ListView(
+                          padding: const EdgeInsets.only(top: 16),
+                          children: [_buildFoodSection(_selectedFood!)],
                         ),
-                      )
-                    : ListView(
-                        padding: const EdgeInsets.only(top: 16),
-                        children: [_buildFoodSection(_selectedFood!)],
-                      ),
               ),
             ),
           ],
@@ -321,7 +321,8 @@ class _MealAnalysisResultsScreenState extends State<MealAnalysisResultsScreen> {
 
     // Separate meals and ingredients
     final meals = results.where((item) => item['_isMeal'] == true).toList();
-    final ingredients = results.where((item) => item['_isMeal'] == false).toList();
+    final ingredients =
+        results.where((item) => item['_isMeal'] == false).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -422,48 +423,46 @@ class _MealAnalysisResultsScreenState extends State<MealAnalysisResultsScreen> {
     final isMeal = item['_isMeal'] as bool? ?? true;
 
     return ListTile(
-      leading: imageUrl != null && imageUrl.isNotEmpty
-          ? ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                imageUrl,
+      leading:
+          imageUrl != null && imageUrl.isNotEmpty
+              ? ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  imageUrl,
+                  width: 56,
+                  height: 56,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        isMeal ? Icons.restaurant : LucideIcons.apple,
+                        color: Colors.grey[600],
+                        size: 28,
+                      ),
+                    );
+                  },
+                ),
+              )
+              : Container(
                 width: 56,
                 height: 56,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      isMeal ? Icons.restaurant : LucideIcons.apple,
-                      color: Colors.grey[600],
-                      size: 28,
-                    ),
-                  );
-                },
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  isMeal ? Icons.restaurant : LucideIcons.apple,
+                  color: Colors.grey[600],
+                  size: 28,
+                ),
               ),
-            )
-          : Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                isMeal ? Icons.restaurant : LucideIcons.apple,
-                color: Colors.grey[600],
-                size: 28,
-              ),
-            ),
-      title: Text(
-        name,
-        style: AppTypography.headline.copyWith(fontSize: 14),
-      ),
+      title: Text(name, style: AppTypography.headline.copyWith(fontSize: 14)),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -480,14 +479,12 @@ class _MealAnalysisResultsScreenState extends State<MealAnalysisResultsScreen> {
           ),
           const SizedBox(height: 4),
           Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 2,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: isMeal
-                  ? AppColors.primary.withValues(alpha: 0.1)
-                  : Colors.green.withValues(alpha: 0.1),
+              color:
+                  isMeal
+                      ? AppColors.primary.withValues(alpha: 0.1)
+                      : Colors.green.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
@@ -501,17 +498,22 @@ class _MealAnalysisResultsScreenState extends State<MealAnalysisResultsScreen> {
           ),
         ],
       ),
-      trailing: const Icon(Icons.add_circle, color: AppColors.primary, size: 28),
+      trailing: const Icon(
+        Icons.add_circle,
+        color: AppColors.primary,
+        size: 28,
+      ),
       onTap: () async {
         final navigator = Navigator.of(context);
 
         final result = await navigator.push(
           MaterialPageRoute(
-            builder: (context) => MealDetailScreen(
-              meal: item,
-              mealType: _selectedMealType,
-              selectedDate: widget.selectedDate,
-            ),
+            builder:
+                (context) => MealDetailScreen(
+                  meal: item,
+                  mealType: _selectedMealType,
+                  selectedDate: widget.selectedDate,
+                ),
           ),
         );
 

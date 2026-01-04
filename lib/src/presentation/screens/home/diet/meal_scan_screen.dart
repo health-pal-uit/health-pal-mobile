@@ -131,7 +131,9 @@ class _MealScanScreenState extends State<MealScanScreen> {
     }
 
     try {
-      final result = await mealRepository.analyzeMealImage(_capturedImage!.path);
+      final result = await mealRepository.analyzeMealImage(
+        _capturedImage!.path,
+      );
 
       if (mounted) {
         setState(() {
@@ -152,10 +154,11 @@ class _MealScanScreenState extends State<MealScanScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => MealAnalysisResultsScreen(
-                  detectedFoods: detectedFoods,
-                  imageFile: _capturedImage,
-                ),
+                builder:
+                    (context) => MealAnalysisResultsScreen(
+                      detectedFoods: detectedFoods,
+                      imageFile: _capturedImage,
+                    ),
               ),
             );
           },
@@ -331,17 +334,21 @@ class _MealScanScreenState extends State<MealScanScreen> {
         height: 30,
         decoration: BoxDecoration(
           border: Border(
-            top: alignment == Alignment.topLeft || alignment == Alignment.topRight
-                ? const BorderSide(color: Colors.white, width: 4)
-                : BorderSide.none,
+            top:
+                alignment == Alignment.topLeft ||
+                        alignment == Alignment.topRight
+                    ? const BorderSide(color: Colors.white, width: 4)
+                    : BorderSide.none,
             bottom:
                 alignment == Alignment.bottomLeft ||
                         alignment == Alignment.bottomRight
                     ? const BorderSide(color: Colors.white, width: 4)
                     : BorderSide.none,
-            left: alignment == Alignment.topLeft || alignment == Alignment.bottomLeft
-                ? const BorderSide(color: Colors.white, width: 4)
-                : BorderSide.none,
+            left:
+                alignment == Alignment.topLeft ||
+                        alignment == Alignment.bottomLeft
+                    ? const BorderSide(color: Colors.white, width: 4)
+                    : BorderSide.none,
             right:
                 alignment == Alignment.topRight ||
                         alignment == Alignment.bottomRight
@@ -371,10 +378,7 @@ class _MealScanScreenState extends State<MealScanScreen> {
               top: top,
               width: squareSize,
               height: squareSize,
-              child: Image.file(
-                _capturedImage!,
-                fit: BoxFit.cover,
-              ),
+              child: Image.file(_capturedImage!, fit: BoxFit.cover),
             ),
           ],
         );
