@@ -74,8 +74,6 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
                         _buildContentInput(),
                         const SizedBox(height: 16),
                         _buildAttachTypeSelector(),
-                        const SizedBox(height: 16),
-                        _buildImagePicker(),
                         const SizedBox(height: 24),
                         _buildPostButton(),
                       ],
@@ -231,40 +229,6 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
     );
   }
 
-  Widget _buildImagePicker() {
-    return GestureDetector(
-      onTap: _pickImage,
-      child: Container(
-        height: 200,
-        decoration: BoxDecoration(
-          color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Colors.grey.shade300,
-            style: BorderStyle.solid,
-          ),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.add_photo_alternate_outlined,
-                size: 48,
-                color: Colors.grey[400],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Add Photo (Optional)',
-                style: TextStyle(color: Colors.grey[600], fontSize: 14),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildPostButton() {
     return SizedBox(
       width: double.infinity,
@@ -298,10 +262,6 @@ class _CreatePostBottomSheetState extends State<CreatePostBottomSheet> {
                 ),
       ),
     );
-  }
-
-  void _pickImage() {
-    // TODO: Implement image picker
   }
 
   Future<void> _createPost() async {

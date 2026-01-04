@@ -1,3 +1,4 @@
+import 'package:da1/src/presentation/screens/profile/fitness_profile_screen.dart';
 import 'package:da1/src/presentation/widgets/profile/profile_item.dart';
 import 'package:da1/src/presentation/widgets/profile/profile_section.dart';
 import 'package:flutter/material.dart';
@@ -16,7 +17,12 @@ class HealthDataSection extends StatelessWidget {
           icon: LucideIcons.activity,
           text: "Fitness Profile",
           onTap: () {
-            // TODO: Navigate to fitness profile
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const FitnessProfileScreen(),
+              ),
+            );
           },
         ),
         ProfileItem(

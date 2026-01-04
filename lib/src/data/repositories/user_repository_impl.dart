@@ -41,4 +41,14 @@ class UserRepositoryImpl implements UserRepository {
       return Left(Exception(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> getUserProfile() async {
+    try {
+      final result = await remoteDataSource.getUserProfile();
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

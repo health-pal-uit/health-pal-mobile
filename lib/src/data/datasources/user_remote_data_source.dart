@@ -10,6 +10,7 @@ abstract class UserRemoteDataSource {
     int page = 1,
     int limit = 20,
   });
+  Future<Map<String, dynamic>> getUserProfile();
 }
 
 class UserRemoteDataSourceImpl implements UserRemoteDataSource {
@@ -110,6 +111,23 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
       throw Exception('Failed to search users');
     } on DioException catch (e) {
       throw Exception(e.response?.data['message'] ?? 'Failed to search users');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> getUserProfile() async {
+    try {
+      final response = await dio.get(ApiConfig.getProfile);
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      }
+
+      throw Exception('Failed to get user profile');
+    } on DioException catch (e) {
+      throw Exception(
+        e.response?.data['message'] ?? 'Failed to get user profile',
+      );
     }
   }
 }

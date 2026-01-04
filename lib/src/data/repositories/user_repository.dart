@@ -9,4 +9,5 @@ abstract class UserRepository {
     int page = 1,
     int limit = 20,
   });
+  Future<Either<Failure, Map<String, dynamic>>> getUserProfile();
 }
