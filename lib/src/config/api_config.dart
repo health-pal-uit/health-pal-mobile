@@ -1,8 +1,8 @@
+import 'package:da1/src/config/env.dart';
+
 class ApiConfig {
-  // emulator debug
-  // static const String baseUrl = "http://10.0.2.2:3001/";
-  // wireless mobile debug
-  static const String baseUrl = "http://192.168.11.15:3001/";
+  // Base URL
+  static final String baseUrl = Env.backendApiUrl;
 
   // Auth endpoints
   static const String login = "/auth/login";

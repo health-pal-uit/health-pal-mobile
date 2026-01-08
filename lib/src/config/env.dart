@@ -8,4 +8,8 @@ class Env {
   static String get supabaseAnonKey {
     return dotenv.get('SUPABASE_ANON_KEY', fallback: "");
   }
+
+  static String get backendApiUrl {
+    return dotenv.get('BACKEND_API_URL', fallback: "");
+  }
 }
