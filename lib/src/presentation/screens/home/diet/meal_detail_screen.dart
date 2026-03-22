@@ -1,8 +1,8 @@
 import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
-import 'package:da1/src/presentation/bloc/auth/auth_bloc.dart';
-import 'package:da1/src/presentation/bloc/auth/auth_state.dart';
+import 'package:da1/src/features/shared/auth/representation/auth_bloc/auth_bloc.dart';
+import 'package:da1/src/features/shared/auth/representation/auth_bloc/auth_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';

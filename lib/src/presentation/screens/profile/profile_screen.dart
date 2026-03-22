@@ -1,7 +1,7 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
 import 'package:da1/src/domain/entities/user.dart';
-import 'package:da1/src/presentation/bloc/auth/auth.dart';
+import 'package:da1/src/features/shared/auth/representation/auth_bloc/auth.dart';
 import 'package:da1/src/presentation/bloc/user/user.dart';
 import 'package:da1/src/presentation/widgets/profile/profile_header.dart';
 import 'package:da1/src/presentation/widgets/profile/profile_item.dart';
