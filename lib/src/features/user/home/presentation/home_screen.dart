@@ -12,7 +12,7 @@ import 'package:da1/src/features/user/home/presentation/fitness_recommendations_
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:da1/src/features/shared/auth/presentation/auth_bloc/auth.dart';
+import 'package:da1/src/core/bloc/auth/auth.dart';
 import 'package:da1/src/core/models/user.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';

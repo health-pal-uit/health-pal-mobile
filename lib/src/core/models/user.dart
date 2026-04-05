@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+enum UserRole { user, expert, pendingExpert }
+
 class User extends Equatable {
   final String id;
   final String? username;
@@ -10,7 +12,7 @@ class User extends Equatable {
   final DateTime? birthDate;
   final String? avatarUrl;
   final bool? isVerified;
-  final String? role;
+  final UserRole? role;
 
   const User({
     required this.id,
@@ -39,7 +41,13 @@ class User extends Equatable {
               : null,
       avatarUrl: json['avatar_url'] as String?,
       isVerified: json['is_verified'] as bool?,
-      role: json['role'] as String?,
+      role:
+          json['role'] != null
+              ? UserRole.values.firstWhere(
+                (e) => e.name == json['role'],
+                orElse: () => UserRole.user,
+              )
+              : null,
     );
   }
 

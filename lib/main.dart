@@ -44,7 +44,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:da1/src/features/shared/auth/presentation/auth_bloc/auth.dart';
+import 'package:da1/src/core/bloc/auth/auth.dart';
 import 'package:da1/src/core/bloc/user/user.dart';
 import 'package:da1/src/features/shared/auth/data/auth_repository_impl.dart';
 import 'package:da1/src/features/shared/auth/data/datasources/auth_local_data_source.dart';

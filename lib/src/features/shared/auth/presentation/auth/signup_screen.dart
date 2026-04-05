@@ -1,6 +1,6 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
-import 'package:da1/src/features/shared/auth/presentation/auth_bloc/auth.dart';
+import 'package:da1/src/core/bloc/auth/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_signin_button/button_list.dart';

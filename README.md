@@ -405,211 +405,213 @@ da1
 │     │     ├─ date_time_helper.dart
 │     │     └─ hashtag_helper.dart
 │     ├─ core
+│     │  ├─ bloc
+│     │  │  └─ user
+│     │  │     ├─ user.dart
+│     │  │     ├─ user_bloc.dart
+│     │  │     ├─ user_event.dart
+│     │  │     └─ user_state.dart
 │     │  ├─ errors
 │     │  │  ├─ exceptions.dart
 │     │  │  └─ failure.dart
+│     │  ├─ models
+│     │  │  ├─ user.dart
+│     │  │  └─ user_model.dart
+│     │  ├─ network
+│     │  │  └─ auth_interceptor.dart
+│     │  ├─ repositories
+│     │  │  └─ user_repository_impl.dart
 │     │  └─ services
 │     │     ├─ auth_service.dart
 │     │     ├─ chat_service.dart
 │     │     ├─ deep_link_service.dart
 │     │     ├─ device_registration_service.dart
 │     │     └─ local_notification_service.dart
-│     ├─ data
-│     │  ├─ datasources
-│     │  │  └─ device_remote_data_source.dart
-│     │  ├─ models
-│     │  │  ├─ chat_model.dart
-│     │  │  ├─ comment_model.dart
-│     │  │  ├─ post_model.dart
-│     │  │  └─ user_model.dart
-│     │  ├─ network
-│     │  │  └─ auth_interceptor.dart
-│     │  └─ repositories
-│     │     ├─ device_repository.dart
-│     │     └─ user_repository_impl.dart
-│     ├─ domain
-│     │  └─ entities
-│     │     ├─ activity.dart
-│     │     ├─ challenge.dart
-│     │     ├─ chat_message.dart
-│     │     ├─ chat_participant.dart
-│     │     ├─ chat_session.dart
-│     │     ├─ diet_type.dart
-│     │     ├─ fitness_goal.dart
-│     │     ├─ medal.dart
-│     │     ├─ user.dart
-│     │     └─ user_chat_message.dart
-│     ├─ features
-│     │  ├─ expert
-│     │  ├─ shared
-│     │  │  └─ auth
-│     │  │     ├─ data
-│     │  │     │  ├─ auth_repository.dart
-│     │  │     │  ├─ auth_repository_impl.dart
-│     │  │     │  ├─ datasources
-│     │  │     │  │  ├─ auth_local_data_source.dart
-│     │  │     │  │  ├─ auth_remote_data_source.dart
-│     │  │     │  │  └─ fitness_goal_remote_data_source.dart
-│     │  │     │  └─ fitness_goal_repository.dart
-│     │  │     └─ representation
-│     │  │        ├─ auth
-│     │  │        │  ├─ email_verification_screen.dart
-│     │  │        │  ├─ forgot_password_screen.dart
-│     │  │        │  ├─ login_screen.dart
-│     │  │        │  ├─ onboarding
-│     │  │        │  │  ├─ onboarding_activity_level_screen.dart
-│     │  │        │  │  ├─ onboarding_body_measurements_screen.dart
-│     │  │        │  │  ├─ onboarding_complete_screen.dart
-│     │  │        │  │  ├─ onboarding_goal_type_screen.dart
-│     │  │        │  │  ├─ onboarding_height_screen.dart
-│     │  │        │  │  └─ onboarding_weight_screen.dart
-│     │  │        │  ├─ password_reset_waiting_screen.dart
-│     │  │        │  ├─ reset_password_screen.dart
-│     │  │        │  ├─ signup_screen.dart
-│     │  │        │  └─ welcome
-│     │  │        │     └─ welcome_scroll_screen.dart
-│     │  │        └─ auth_bloc
-│     │  │           ├─ auth.dart
-│     │  │           ├─ auth_bloc.dart
-│     │  │           ├─ auth_event.dart
-│     │  │           └─ auth_state.dart
-│     │  └─ user
-│     │     ├─ advisor
-│     │     │  └─ presentation
-│     │     │     ├─ advisor_screen.dart
-│     │     │     └─ widgets
-│     │     │        ├─ chat_message_widget.dart
-│     │     │        ├─ clear_chat_dialog.dart
-│     │     │        ├─ empty_state_widget.dart
-│     │     │        └─ typing_indicator.dart
-│     │     ├─ chat
-│     │     │  ├─ data
-│     │     │  │  ├─ chat_message_repository.dart
-│     │     │  │  ├─ chat_session_repository.dart
-│     │     │  │  └─ datasources
-│     │     │  │     ├─ chat_message_remote_data_source.dart
-│     │     │  │     ├─ chat_remote_data_source.dart
-│     │     │  │     └─ chat_session_remote_data_source.dart
-│     │     │  └─ presentation
-│     │     │     ├─ add_group_participant_screen.dart
-│     │     │     ├─ chat_list_screen.dart
-│     │     │     ├─ chat_thread_screen.dart
-│     │     │     ├─ group_participants_screen.dart
-│     │     │     ├─ new_chat_screen.dart
-│     │     │     ├─ new_group_chat_screen.dart
-│     │     │     └─ widgets
-│     │     │        ├─ delete_chat_dialog.dart
-│     │     │        ├─ message_bubble.dart
-│     │     │        └─ message_input.dart
-│     │     ├─ community
-│     │     │  ├─ data
-│     │     │  │  └─ datasources
-│     │     │  │     └─ post_remote_data_source.dart
-│     │     │  └─ presentation
-│     │     │     ├─ community_screen.dart
-│     │     │     └─ personal_profile_screen.dart
-│     │     ├─ home
-│     │     │  ├─ data
-│     │     │  │  ├─ activity_record_repository.dart
-│     │     │  │  ├─ activity_repository.dart
-│     │     │  │  ├─ challenge_repository.dart
-│     │     │  │  ├─ daily_log_repository.dart
-│     │     │  │  ├─ daily_meal_repository.dart
-│     │     │  │  ├─ datasources
-│     │     │  │  │  ├─ activity_record_remote_data_source.dart
-│     │     │  │  │  ├─ activity_remote_data_source.dart
-│     │     │  │  │  ├─ challenge_remote_data_source.dart
-│     │     │  │  │  ├─ daily_log_remote_data_source.dart
-│     │     │  │  │  ├─ daily_meal_remote_data_source.dart
-│     │     │  │  │  ├─ diet_type_remote_data_source.dart
-│     │     │  │  │  ├─ meal_remote_data_source.dart
-│     │     │  │  │  ├─ medal_remote_data_source.dart
-│     │     │  │  │  ├─ user_remote_data_source.dart
-│     │     │  │  │  └─ user_repository_impl.dart
-│     │     │  │  ├─ diet_type_repository.dart
-│     │     │  │  ├─ meal_repository.dart
-│     │     │  │  ├─ medal_repository.dart
-│     │     │  │  └─ user_repository.dart
-│     │     │  └─ presentation
-│     │     │     ├─ diet
-│     │     │     │  ├─ create_recipe_screen.dart
-│     │     │     │  ├─ food_search_screen.dart
-│     │     │     │  ├─ meal_analysis_results_screen.dart
-│     │     │     │  ├─ meal_detail_screen.dart
-│     │     │     │  ├─ meal_diary_detail_screen.dart
-│     │     │     │  └─ meal_scan_screen.dart
-│     │     │     ├─ exercise
-│     │     │     │  ├─ activity_analytics_screen.dart
-│     │     │     │  ├─ add_activity_screen.dart
-│     │     │     │  ├─ challenges_screen.dart
-│     │     │     │  ├─ challenge_detail_screen.dart
-│     │     │     │  ├─ log_activity_screen.dart
-│     │     │     │  └─ medals_screen.dart
-│     │     │     ├─ fitness_recommendations_screen.dart
-│     │     │     ├─ home_screen.dart
-│     │     │     ├─ meal_recommendations_input_screen.dart
-│     │     │     ├─ meal_recommendations_results_screen.dart
-│     │     │     └─ step
-│     │     │        └─ steps_screen.dart
-│     │     ├─ notifications
-│     │     │  ├─ data
-│     │     │  │  ├─ datasources
-│     │     │  │  │  └─ notification_remote_data_source.dart
-│     │     │  │  └─ notification_repository.dart
-│     │     │  └─ presentation
-│     │     │     └─ notifications_screen.dart
-│     │     └─ profile
-│     │        ├─ data
-│     │        │  ├─ datasources
-│     │        │  │  ├─ fitness_profile_remote_data_source.dart
-│     │        │  │  └─ google_fit_remote_data_source.dart
-│     │        │  ├─ fitness_profile_repository.dart
-│     │        │  └─ google_fit_repository.dart
-│     │        └─ presentation
-│     │           ├─ body_fat_calculator_results_screen.dart
-│     │           ├─ body_fat_calculator_screen.dart
-│     │           ├─ fitness_profile_screen.dart
-│     │           ├─ integrations
-│     │           │  └─ google_fit_sync_screen.dart
-│     │           └─ profile_screen.dart
-│     └─ presentation
-│        ├─ bloc
-│        │  └─ user
-│        │     ├─ user.dart
-│        │     ├─ user_bloc.dart
-│        │     ├─ user_event.dart
-│        │     └─ user_state.dart
-│        ├─ screens
-│        └─ widgets
-│           ├─ add_action_bottom_list.dart
-│           ├─ charts
-│           │  ├─ kcal_circular_progress.dart
-│           │  ├─ steps_progress.dart
-│           │  └─ water_intake.dart
+│     └─ features
+│        ├─ expert
+│        ├─ shared
+│        │  ├─ auth
+│        │  │  ├─ data
+│        │  │  │  ├─ auth_repository.dart
+│        │  │  │  ├─ auth_repository_impl.dart
+│        │  │  │  ├─ datasources
+│        │  │  │  │  ├─ auth_local_data_source.dart
+│        │  │  │  │  ├─ auth_remote_data_source.dart
+│        │  │  │  │  └─ fitness_goal_remote_data_source.dart
+│        │  │  │  └─ fitness_goal_repository.dart
+│        │  │  └─ presentation
+│        │  │     ├─ auth
+│        │  │     │  ├─ email_verification_screen.dart
+│        │  │     │  ├─ forgot_password_screen.dart
+│        │  │     │  ├─ login_screen.dart
+│        │  │     │  ├─ onboarding
+│        │  │     │  │  ├─ onboarding_activity_level_screen.dart
+│        │  │     │  │  ├─ onboarding_body_measurements_screen.dart
+│        │  │     │  │  ├─ onboarding_complete_screen.dart
+│        │  │     │  │  ├─ onboarding_goal_type_screen.dart
+│        │  │     │  │  ├─ onboarding_height_screen.dart
+│        │  │     │  │  └─ onboarding_weight_screen.dart
+│        │  │     │  ├─ password_reset_waiting_screen.dart
+│        │  │     │  ├─ reset_password_screen.dart
+│        │  │     │  ├─ signup_screen.dart
+│        │  │     │  └─ welcome
+│        │  │     │     └─ welcome_scroll_screen.dart
+│        │  │     └─ auth_bloc
+│        │  │        ├─ auth.dart
+│        │  │        ├─ auth_bloc.dart
+│        │  │        ├─ auth_event.dart
+│        │  │        └─ auth_state.dart
+│        │  └─ notifications
+│        │     └─ data
+│        │        ├─ datasources
+│        │        │  └─ device_remote_data_source.dart
+│        │        └─ device_repository.dart
+│        └─ user
+│           ├─ advisor
+│           │  └─ presentation
+│           │     ├─ advisor_screen.dart
+│           │     └─ widgets
+│           │        ├─ chat_message_widget.dart
+│           │        ├─ clear_chat_dialog.dart
+│           │        ├─ empty_state_widget.dart
+│           │        └─ typing_indicator.dart
+│           ├─ chat
+│           │  ├─ data
+│           │  │  ├─ chat_message_repository.dart
+│           │  │  ├─ chat_model.dart
+│           │  │  ├─ chat_session_repository.dart
+│           │  │  └─ datasources
+│           │  │     ├─ chat_message_remote_data_source.dart
+│           │  │     ├─ chat_remote_data_source.dart
+│           │  │     └─ chat_session_remote_data_source.dart
+│           │  ├─ domain
+│           │  │  ├─ chat_message.dart
+│           │  │  ├─ chat_participant.dart
+│           │  │  ├─ chat_session.dart
+│           │  │  └─ user_chat_message.dart
+│           │  └─ presentation
+│           │     ├─ add_group_participant_screen.dart
+│           │     ├─ chat_list_screen.dart
+│           │     ├─ chat_thread_screen.dart
+│           │     ├─ group_participants_screen.dart
+│           │     ├─ new_chat_screen.dart
+│           │     ├─ new_group_chat_screen.dart
+│           │     └─ widgets
+│           │        ├─ delete_chat_dialog.dart
+│           │        ├─ message_bubble.dart
+│           │        └─ message_input.dart
 │           ├─ community
-│           │  ├─ attachment_selection_screen.dart
-│           │  ├─ comments_bottom_sheet.dart
-│           │  ├─ create_post_bottom_sheet.dart
-│           │  ├─ post_card.dart
-│           │  └─ stat_card.dart
-│           ├─ custom_bottom_nav.dart
-│           ├─ diet_type_bottom_sheet.dart
-│           ├─ home_items
-│           │  ├─ meal_diary_card.dart
-│           │  └─ workout_card.dart
+│           │  ├─ data
+│           │  │  ├─ comment_model.dart
+│           │  │  ├─ datasources
+│           │  │  │  └─ post_remote_data_source.dart
+│           │  │  └─ post_model.dart
+│           │  └─ presentation
+│           │     ├─ community_screen.dart
+│           │     ├─ personal_profile_screen.dart
+│           │     └─ widgets
+│           │        ├─ attachment_selection_screen.dart
+│           │        ├─ comments_bottom_sheet.dart
+│           │        ├─ create_post_bottom_sheet.dart
+│           │        ├─ post_card.dart
+│           │        └─ stat_card.dart
+│           ├─ home
+│           │  ├─ data
+│           │  │  ├─ activity_record_repository.dart
+│           │  │  ├─ activity_repository.dart
+│           │  │  ├─ challenge_repository.dart
+│           │  │  ├─ daily_log_repository.dart
+│           │  │  ├─ daily_meal_repository.dart
+│           │  │  ├─ datasources
+│           │  │  │  ├─ activity_record_remote_data_source.dart
+│           │  │  │  ├─ activity_remote_data_source.dart
+│           │  │  │  ├─ challenge_remote_data_source.dart
+│           │  │  │  ├─ daily_log_remote_data_source.dart
+│           │  │  │  ├─ daily_meal_remote_data_source.dart
+│           │  │  │  ├─ diet_type_remote_data_source.dart
+│           │  │  │  ├─ meal_remote_data_source.dart
+│           │  │  │  ├─ medal_remote_data_source.dart
+│           │  │  │  ├─ user_remote_data_source.dart
+│           │  │  │  └─ user_repository_impl.dart
+│           │  │  ├─ diet_type_repository.dart
+│           │  │  ├─ meal_repository.dart
+│           │  │  ├─ medal_repository.dart
+│           │  │  └─ user_repository.dart
+│           │  ├─ domain
+│           │  │  ├─ activity.dart
+│           │  │  ├─ challenge.dart
+│           │  │  ├─ diet_type.dart
+│           │  │  └─ medal.dart
+│           │  └─ presentation
+│           │     ├─ diet
+│           │     │  ├─ create_recipe_screen.dart
+│           │     │  ├─ food_search_screen.dart
+│           │     │  ├─ meal_analysis_results_screen.dart
+│           │     │  ├─ meal_detail_screen.dart
+│           │     │  ├─ meal_diary_detail_screen.dart
+│           │     │  └─ meal_scan_screen.dart
+│           │     ├─ exercise
+│           │     │  ├─ activity_analytics_screen.dart
+│           │     │  ├─ add_activity_screen.dart
+│           │     │  ├─ challenges_screen.dart
+│           │     │  ├─ challenge_detail_screen.dart
+│           │     │  ├─ log_activity_screen.dart
+│           │     │  └─ medals_screen.dart
+│           │     ├─ fitness_recommendations_screen.dart
+│           │     ├─ home_screen.dart
+│           │     ├─ meal_recommendations_input_screen.dart
+│           │     ├─ meal_recommendations_results_screen.dart
+│           │     ├─ step
+│           │     │  └─ steps_screen.dart
+│           │     └─ widgets
+│           │        ├─ add_action_bottom_list.dart
+│           │        ├─ charts
+│           │        │  ├─ kcal_circular_progress.dart
+│           │        │  ├─ steps_progress.dart
+│           │        │  └─ water_intake.dart
+│           │        ├─ custom_bottom_nav.dart
+│           │        ├─ diet_type_bottom_sheet.dart
+│           │        ├─ meal_diary_card.dart
+│           │        └─ workout_card.dart
+│           ├─ notifications
+│           │  ├─ data
+│           │  │  ├─ datasources
+│           │  │  │  └─ notification_remote_data_source.dart
+│           │  │  └─ notification_repository.dart
+│           │  └─ presentation
+│           │     └─ notifications_screen.dart
 │           └─ profile
-│              ├─ profile_header.dart
-│              ├─ profile_item.dart
-│              ├─ profile_section.dart
-│              └─ sections
-│                 ├─ account_section.dart
-│                 ├─ health_data_section.dart
-│                 ├─ preferences_section.dart
-│                 └─ support_section.dart
+│              ├─ data
+│              │  ├─ datasources
+│              │  │  ├─ fitness_profile_remote_data_source.dart
+│              │  │  └─ google_fit_remote_data_source.dart
+│              │  ├─ fitness_profile_repository.dart
+│              │  └─ google_fit_repository.dart
+│              ├─ domain
+│              │  └─ fitness_goal.dart
+│              └─ presentation
+│                 ├─ body_fat_calculator_results_screen.dart
+│                 ├─ body_fat_calculator_screen.dart
+│                 ├─ fitness_profile_screen.dart
+│                 ├─ integrations
+│                 │  └─ google_fit_sync_screen.dart
+│                 ├─ profile_screen.dart
+│                 └─ widgets
+│                    ├─ profile_header.dart
+│                    ├─ profile_item.dart
+│                    ├─ profile_section.dart
+│                    └─ sections
+│                       ├─ account_section.dart
+│                       ├─ health_data_section.dart
+│                       ├─ preferences_section.dart
+│                       └─ support_section.dart
 ├─ package-lock.json
 ├─ package.json
 ├─ pubspec.lock
 ├─ pubspec.yaml
 ├─ README.md
+├─ test
+│  └─ widget_test.dart
 └─ web
+
 ```

@@ -3,6 +3,14 @@ import 'package:equatable/equatable.dart';
 
 abstract class AuthState extends Equatable {
   const AuthState();
+
+  UserRole? get role {
+    if (this is Authenticated) {
+      return (this as Authenticated).user.role;
+    }
+    return null;
+  }
+
   @override
   List<Object> get props => [];
 }
