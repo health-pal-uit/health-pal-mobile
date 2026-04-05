@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:da1/src/data/repositories/device_repository.dart';
+import 'package:da1/src/features/shared/notifications/data/device_repository.dart';
 import 'package:da1/src/core/services/local_notification_service.dart';
 
 class DeviceRegistrationService {

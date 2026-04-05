@@ -12,62 +12,62 @@ Health Pal is a mobile health companion that empowers users to take control of t
 
 ### Key Features
 
--   🔐 **Authentication**: Secure login with email/password and Google OAuth integration
--   📊 **Health Tracking**: Monitor steps, calories, exercise activities, and nutrition
--   🍎 **Diet Management**: Search and track food intake with detailed nutritional information
--   💪 **Exercise Analytics**: Log workouts and view detailed activity analytics
--   👥 **Community**: Connect with other users, share progress, and build a supportive network
--   🎯 **Personalized Onboarding**: Customized setup flow to capture user health metrics
--   🔔 **Password Recovery**: Secure password reset flow powered by Supabase
+- 🔐 **Authentication**: Secure login with email/password and Google OAuth integration
+- 📊 **Health Tracking**: Monitor steps, calories, exercise activities, and nutrition
+- 🍎 **Diet Management**: Search and track food intake with detailed nutritional information
+- 💪 **Exercise Analytics**: Log workouts and view detailed activity analytics
+- 👥 **Community**: Connect with other users, share progress, and build a supportive network
+- 🎯 **Personalized Onboarding**: Customized setup flow to capture user health metrics
+- 🔔 **Password Recovery**: Secure password reset flow powered by Supabase
 
 ## 🛠️ Built With
 
 ### Core Technologies
 
--   **Flutter** (^3.7.0) - Cross-platform mobile framework
--   **Dart** (^3.7.0) - Programming language
+- **Flutter** (^3.7.0) - Cross-platform mobile framework
+- **Dart** (^3.7.0) - Programming language
 
 ### State Management & Architecture
 
--   **flutter_bloc** (^8.1.2) - BLoC pattern for state management
--   **go_router** (^16.2.1) - Declarative routing
--   **equatable** (^2.0.5) - Value equality comparisons
--   **dartz** (^0.10.1) - Functional programming utilities
+- **flutter_bloc** (^8.1.2) - BLoC pattern for state management
+- **go_router** (^16.2.1) - Declarative routing
+- **equatable** (^2.0.5) - Value equality comparisons
+- **dartz** (^0.10.1) - Functional programming utilities
 
 ### Backend & Authentication
 
--   **Supabase Flutter** (^2.9.4) - Backend-as-a-Service and authentication
--   **Dio** (^5.3.3) - HTTP client for REST API communication
--   **JWT Decoder** (^2.0.1) - JSON Web Token decoding
+- **Supabase Flutter** (^2.9.4) - Backend-as-a-Service and authentication
+- **Dio** (^5.3.3) - HTTP client for REST API communication
+- **JWT Decoder** (^2.0.1) - JSON Web Token decoding
 
 ### UI Components & Design
 
--   **flutter_screenutil** (^5.9.3) - Responsive UI design
--   **lucide_icons_flutter** (^3.1.4) - Modern icon pack
--   **font_awesome_flutter** (^10.9.1) - Font Awesome icons
--   **flutter_signin_button** (^2.1.1) - Pre-built OAuth sign-in buttons
--   **fl_chart** (^1.1.1) - Beautiful data visualization charts
--   **syncfusion_flutter_gauges** (^31.1.19) - Circular progress indicators
+- **flutter_screenutil** (^5.9.3) - Responsive UI design
+- **lucide_icons_flutter** (^3.1.4) - Modern icon pack
+- **font_awesome_flutter** (^10.9.1) - Font Awesome icons
+- **flutter_signin_button** (^2.1.1) - Pre-built OAuth sign-in buttons
+- **fl_chart** (^1.1.1) - Beautiful data visualization charts
+- **syncfusion_flutter_gauges** (^31.1.19) - Circular progress indicators
 
 ### Local Storage & Security
 
--   **flutter_secure_storage** (^9.2.4) - Encrypted local data storage
--   **flutter_dotenv** (^6.0.0) - Environment variable management
+- **flutter_secure_storage** (^9.2.4) - Encrypted local data storage
+- **flutter_dotenv** (^6.0.0) - Environment variable management
 
 ### Additional Features
 
--   **url_launcher** (^6.3.1) - External URL handling for OAuth
--   **app_links** (^6.3.4) - Deep linking support
--   **intl** (^0.20.2) - Internationalization and date formatting
+- **url_launcher** (^6.3.1) - External URL handling for OAuth
+- **app_links** (^6.3.4) - Deep linking support
+- **intl** (^0.20.2) - Internationalization and date formatting
 
 ## 📋 Prerequisites
 
 Before you begin, ensure you have the following installed:
 
--   **Flutter SDK**: Version 3.7.0 or higher
--   **Dart SDK**: Version 3.0 or higher
--   **Android Studio** or **Xcode** (for mobile development)
--   **Git**: For version control
+- **Flutter SDK**: Version 3.7.0 or higher
+- **Dart SDK**: Version 3.0 or higher
+- **Android Studio** or **Xcode** (for mobile development)
+- **Git**: For version control
 
 To verify your Flutter installation:
 
@@ -176,9 +176,9 @@ flutter run -d <device_id>
 
 While the app is running, you can use hot reload for faster development:
 
--   Press `r` in the terminal for hot reload
--   Press `R` for hot restart
--   Press `q` to quit
+- Press `r` in the terminal for hot reload
+- Press `R` for hot restart
+- Press `q` to quit
 
 ## 🏗️ Build for Production
 
@@ -280,46 +280,46 @@ flutter test integration_test
 
 ### Authentication Flow
 
--   Welcome screens with onboarding
--   Email/password registration and login
--   Google OAuth integration
--   Password reset via email (Supabase)
--   Email verification
+- Welcome screens with onboarding
+- Email/password registration and login
+- Google OAuth integration
+- Password reset via email (Supabase)
+- Email verification
 
 ### Health Tracking
 
--   Step counter with daily goals
--   Calorie tracking and management
--   Water intake monitoring
--   Weight and height tracking
+- Step counter with daily goals
+- Calorie tracking and management
+- Water intake monitoring
+- Weight and height tracking
 
 ### Exercise & Activity
 
--   Activity logging and analytics
--   Exercise search and categorization
--   Workout statistics and charts
--   Weekly progress tracking
+- Activity logging and analytics
+- Exercise search and categorization
+- Workout statistics and charts
+- Weekly progress tracking
 
 ### Nutrition
 
--   Food search functionality
--   Meal logging (breakfast, lunch, dinner)
--   Calorie and nutritional information
--   Custom meals and recipes
+- Food search functionality
+- Meal logging (breakfast, lunch, dinner)
+- Calorie and nutritional information
+- Custom meals and recipes
 
 ### Community
 
--   User profiles
--   Social feed with posts
--   Health stats sharing
--   Community engagement
+- User profiles
+- Social feed with posts
+- Health stats sharing
+- Community engagement
 
 ### Profile Management
 
--   Personal health information
--   Account settings
--   Notification preferences
--   Theme customization
+- Personal health information
+- Account settings
+- Notification preferences
+- Theme customization
 
 ## 🤝 Contributing
 
@@ -339,35 +339,277 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Health Pal Team** - UIT (University of Information Technology)
 
--   Repository: [health-pal-uit/health-pal-mobile](https://github.com/health-pal-uit/health-pal-mobile)
+- Repository: [health-pal-uit/health-pal-mobile](https://github.com/health-pal-uit/health-pal-mobile)
 
 ## 📞 Support
 
 For support and questions:
 
--   Create an issue in the GitHub repository
--   Contact: duyhuu1109@gmail.com
+- Create an issue in the GitHub repository
+- Contact: duyhuu1109@gmail.com
 
 ## 🙏 Acknowledgments
 
--   [Flutter](https://flutter.dev/) - UI framework
--   [Supabase](https://supabase.com/) - Backend infrastructure
--   [BLoC Library](https://bloclibrary.dev/) - State management
--   All open-source contributors
+- [Flutter](https://flutter.dev/) - UI framework
+- [Supabase](https://supabase.com/) - Backend infrastructure
+- [BLoC Library](https://bloclibrary.dev/) - State management
+- All open-source contributors
 
 ---
 
 Made with ❤️ by the Health Pal Team
 
--   **app_links** (^6.3.4) - Deep linking support
--   **intl** (^0.19.0) - Internationalization and date formatting
--   **dartz** (^0.10.1) - Functional programming utilities
+- **app_links** (^6.3.4) - Deep linking support
+- **intl** (^0.19.0) - Internationalization and date formatting
+- **dartz** (^0.10.1) - Functional programming utilities
 
 ## 📋 Prerequisites
 
 Before you begin, ensure you have the following installed:
 
--   **Flutter SDK**: Version 3.7.0 or higher
+- **Flutter SDK**: Version 3.7.0 or higher
     ```bash
     flutter --version
     ```
+
+```
+da1
+├─ .metadata
+├─ analysis_options.yaml
+├─ assets
+│  ├─ icons
+│  │  ├─ google_fit.svg
+│  │  └─ health-pal-logo.png
+│  └─ images
+│     ├─ welcome1.jpeg
+│     ├─ welcome2.jpeg
+│     └─ welcome3.jpeg
+├─ commitlint.config.js
+├─ devtools_options.yaml
+├─ firebase.json
+├─ lib
+│  ├─ firebase_options.dart
+│  ├─ main.dart
+│  └─ src
+│     ├─ app.dart
+│     ├─ config
+│     │  ├─ api_config.dart
+│     │  ├─ constants.dart
+│     │  ├─ env.dart
+│     │  ├─ routes.dart
+│     │  ├─ theme
+│     │  │  ├─ app_colors.dart
+│     │  │  ├─ app_theme.dart
+│     │  │  └─ typography.dart
+│     │  └─ utils
+│     │     ├─ date_time_helper.dart
+│     │     └─ hashtag_helper.dart
+│     ├─ core
+│     │  ├─ errors
+│     │  │  ├─ exceptions.dart
+│     │  │  └─ failure.dart
+│     │  └─ services
+│     │     ├─ auth_service.dart
+│     │     ├─ chat_service.dart
+│     │     ├─ deep_link_service.dart
+│     │     ├─ device_registration_service.dart
+│     │     └─ local_notification_service.dart
+│     ├─ data
+│     │  ├─ datasources
+│     │  │  └─ device_remote_data_source.dart
+│     │  ├─ models
+│     │  │  ├─ chat_model.dart
+│     │  │  ├─ comment_model.dart
+│     │  │  ├─ post_model.dart
+│     │  │  └─ user_model.dart
+│     │  ├─ network
+│     │  │  └─ auth_interceptor.dart
+│     │  └─ repositories
+│     │     ├─ device_repository.dart
+│     │     └─ user_repository_impl.dart
+│     ├─ domain
+│     │  └─ entities
+│     │     ├─ activity.dart
+│     │     ├─ challenge.dart
+│     │     ├─ chat_message.dart
+│     │     ├─ chat_participant.dart
+│     │     ├─ chat_session.dart
+│     │     ├─ diet_type.dart
+│     │     ├─ fitness_goal.dart
+│     │     ├─ medal.dart
+│     │     ├─ user.dart
+│     │     └─ user_chat_message.dart
+│     ├─ features
+│     │  ├─ expert
+│     │  ├─ shared
+│     │  │  └─ auth
+│     │  │     ├─ data
+│     │  │     │  ├─ auth_repository.dart
+│     │  │     │  ├─ auth_repository_impl.dart
+│     │  │     │  ├─ datasources
+│     │  │     │  │  ├─ auth_local_data_source.dart
+│     │  │     │  │  ├─ auth_remote_data_source.dart
+│     │  │     │  │  └─ fitness_goal_remote_data_source.dart
+│     │  │     │  └─ fitness_goal_repository.dart
+│     │  │     └─ representation
+│     │  │        ├─ auth
+│     │  │        │  ├─ email_verification_screen.dart
+│     │  │        │  ├─ forgot_password_screen.dart
+│     │  │        │  ├─ login_screen.dart
+│     │  │        │  ├─ onboarding
+│     │  │        │  │  ├─ onboarding_activity_level_screen.dart
+│     │  │        │  │  ├─ onboarding_body_measurements_screen.dart
+│     │  │        │  │  ├─ onboarding_complete_screen.dart
+│     │  │        │  │  ├─ onboarding_goal_type_screen.dart
+│     │  │        │  │  ├─ onboarding_height_screen.dart
+│     │  │        │  │  └─ onboarding_weight_screen.dart
+│     │  │        │  ├─ password_reset_waiting_screen.dart
+│     │  │        │  ├─ reset_password_screen.dart
+│     │  │        │  ├─ signup_screen.dart
+│     │  │        │  └─ welcome
+│     │  │        │     └─ welcome_scroll_screen.dart
+│     │  │        └─ auth_bloc
+│     │  │           ├─ auth.dart
+│     │  │           ├─ auth_bloc.dart
+│     │  │           ├─ auth_event.dart
+│     │  │           └─ auth_state.dart
+│     │  └─ user
+│     │     ├─ advisor
+│     │     │  └─ presentation
+│     │     │     ├─ advisor_screen.dart
+│     │     │     └─ widgets
+│     │     │        ├─ chat_message_widget.dart
+│     │     │        ├─ clear_chat_dialog.dart
+│     │     │        ├─ empty_state_widget.dart
+│     │     │        └─ typing_indicator.dart
+│     │     ├─ chat
+│     │     │  ├─ data
+│     │     │  │  ├─ chat_message_repository.dart
+│     │     │  │  ├─ chat_session_repository.dart
+│     │     │  │  └─ datasources
+│     │     │  │     ├─ chat_message_remote_data_source.dart
+│     │     │  │     ├─ chat_remote_data_source.dart
+│     │     │  │     └─ chat_session_remote_data_source.dart
+│     │     │  └─ presentation
+│     │     │     ├─ add_group_participant_screen.dart
+│     │     │     ├─ chat_list_screen.dart
+│     │     │     ├─ chat_thread_screen.dart
+│     │     │     ├─ group_participants_screen.dart
+│     │     │     ├─ new_chat_screen.dart
+│     │     │     ├─ new_group_chat_screen.dart
+│     │     │     └─ widgets
+│     │     │        ├─ delete_chat_dialog.dart
+│     │     │        ├─ message_bubble.dart
+│     │     │        └─ message_input.dart
+│     │     ├─ community
+│     │     │  ├─ data
+│     │     │  │  └─ datasources
+│     │     │  │     └─ post_remote_data_source.dart
+│     │     │  └─ presentation
+│     │     │     ├─ community_screen.dart
+│     │     │     └─ personal_profile_screen.dart
+│     │     ├─ home
+│     │     │  ├─ data
+│     │     │  │  ├─ activity_record_repository.dart
+│     │     │  │  ├─ activity_repository.dart
+│     │     │  │  ├─ challenge_repository.dart
+│     │     │  │  ├─ daily_log_repository.dart
+│     │     │  │  ├─ daily_meal_repository.dart
+│     │     │  │  ├─ datasources
+│     │     │  │  │  ├─ activity_record_remote_data_source.dart
+│     │     │  │  │  ├─ activity_remote_data_source.dart
+│     │     │  │  │  ├─ challenge_remote_data_source.dart
+│     │     │  │  │  ├─ daily_log_remote_data_source.dart
+│     │     │  │  │  ├─ daily_meal_remote_data_source.dart
+│     │     │  │  │  ├─ diet_type_remote_data_source.dart
+│     │     │  │  │  ├─ meal_remote_data_source.dart
+│     │     │  │  │  ├─ medal_remote_data_source.dart
+│     │     │  │  │  ├─ user_remote_data_source.dart
+│     │     │  │  │  └─ user_repository_impl.dart
+│     │     │  │  ├─ diet_type_repository.dart
+│     │     │  │  ├─ meal_repository.dart
+│     │     │  │  ├─ medal_repository.dart
+│     │     │  │  └─ user_repository.dart
+│     │     │  └─ presentation
+│     │     │     ├─ diet
+│     │     │     │  ├─ create_recipe_screen.dart
+│     │     │     │  ├─ food_search_screen.dart
+│     │     │     │  ├─ meal_analysis_results_screen.dart
+│     │     │     │  ├─ meal_detail_screen.dart
+│     │     │     │  ├─ meal_diary_detail_screen.dart
+│     │     │     │  └─ meal_scan_screen.dart
+│     │     │     ├─ exercise
+│     │     │     │  ├─ activity_analytics_screen.dart
+│     │     │     │  ├─ add_activity_screen.dart
+│     │     │     │  ├─ challenges_screen.dart
+│     │     │     │  ├─ challenge_detail_screen.dart
+│     │     │     │  ├─ log_activity_screen.dart
+│     │     │     │  └─ medals_screen.dart
+│     │     │     ├─ fitness_recommendations_screen.dart
+│     │     │     ├─ home_screen.dart
+│     │     │     ├─ meal_recommendations_input_screen.dart
+│     │     │     ├─ meal_recommendations_results_screen.dart
+│     │     │     └─ step
+│     │     │        └─ steps_screen.dart
+│     │     ├─ notifications
+│     │     │  ├─ data
+│     │     │  │  ├─ datasources
+│     │     │  │  │  └─ notification_remote_data_source.dart
+│     │     │  │  └─ notification_repository.dart
+│     │     │  └─ presentation
+│     │     │     └─ notifications_screen.dart
+│     │     └─ profile
+│     │        ├─ data
+│     │        │  ├─ datasources
+│     │        │  │  ├─ fitness_profile_remote_data_source.dart
+│     │        │  │  └─ google_fit_remote_data_source.dart
+│     │        │  ├─ fitness_profile_repository.dart
+│     │        │  └─ google_fit_repository.dart
+│     │        └─ presentation
+│     │           ├─ body_fat_calculator_results_screen.dart
+│     │           ├─ body_fat_calculator_screen.dart
+│     │           ├─ fitness_profile_screen.dart
+│     │           ├─ integrations
+│     │           │  └─ google_fit_sync_screen.dart
+│     │           └─ profile_screen.dart
+│     └─ presentation
+│        ├─ bloc
+│        │  └─ user
+│        │     ├─ user.dart
+│        │     ├─ user_bloc.dart
+│        │     ├─ user_event.dart
+│        │     └─ user_state.dart
+│        ├─ screens
+│        └─ widgets
+│           ├─ add_action_bottom_list.dart
+│           ├─ charts
+│           │  ├─ kcal_circular_progress.dart
+│           │  ├─ steps_progress.dart
+│           │  └─ water_intake.dart
+│           ├─ community
+│           │  ├─ attachment_selection_screen.dart
+│           │  ├─ comments_bottom_sheet.dart
+│           │  ├─ create_post_bottom_sheet.dart
+│           │  ├─ post_card.dart
+│           │  └─ stat_card.dart
+│           ├─ custom_bottom_nav.dart
+│           ├─ diet_type_bottom_sheet.dart
+│           ├─ home_items
+│           │  ├─ meal_diary_card.dart
+│           │  └─ workout_card.dart
+│           └─ profile
+│              ├─ profile_header.dart
+│              ├─ profile_item.dart
+│              ├─ profile_section.dart
+│              └─ sections
+│                 ├─ account_section.dart
+│                 ├─ health_data_section.dart
+│                 ├─ preferences_section.dart
+│                 └─ support_section.dart
+├─ package-lock.json
+├─ package.json
+├─ pubspec.lock
+├─ pubspec.yaml
+├─ README.md
+└─ web
+```

@@ -1,8 +1,8 @@
 import 'package:da1/src/core/errors/failure.dart';
-import 'package:da1/src/data/datasources/auth_local_data_source.dart';
-import 'package:da1/src/data/datasources/auth_remote_data_source.dart';
+import 'package:da1/src/features/shared/auth/data/datasources/auth_local_data_source.dart';
+import 'package:da1/src/features/shared/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:da1/src/features/shared/auth/data/auth_repository.dart';
-import 'package:da1/src/domain/entities/user.dart';
+import 'package:da1/src/core/models/user.dart';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
