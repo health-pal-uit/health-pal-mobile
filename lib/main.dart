@@ -325,7 +325,7 @@ void main() async {
         BlocProvider<AuthBloc>(create: (context) => authBloc),
         BlocProvider<UserBloc>(create: (context) => userBloc),
       ],
-      child: const App(),
+      child: App(appRouter: appRouter),
     ),
   );
 }
