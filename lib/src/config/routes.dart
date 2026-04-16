@@ -43,6 +43,10 @@ import 'package:da1/src/features/user/notifications/data/notification_repository
 import 'package:da1/src/features/user/profile/data/google_fit_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:async';
+import 'package:da1/src/core/bloc/auth/auth_bloc.dart';
+import 'package:da1/src/core/bloc/auth/auth_state.dart';
+import 'package:da1/src/core/models/user.dart';
 
 class AppRoutes {
   static FitnessProfileRepository? _fitnessProfileRepository;
@@ -190,285 +194,323 @@ class AppRoutes {
     return _googleFitRepository;
   }
 
-  static final GoRouter router = GoRouter(
-    initialLocation: '/',
-    redirect: (context, state) async {
-      // Check if user has a valid token
-      final hasToken = await _authRepository?.hasValidToken() ?? false;
+  static GoRouter createRouter(AuthBloc authBloc) {
+    return GoRouter(
+      initialLocation: '/',
+      refreshListenable: GoRouterRefreshStream(authBloc.stream),
 
-      final isOnWelcomePage = state.matchedLocation == '/welcome';
-      final isOnLoginPage = state.matchedLocation == '/login';
-      final isOnSignupPage = state.matchedLocation == '/signup';
-      final isOnAuthPages =
-          isOnWelcomePage ||
-          isOnLoginPage ||
-          isOnSignupPage ||
-          state.matchedLocation.startsWith('/email-verification') ||
-          state.matchedLocation.startsWith('/forgot-password') ||
-          state.matchedLocation.startsWith('/password-reset') ||
-          state.matchedLocation.startsWith('/reset-password');
+      redirect: (context, state) async {
+        // Lấy state trực tiếp từ Bloc thay vì dùng authRepository thủ công
+        final authState = authBloc.state;
+        final bool isAuthenticated = authState is Authenticated;
+        final UserRole? role =
+            authState.role; // Cần đảm bảo AuthState đã có getter role
 
-      // If not authenticated and trying to access protected route, go to welcome
-      if (!hasToken && !isOnAuthPages) {
-        return '/welcome';
-      }
+        final isOnWelcomePage = state.matchedLocation == '/welcome';
+        final isOnLoginPage = state.matchedLocation == '/login';
+        final isOnSignupPage = state.matchedLocation == '/signup';
+        final isOnAuthPages =
+            isOnWelcomePage ||
+            isOnLoginPage ||
+            isOnSignupPage ||
+            state.matchedLocation.startsWith('/email-verification') ||
+            state.matchedLocation.startsWith('/forgot-password') ||
+            state.matchedLocation.startsWith('/password-reset') ||
+            state.matchedLocation.startsWith('/reset-password');
 
-      // If authenticated and on auth pages, go to home
-      if (hasToken && isOnAuthPages) {
-        return '/';
-      }
+        // 1. Nếu chưa đăng nhập và cố truy cập route bị khóa -> Đá về Welcome
+        if (!isAuthenticated && !isOnAuthPages) {
+          return '/welcome';
+        }
 
-      // No redirect needed
-      return null;
-    },
-    routes: [
-      GoRoute(
-        path: '/welcome',
-        name: 'welcome',
-        builder: (context, state) => const WelcomeScrollScreen(),
-      ),
-      GoRoute(
-        path: '/onboarding-height',
-        name: 'onboarding-height',
-        redirect: (context, state) async {
-          // Prevent access if user already has fitness profile
-          if (_fitnessProfileRepository != null) {
-            final result = await _fitnessProfileRepository!.hasFitnessProfile();
-            return result.fold(
-              (failure) => null,
-              (hasProfile) => hasProfile ? '/' : null,
+        // 2. Nếu đã đăng nhập nhưng ở trang Auth -> Đưa vào Dashboard theo Role
+        if (isAuthenticated && isOnAuthPages) {
+          if (role == UserRole.expert) return '/expert/dashboard';
+          if (role == UserRole.pendingExpert) return '/expert/pending';
+          return '/'; // Mặc định về trang chủ user
+        }
+
+        // 3. Phân quyền (Role Guard) - Tránh đi lạc
+        final isExpertRoute = state.matchedLocation.startsWith('/expert');
+        if (isExpertRoute &&
+            role != UserRole.expert &&
+            role != UserRole.pendingExpert) {
+          return '/'; // User cố tình gõ url /expert -> đá về home
+        }
+
+        return null; // Không có lỗi gì -> Đi tiếp
+      },
+      routes: [
+        GoRoute(
+          path: '/welcome',
+          name: 'welcome',
+          builder: (context, state) => const WelcomeScrollScreen(),
+        ),
+        GoRoute(
+          path: '/onboarding-height',
+          name: 'onboarding-height',
+          redirect: (context, state) async {
+            if (_fitnessProfileRepository != null) {
+              final result =
+                  await _fitnessProfileRepository!.hasFitnessProfile();
+              return result.fold(
+                (failure) => null,
+                (hasProfile) => hasProfile ? '/' : null,
+              );
+            }
+            return null;
+          },
+          builder: (context, state) => const OnboardingHeightScreen(),
+        ),
+        GoRoute(
+          path: '/onboarding-weight',
+          name: 'onboarding-weight',
+          redirect: (context, state) async {
+            if (_fitnessProfileRepository != null) {
+              final result =
+                  await _fitnessProfileRepository!.hasFitnessProfile();
+              return result.fold(
+                (failure) => null,
+                (hasProfile) => hasProfile ? '/' : null,
+              );
+            }
+            return null;
+          },
+          builder: (context, state) {
+            final height = state.extra as double?;
+            return OnboardingWeightScreen(height: height);
+          },
+        ),
+        GoRoute(
+          path: '/onboarding-body-measurements',
+          name: 'onboarding-body-measurements',
+          redirect: (context, state) async {
+            if (_fitnessProfileRepository != null) {
+              final result =
+                  await _fitnessProfileRepository!.hasFitnessProfile();
+              return result.fold(
+                (failure) => null,
+                (hasProfile) => hasProfile ? '/' : null,
+              );
+            }
+            return null;
+          },
+          builder: (context, state) {
+            final data = state.extra as Map<String, dynamic>;
+            return OnboardingBodyMeasurementsScreen(
+              height: (data['height'] as num).toDouble(),
+              weight: (data['weight'] as num).toDouble(),
             );
-          }
-          return null;
-        },
-        builder: (context, state) => const OnboardingHeightScreen(),
-      ),
-      GoRoute(
-        path: '/onboarding-weight',
-        name: 'onboarding-weight',
-        redirect: (context, state) async {
-          // Prevent access if user already has fitness profile
-          if (_fitnessProfileRepository != null) {
-            final result = await _fitnessProfileRepository!.hasFitnessProfile();
-            return result.fold(
-              (failure) => null,
-              (hasProfile) => hasProfile ? '/' : null,
+          },
+        ),
+        GoRoute(
+          path: '/onboarding-activity',
+          name: 'onboarding-activity',
+          redirect: (context, state) async {
+            if (_fitnessProfileRepository != null) {
+              final result =
+                  await _fitnessProfileRepository!.hasFitnessProfile();
+              return result.fold(
+                (failure) => null,
+                (hasProfile) => hasProfile ? '/' : null,
+              );
+            }
+            return null;
+          },
+          builder: (context, state) {
+            final data = state.extra as Map<String, dynamic>;
+            final measurements = {
+              'height': (data['height'] as num).toDouble(),
+              'weight': (data['weight'] as num).toDouble(),
+              'waist':
+                  data['waist'] != null
+                      ? (data['waist'] as num).toDouble()
+                      : null,
+              'hip':
+                  data['hip'] != null ? (data['hip'] as num).toDouble() : null,
+              'neck':
+                  data['neck'] != null
+                      ? (data['neck'] as num).toDouble()
+                      : null,
+            };
+            return OnboardingActivityLevelScreen(measurements: measurements);
+          },
+        ),
+        GoRoute(
+          path: '/onboarding-goal',
+          name: 'onboarding-goal',
+          builder: (context, state) {
+            final data = state.extra as Map<String, dynamic>? ?? {};
+            return OnboardingGoalTypeScreen(previousData: data);
+          },
+        ),
+        GoRoute(
+          path: '/onboarding-complete',
+          name: 'onboarding-complete',
+          builder: (context, state) => const OnboardingCompleteScreen(),
+        ),
+        GoRoute(
+          path: '/login',
+          name: 'login',
+          builder: (context, state) => const LoginScreen(),
+        ),
+        GoRoute(
+          path: '/signup',
+          name: 'signup',
+          builder: (context, state) => const SignUpScreen(),
+        ),
+        GoRoute(
+          path: '/forgot-password',
+          name: 'forgot-password',
+          builder: (context, state) => const ForgotPasswordScreen(),
+        ),
+        GoRoute(
+          path: '/password-reset-waiting',
+          name: 'password-reset-waiting',
+          builder: (context, state) {
+            final email = state.extra as String;
+            return PasswordResetWaitingScreen(email: email);
+          },
+        ),
+        GoRoute(
+          path: '/reset-password',
+          name: 'reset-password',
+          builder: (context, state) => const ResetPasswordScreen(),
+        ),
+        GoRoute(
+          path: '/email-verification',
+          name: 'email-verification',
+          builder: (context, state) {
+            final email = state.extra as String;
+            return EmailVerificationScreen(email: email);
+          },
+        ),
+        GoRoute(
+          path: '/foodSearch',
+          name: 'foodSearch',
+          builder: (context, state) {
+            final mealType = state.uri.queryParameters['mealType'];
+            final date = state.uri.queryParameters['date'];
+            return FoodSearchScreen(
+              initialMealType: mealType,
+              selectedDate: date,
             );
-          }
-          return null;
-        },
-        builder: (context, state) {
-          final height = state.extra as double?;
-          return OnboardingWeightScreen(height: height);
-        },
-      ),
-      GoRoute(
-        path: '/onboarding-body-measurements',
-        name: 'onboarding-body-measurements',
-        redirect: (context, state) async {
-          // Prevent access if user already has fitness profile
-          if (_fitnessProfileRepository != null) {
-            final result = await _fitnessProfileRepository!.hasFitnessProfile();
-            return result.fold(
-              (failure) => null,
-              (hasProfile) => hasProfile ? '/' : null,
+          },
+        ),
+        GoRoute(
+          path: '/meal-scan',
+          name: 'meal-scan',
+          builder: (context, state) => const MealScanScreen(),
+        ),
+        GoRoute(
+          path: '/steps',
+          name: 'steps',
+          builder: (context, state) => StepsScreen(),
+        ),
+        GoRoute(
+          path: '/add-activity',
+          name: 'add-activity',
+          builder: (context, state) => AddActivityScreen(),
+        ),
+        GoRoute(
+          path: '/activity-analytics',
+          name: 'activity-analytics',
+          builder: (context, state) => ActivityAnalyticsScreen(),
+        ),
+        GoRoute(
+          path: '/notifications',
+          name: 'notifications',
+          builder: (context, state) => const NotificationsScreen(),
+        ),
+        GoRoute(
+          path: '/google-fit-sync',
+          name: 'google-fit-sync',
+          builder:
+              (context, state) => GoogleFitSyncScreen(
+                googleFitRepository: _googleFitRepository!,
+              ),
+        ),
+
+        // --- CÁC ROUTE CỦA CHUYÊN GIA ---
+        GoRoute(
+          path: '/expert/dashboard',
+          name: 'expert-dashboard',
+          builder:
+              (context, state) => const Scaffold(
+                body: Center(
+                  child: Text('Trang Quản lý Chuyên gia (Dashboard)'),
+                ),
+              ),
+        ),
+        GoRoute(
+          path: '/expert/pending',
+          name: 'expert-pending',
+          builder:
+              (context, state) => const Scaffold(
+                body: Center(
+                  child: Text('Tài khoản chuyên gia đang chờ duyệt'),
+                ),
+              ),
+        ),
+
+        ShellRoute(
+          builder: (context, state, child) {
+            return Scaffold(
+              body: child,
+              bottomNavigationBar: CustomBottomNav(
+                currentIndex: _calculateSelectedIndex(state),
+                onTap: (index) => _onItemTapped(context, index),
+              ),
             );
-          }
-          return null;
-        },
-        builder: (context, state) {
-          final data = state.extra as Map<String, dynamic>;
-          return OnboardingBodyMeasurementsScreen(
-            height: (data['height'] as num).toDouble(),
-            weight: (data['weight'] as num).toDouble(),
-          );
-        },
-      ),
-      GoRoute(
-        path: '/onboarding-activity',
-        name: 'onboarding-activity',
-        redirect: (context, state) async {
-          // Prevent access if user already has fitness profile
-          if (_fitnessProfileRepository != null) {
-            final result = await _fitnessProfileRepository!.hasFitnessProfile();
-            return result.fold(
-              (failure) => null,
-              (hasProfile) => hasProfile ? '/' : null,
-            );
-          }
-          return null;
-        },
-        builder: (context, state) {
-          final data = state.extra as Map<String, dynamic>;
-          final measurements = {
-            'height': (data['height'] as num).toDouble(),
-            'weight': (data['weight'] as num).toDouble(),
-            'waist':
-                data['waist'] != null
-                    ? (data['waist'] as num).toDouble()
-                    : null,
-            'hip': data['hip'] != null ? (data['hip'] as num).toDouble() : null,
-            'neck':
-                data['neck'] != null ? (data['neck'] as num).toDouble() : null,
-          };
-          return OnboardingActivityLevelScreen(measurements: measurements);
-        },
-      ),
-      GoRoute(
-        path: '/onboarding-goal',
-        name: 'onboarding-goal',
-        // Remove redirect - allow access during onboarding flow even after profile created
-        builder: (context, state) {
-          final data = state.extra as Map<String, dynamic>? ?? {};
-          return OnboardingGoalTypeScreen(previousData: data);
-        },
-      ),
-      GoRoute(
-        path: '/onboarding-complete',
-        name: 'onboarding-complete',
-        builder: (context, state) => const OnboardingCompleteScreen(),
-      ),
-      GoRoute(
-        path: '/login',
-        name: 'login',
-        builder: (context, state) => const LoginScreen(),
-      ),
-      GoRoute(
-        path: '/signup',
-        name: 'signup',
-        builder: (context, state) => const SignUpScreen(),
-      ),
-      GoRoute(
-        path: '/forgot-password',
-        name: 'forgot-password',
-        builder: (context, state) => const ForgotPasswordScreen(),
-      ),
-      GoRoute(
-        path: '/password-reset-waiting',
-        name: 'password-reset-waiting',
-        builder: (context, state) {
-          final email = state.extra as String;
-          return PasswordResetWaitingScreen(email: email);
-        },
-      ),
-      GoRoute(
-        path: '/reset-password',
-        name: 'reset-password',
-        builder: (context, state) => const ResetPasswordScreen(),
-      ),
-      GoRoute(
-        path: '/email-verification',
-        name: 'email-verification',
-        builder: (context, state) {
-          final email = state.extra as String;
-          return EmailVerificationScreen(email: email);
-        },
-      ),
-      GoRoute(
-        path: '/foodSearch',
-        name: 'foodSearch',
-        builder: (context, state) {
-          final mealType = state.uri.queryParameters['mealType'];
-          final date = state.uri.queryParameters['date'];
-          return FoodSearchScreen(
-            initialMealType: mealType,
-            selectedDate: date,
-          );
-        },
-      ),
-      GoRoute(
-        path: '/meal-scan',
-        name: 'meal-scan',
-        builder: (context, state) => const MealScanScreen(),
-      ),
-      GoRoute(
-        path: '/steps',
-        name: 'steps',
-        builder: (context, state) => StepsScreen(),
-      ),
-      GoRoute(
-        path: '/add-activity',
-        name: 'add-activity',
-        builder: (context, state) => AddActivityScreen(),
-      ),
-      GoRoute(
-        path: '/activity-analytics',
-        name: 'activity-analytics',
-        builder: (context, state) => ActivityAnalyticsScreen(),
-      ),
-      GoRoute(
-        path: '/notifications',
-        name: 'notifications',
-        builder: (context, state) => const NotificationsScreen(),
-      ),
-      GoRoute(
-        path: '/google-fit-sync',
-        name: 'google-fit-sync',
-        builder:
-            (context, state) =>
-                GoogleFitSyncScreen(googleFitRepository: _googleFitRepository!),
-      ),
-      ShellRoute(
-        builder: (context, state, child) {
-          return Scaffold(
-            body: child,
-            bottomNavigationBar: CustomBottomNav(
-              currentIndex: _calculateSelectedIndex(state),
-              onTap: (index) => _onItemTapped(context, index),
-            ),
-          );
-        },
-        routes: [
-          GoRoute(
-            path: '/',
-            name: 'home',
-            redirect: (context, state) async {
-              // Check if user has fitness profile
-              if (_fitnessProfileRepository != null) {
-                final result =
-                    await _fitnessProfileRepository!.hasFitnessProfile();
-                return result.fold(
-                  (failure) => null, // If error, let user proceed to home
-                  (hasProfile) {
+          },
+          routes: [
+            GoRoute(
+              path: '/',
+              name: 'home',
+              redirect: (context, state) async {
+                if (_fitnessProfileRepository != null) {
+                  final result =
+                      await _fitnessProfileRepository!.hasFitnessProfile();
+                  return result.fold((failure) => null, (hasProfile) {
                     if (!hasProfile) {
                       return '/onboarding-height';
                     }
-                    return null; // null means no redirect, proceed to home
-                  },
-                );
-              }
-              return null;
-            },
-            builder: (context, state) => const HomeScreen(),
-          ),
-          GoRoute(
-            path: '/advisor',
-            name: 'advisor',
-            builder: (context, state) => AdvisorScreen(),
-          ),
-          GoRoute(
-            path: '/community',
-            name: 'community',
-            builder: (context, state) => CommunityScreen(),
-          ),
-          GoRoute(
-            path: '/personal-profile/:userId',
-            name: 'personal-profile',
-            builder: (context, state) {
-              final userId = state.pathParameters['userId'];
-              final user = state.extra as UserInfo?;
-              return PersonalProfileScreen(userId: userId, user: user);
-            },
-          ),
-          GoRoute(
-            path: '/profile',
-            name: 'profile',
-            builder: (context, state) => ProfileScreen(),
-          ),
-        ],
-      ),
-    ],
-  );
+                    return null;
+                  });
+                }
+                return null;
+              },
+              builder: (context, state) => const HomeScreen(),
+            ),
+            GoRoute(
+              path: '/advisor',
+              name: 'advisor',
+              builder: (context, state) => AdvisorScreen(),
+            ),
+            GoRoute(
+              path: '/community',
+              name: 'community',
+              builder: (context, state) => CommunityScreen(),
+            ),
+            GoRoute(
+              path: '/personal-profile/:userId',
+              name: 'personal-profile',
+              builder: (context, state) {
+                final userId = state.pathParameters['userId'];
+                final user = state.extra as UserInfo?;
+                return PersonalProfileScreen(userId: userId, user: user);
+              },
+            ),
+            GoRoute(
+              path: '/profile',
+              name: 'profile',
+              builder: (context, state) => ProfileScreen(),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
 
   static int _calculateSelectedIndex(GoRouterState state) {
     final location = state.uri.toString();
@@ -493,5 +535,22 @@ class AppRoutes {
         context.go('/profile');
         break;
     }
+  }
+}
+
+class GoRouterRefreshStream extends ChangeNotifier {
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    notifyListeners();
+    _subscription = stream.asBroadcastStream().listen(
+      (dynamic _) => notifyListeners(),
+    );
+  }
+
+  late final StreamSubscription<dynamic> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
   }
 }

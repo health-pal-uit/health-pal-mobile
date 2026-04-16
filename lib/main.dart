@@ -52,6 +52,7 @@ import 'package:da1/src/features/shared/auth/data/datasources/auth_remote_data_s
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:go_router/go_router.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:da1/src/core/models/user.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide User;
@@ -72,16 +73,6 @@ void main() async {
   // Set up background message handler
   FirebaseMessaging.onBackgroundMessage(
     DeviceRegistrationService.backgroundMessageHandler,
-  );
-
-  // Initialize local notifications with tap handler
-  await LocalNotificationService().initialize(
-    onNotificationTap: (postId) {
-      // Navigate to community screen when notification is tapped
-      if (postId != null) {
-        AppRoutes.router.go('/community');
-      }
-    },
   );
 
   SystemChrome.setPreferredOrientations(<DeviceOrientation>[
@@ -224,6 +215,17 @@ void main() async {
   final AuthBloc authBloc = AuthBloc(authRepository: authRepository);
   final UserBloc userBloc = UserBloc(userRepository: userRepository);
 
+  final GoRouter appRouter = AppRoutes.createRouter(authBloc);
+
+  // Initialize local notifications with tap handler
+  await LocalNotificationService().initialize(
+    onNotificationTap: (postId) {
+      // Navigate to community screen when notification is tapped
+      if (postId != null) {
+        appRouter.go('/community');
+      }
+    },
+  );
   // Check authentication status on app startup
   authBloc.add(CheckAuthStatus());
 
@@ -241,14 +243,14 @@ void main() async {
       // Handle notification taps when app is in background
       deviceService.setupNotificationTapHandler((postId) {
         if (postId != null) {
-          AppRoutes.router.go('/community');
+          appRouter.go('/community');
         }
       });
 
       // Handle notification when app was terminated
       await deviceService.handleInitialMessage((postId) {
         if (postId != null) {
-          AppRoutes.router.go('/community');
+          appRouter.go('/community');
         }
       });
     }
@@ -295,7 +297,7 @@ void main() async {
       _pendingResetPasswordDeepLink = '/reset-password';
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_pendingResetPasswordDeepLink != null) {
-          AppRoutes.router.go(_pendingResetPasswordDeepLink!);
+          appRouter.go(_pendingResetPasswordDeepLink!);
           _pendingResetPasswordDeepLink = null;
         }
       });
@@ -308,10 +310,10 @@ void main() async {
         final currentState = authBloc.state;
         if (currentState is Authenticated) {
           // User is signed in, navigate to Google Fit sync screen
-          AppRoutes.router.go('/google-fit-sync');
+          appRouter.go('/google-fit-sync');
         } else {
           // User is not signed in, navigate to home
-          AppRoutes.router.go('/');
+          appRouter.go('/');
         }
       });
     },
