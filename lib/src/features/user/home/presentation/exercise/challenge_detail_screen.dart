@@ -1,8 +1,9 @@
-import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/features/user/home/data/challenge_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:da1/src/features/user/home/domain/challenge.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ChallengeDetailScreen extends StatefulWidget {
   final Challenge challenge;
@@ -43,7 +44,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
       _isFinishing = true;
     });
 
-    final result = await AppRoutes.getChallengeRepository()!.finishChallenge(
+    final result = await context.read<ChallengeRepository>().finishChallenge(
       widget.challenge.id,
     );
 

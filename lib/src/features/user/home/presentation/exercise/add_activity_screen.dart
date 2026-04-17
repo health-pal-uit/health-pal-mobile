@@ -1,8 +1,9 @@
 import 'package:da1/src/config/theme/app_colors.dart';
-import 'package:da1/src/config/routes.dart';
+import 'package:da1/src/features/user/home/data/activity_repository.dart';
 import 'package:da1/src/features/user/home/domain/activity.dart';
 import 'package:da1/src/features/user/home/presentation/exercise/log_activity_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'dart:async';
 
@@ -64,15 +65,7 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
       hasMore = true;
     });
 
-    final repository = AppRoutes.getActivityRepository();
-    if (repository == null) {
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-      }
-      return;
-    }
+    final repository = context.read<ActivityRepository>();
 
     try {
       final result = await repository.getActivities(
@@ -114,15 +107,7 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
       isLoadingMore = true;
     });
 
-    final repository = AppRoutes.getActivityRepository();
-    if (repository == null) {
-      if (mounted) {
-        setState(() {
-          isLoadingMore = false;
-        });
-      }
-      return;
-    }
+    final repository = context.read<ActivityRepository>();
 
     try {
       final result = await repository.getActivities(
@@ -179,15 +164,7 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
       hasMore = true;
     });
 
-    final repository = AppRoutes.getActivityRepository();
-    if (repository == null) {
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-      }
-      return;
-    }
+    final repository = context.read<ActivityRepository>();
 
     try {
       final result = await repository.searchActivities(
@@ -229,15 +206,7 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
       isLoadingMore = true;
     });
 
-    final repository = AppRoutes.getActivityRepository();
-    if (repository == null) {
-      if (mounted) {
-        setState(() {
-          isLoadingMore = false;
-        });
-      }
-      return;
-    }
+    final repository = context.read<ActivityRepository>();
 
     try {
       final result = await repository.searchActivities(

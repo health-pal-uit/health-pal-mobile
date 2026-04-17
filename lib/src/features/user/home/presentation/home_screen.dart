@@ -1,7 +1,12 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
-import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/core/services/local_notification_service.dart';
+import 'package:da1/src/features/shared/auth/data/fitness_goal_repository.dart';
+import 'package:da1/src/features/user/home/data/activity_record_repository.dart';
+import 'package:da1/src/features/user/home/data/challenge_repository.dart';
+import 'package:da1/src/features/user/home/data/daily_log_repository.dart';
+import 'package:da1/src/features/user/home/data/diet_type_repository.dart';
+import 'package:da1/src/features/user/home/data/medal_repository.dart';
 import 'package:da1/src/features/user/home/presentation/widgets/charts/kcal_circular_progress.dart';
 import 'package:da1/src/features/user/home/presentation/widgets/workout_card.dart';
 import 'package:da1/src/features/user/home/presentation/widgets/meal_diary_card.dart';
@@ -9,6 +14,8 @@ import 'package:da1/src/features/user/home/presentation/widgets/diet_type_bottom
 import 'package:da1/src/features/user/home/domain/diet_type.dart';
 import 'package:da1/src/features/user/home/presentation/exercise/challenges_screen.dart';
 import 'package:da1/src/features/user/home/presentation/fitness_recommendations_screen.dart';
+import 'package:da1/src/features/user/notifications/data/notification_repository.dart';
+import 'package:da1/src/features/user/profile/data/fitness_profile_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -58,23 +65,22 @@ class _HomeScreenState extends State<HomeScreen> {
     bool hasClaimable = false;
 
     // Check challenges
-    final challengeRepo = AppRoutes.getChallengeRepository();
-    if (challengeRepo != null) {
-      final challengeResult = await challengeRepo.getChallenges();
-      challengeResult.fold((error) {}, (challenges) {
+    final challengeRepo = context.read<ChallengeRepository>();
+    final medalRepo = context.read<MedalRepository>();
+    final challengeResult = await challengeRepo.getChallenges();
+
+    challengeResult.fold((error) {}, (challenges) {
+      setState(() {
         hasClaimable = challenges.any((c) => c.canClaim);
       });
-    }
+    });
 
-    // Check medals if no claimable challenge found
     if (!hasClaimable) {
-      final medalRepo = AppRoutes.getMedalRepository();
-      if (medalRepo != null) {
-        final medalResult = await medalRepo.getMedals();
-        medalResult.fold((error) {}, (medals) {
-          hasClaimable = medals.any((m) => m.canClaim);
-        });
-      }
+      final medalResult = await medalRepo.getMedals();
+
+      medalResult.fold((error) {}, (medals) {
+        hasClaimable = medals.any((m) => m.canClaim);
+      });
     }
 
     if (mounted) {
@@ -85,8 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _checkUnreadNotifications() async {
-    final notificationRepo = AppRoutes.getNotificationRepository();
-    if (notificationRepo == null) return;
+    final notificationRepo = context.read<NotificationRepository>();
 
     final result = await notificationRepo.getNotifications(page: 1, limit: 10);
     result.fold((error) {}, (data) {
@@ -101,21 +106,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadDietTypes() async {
-    final repository = AppRoutes.getDietTypeRepository();
-    if (repository == null) {
-      if (mounted) {
-        setState(() {
-          isLoadingDietTypes = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Diet type repository not available'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-      return;
-    }
+    final repository = context.read<DietTypeRepository>();
 
     try {
       final result = await repository.getDietTypes();
@@ -214,8 +205,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _updateFitnessGoalDietType(DietType dietType) async {
-    final repository = AppRoutes.getFitnessProfileRepository();
-    if (repository == null) return;
+    final repository = context.read<FitnessProfileRepository>();
 
     try {
       final payload = {'diet_type_id': dietType.id};
@@ -257,8 +247,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadFitnessProfile() async {
-    final repository = AppRoutes.getFitnessProfileRepository();
-    if (repository == null) return;
+    final repository = context.read<FitnessProfileRepository>();
 
     try {
       final result = await repository.getMyFitnessProfile();
@@ -311,10 +300,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadDailyLog() async {
-    final repository = AppRoutes.getDailyLogRepository();
-    if (repository == null) {
-      return;
-    }
+    final repository = context.read<DailyLogRepository>();
 
     if (mounted) {
       setState(() {
@@ -367,15 +353,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    final repository = AppRoutes.getActivityRecordRepository();
-    if (repository == null) {
-      if (mounted) {
-        setState(() {
-          isLoadingActivityRecords = false;
-        });
-      }
-      return;
-    }
+    final repository = context.read<ActivityRecordRepository>();
 
     if (mounted) {
       setState(() {
@@ -543,21 +521,7 @@ class _HomeScreenState extends State<HomeScreen> {
       isDeletingActivity = true;
     });
 
-    final repository = AppRoutes.getActivityRecordRepository();
-    if (repository == null) {
-      if (mounted) {
-        setState(() {
-          isDeletingActivity = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Activity record repository not available'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-      return;
-    }
+    final repository = context.read<ActivityRecordRepository>();
 
     try {
       final result = await repository.updateActivityRecord(
@@ -629,6 +593,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _deleteActivityRecord(Map<String, dynamic> record) async {
+    final repository = context.read<ActivityRecordRepository>();
     final recordId = record['id'] as String?;
     if (recordId == null) {
       if (mounted) {
@@ -669,22 +634,6 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       isDeletingActivity = true;
     });
-
-    final repository = AppRoutes.getActivityRecordRepository();
-    if (repository == null) {
-      if (mounted) {
-        setState(() {
-          isDeletingActivity = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Activity record repository not available'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-      return;
-    }
 
     try {
       final result = await repository.deleteActivityRecord(recordId);
@@ -744,15 +693,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadFitnessGoal() async {
-    final repository = AppRoutes.getFitnessGoalRepository();
-    if (repository == null) {
-      if (mounted) {
-        setState(() {
-          isLoadingFitnessGoal = false;
-        });
-      }
-      return;
-    }
+    final repository = context.read<FitnessGoalRepository>();
 
     try {
       final result = await repository.getFitnessGoal();

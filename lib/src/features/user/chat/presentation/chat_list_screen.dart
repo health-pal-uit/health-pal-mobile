@@ -1,11 +1,12 @@
-import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
+import 'package:da1/src/features/user/chat/data/chat_session_repository.dart';
 import 'package:da1/src/features/user/chat/domain/chat_session.dart';
 import 'package:da1/src/features/user/chat/presentation/chat_thread_screen.dart';
 import 'package:da1/src/features/user/chat/presentation/new_chat_screen.dart';
 import 'package:da1/src/features/user/chat/presentation/new_group_chat_screen.dart';
 import 'package:da1/src/features/user/chat/presentation/widgets/delete_chat_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class ChatListScreen extends StatefulWidget {
@@ -32,14 +33,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
       errorMessage = null;
     });
 
-    final repository = AppRoutes.getChatSessionRepository();
-    if (repository == null) {
-      setState(() {
-        isLoading = false;
-        errorMessage = 'Chat repository not initialized';
-      });
-      return;
-    }
+    final repository = context.read<ChatSessionRepository>();
 
     final result = await repository.getSessions();
 
@@ -60,26 +54,14 @@ class _ChatListScreenState extends State<ChatListScreen> {
   }
 
   Future<bool> _handleDeleteChat(ChatSession session) async {
-    // Show confirmation dialog
+    final repository = context.read<ChatSessionRepository>();
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => const DeleteChatDialog(),
     );
 
     if (confirmed != true) {
-      return false;
-    }
-
-    final repository = AppRoutes.getChatSessionRepository();
-    if (repository == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Chat service not available'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
       return false;
     }
 

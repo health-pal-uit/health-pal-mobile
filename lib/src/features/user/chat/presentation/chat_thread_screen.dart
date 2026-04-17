@@ -1,7 +1,8 @@
 import 'dart:async';
 
-import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
+import 'package:da1/src/features/user/chat/data/chat_message_repository.dart';
+import 'package:da1/src/features/user/chat/data/chat_session_repository.dart';
 import 'package:da1/src/features/user/chat/domain/user_chat_message.dart';
 import 'package:da1/src/features/user/chat/domain/chat_session.dart';
 import 'package:da1/src/core/bloc/auth/auth_bloc.dart';
@@ -59,25 +60,11 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   }
 
   Future<void> _loadMessages() async {
+    final repository = context.read<ChatMessageRepository>();
+
     setState(() {
       isLoading = true;
     });
-
-    final repository = AppRoutes.getChatMessageRepository();
-    if (repository == null) {
-      setState(() {
-        isLoading = false;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Chat message service not available'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-      return;
-    }
 
     final result = await repository.getRecentMessages(
       sessionId: widget.session.id,
@@ -120,13 +107,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
       isLoadingMore = true;
     });
 
-    final repository = AppRoutes.getChatMessageRepository();
-    if (repository == null) {
-      setState(() {
-        isLoadingMore = false;
-      });
-      return;
-    }
+    final repository = context.read<ChatMessageRepository>();
 
     final remaining = total - messages.length;
     if (remaining <= 0) {
@@ -172,8 +153,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   Future<void> _pollNewMessages() async {
     if (messages.isEmpty) return;
 
-    final repository = AppRoutes.getChatMessageRepository();
-    if (repository == null) return;
+    final repository = context.read<ChatMessageRepository>();
 
     final result = await repository.getRecentMessages(
       sessionId: widget.session.id,
@@ -328,18 +308,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   }
 
   Future<void> _handleDeleteChat() async {
-    final repository = AppRoutes.getChatSessionRepository();
-    if (repository == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Chat service not available'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-      return;
-    }
+    final repository = context.read<ChatSessionRepository>();
 
     // Show loading indicator
     if (!mounted) return;

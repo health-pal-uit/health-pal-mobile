@@ -1,7 +1,8 @@
-import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/features/user/notifications/data/notification_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 class NotificationsScreen extends StatefulWidget {
@@ -52,14 +53,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       _hasMoreData = true;
     });
 
-    final repository = AppRoutes.getNotificationRepository();
-    if (repository == null) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = 'Repository not initialized';
-      });
-      return;
-    }
+    final repository = context.read<NotificationRepository>();
 
     final result = await repository.getNotifications(
       page: _currentPage,
@@ -97,11 +91,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       _isLoadingMore = true;
     });
 
-    final repository = AppRoutes.getNotificationRepository();
-    if (repository == null) {
-      setState(() => _isLoadingMore = false);
-      return;
-    }
+    final repository = context.read<NotificationRepository>();
 
     final nextPage = _currentPage + 1;
     final result = await repository.getNotifications(
@@ -134,8 +124,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Future<void> _markAsRead(String id) async {
-    final repository = AppRoutes.getNotificationRepository();
-    if (repository == null) return;
+    final repository = context.read<NotificationRepository>();
 
     final result = await repository.markAsRead(id);
 
@@ -161,8 +150,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Future<void> _markAllAsRead() async {
-    final repository = AppRoutes.getNotificationRepository();
-    if (repository == null) return;
+    final repository = context.read<NotificationRepository>();
 
     final result = await repository.markAllAsRead();
 
@@ -192,8 +180,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Future<void> _deleteNotification(String id) async {
-    final repository = AppRoutes.getNotificationRepository();
-    if (repository == null) return;
+    final repository = context.read<NotificationRepository>();
 
     final result = await repository.deleteNotification(id);
 

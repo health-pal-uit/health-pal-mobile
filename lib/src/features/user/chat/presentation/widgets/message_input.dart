@@ -1,8 +1,9 @@
 import 'dart:io';
 
-import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
+import 'package:da1/src/features/user/chat/data/chat_message_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -44,21 +45,7 @@ class _MessageInputState extends State<MessageInput> {
       _isSending = true;
     });
 
-    final repository = AppRoutes.getChatMessageRepository();
-    if (repository == null) {
-      setState(() {
-        _isSending = false;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Chat service not available'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-      return;
-    }
+    final repository = context.read<ChatMessageRepository>();
 
     // If there's an image, send it with optional text
     if (_selectedImage != null) {

@@ -1,8 +1,9 @@
-import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/features/user/home/data/medal_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:da1/src/features/user/home/domain/medal.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class MedalsScreen extends StatefulWidget {
   const MedalsScreen({super.key});
@@ -28,7 +29,7 @@ class _MedalsScreenState extends State<MedalsScreen> {
       _errorMessage = null;
     });
 
-    final result = await AppRoutes.getMedalRepository()!.getMedals();
+    final result = await context.read<MedalRepository>().getMedals();
 
     result.fold(
       (error) {

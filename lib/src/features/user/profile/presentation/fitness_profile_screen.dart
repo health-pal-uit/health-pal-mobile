@@ -1,7 +1,11 @@
-import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/features/shared/auth/data/fitness_goal_repository.dart';
+import 'package:da1/src/features/user/home/data/user_repository.dart';
+import 'package:da1/src/features/user/profile/data/fitness_profile_repository.dart';
+import 'package:da1/src/features/user/profile/data/google_fit_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class FitnessProfileScreen extends StatefulWidget {
@@ -44,8 +48,7 @@ class _FitnessProfileScreenState extends State<FitnessProfileScreen> {
   }
 
   Future<void> _loadFitnessProfile() async {
-    final repository = AppRoutes.getFitnessProfileRepository();
-    if (repository == null) return;
+    final repository = context.read<FitnessProfileRepository>();
 
     try {
       final result = await repository.getMyFitnessProfile();
@@ -86,8 +89,7 @@ class _FitnessProfileScreenState extends State<FitnessProfileScreen> {
   }
 
   Future<void> _loadFitnessGoal() async {
-    final repository = AppRoutes.getFitnessGoalRepository();
-    if (repository == null) return;
+    final repository = context.read<FitnessGoalRepository>();
 
     try {
       final result = await repository.getFitnessGoal();
@@ -107,8 +109,7 @@ class _FitnessProfileScreenState extends State<FitnessProfileScreen> {
   }
 
   Future<void> _loadGoogleFitStatus() async {
-    final repository = AppRoutes.getGoogleFitRepository();
-    if (repository == null) return;
+    final repository = context.read<GoogleFitRepository>();
 
     try {
       final result = await repository.getConnectionStatus();
@@ -134,8 +135,7 @@ class _FitnessProfileScreenState extends State<FitnessProfileScreen> {
   }
 
   Future<void> _loadUserData() async {
-    final repository = AppRoutes.getUserRepository();
-    if (repository == null) return;
+    final repository = context.read<UserRepository>();
 
     try {
       final result = await repository.getUserProfile();

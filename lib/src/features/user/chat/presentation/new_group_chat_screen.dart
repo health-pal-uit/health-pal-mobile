@@ -1,8 +1,10 @@
-import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/core/models/user.dart';
+import 'package:da1/src/features/user/chat/data/chat_session_repository.dart';
 import 'package:da1/src/features/user/chat/presentation/chat_thread_screen.dart';
+import 'package:da1/src/features/user/home/data/user_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class NewGroupChatScreen extends StatefulWidget {
@@ -67,10 +69,7 @@ class _NewGroupChatScreenState extends State<NewGroupChatScreen> {
     });
 
     try {
-      final repository = AppRoutes.getUserRepository();
-      if (repository == null) {
-        throw Exception('User repository not initialized');
-      }
+      final repository = context.read<UserRepository>();
 
       final query = _searchController.text.trim();
       if (query.isEmpty) {
@@ -136,10 +135,7 @@ class _NewGroupChatScreenState extends State<NewGroupChatScreen> {
     });
 
     try {
-      final repository = AppRoutes.getUserRepository();
-      if (repository == null) {
-        throw Exception('User repository not initialized');
-      }
+      final repository = context.read<UserRepository>();
 
       currentPage++;
       final query = _searchController.text.trim();
@@ -199,12 +195,8 @@ class _NewGroupChatScreenState extends State<NewGroupChatScreen> {
     }
 
     try {
-      final repository = AppRoutes.getChatSessionRepository();
-      if (repository == null) {
-        throw Exception('Chat repository not initialized');
-      }
+      final repository = context.read<ChatSessionRepository>();
 
-      // Show loading indicator
       if (mounted) {
         showDialog(
           context: context,

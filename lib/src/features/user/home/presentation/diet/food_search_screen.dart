@@ -1,9 +1,10 @@
-import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/features/user/home/data/meal_repository.dart';
 import 'package:da1/src/features/user/home/presentation/diet/meal_detail_screen.dart';
 import 'package:da1/src/features/user/home/presentation/diet/create_recipe_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class FoodSearchScreen extends StatefulWidget {
@@ -38,8 +39,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
   }
 
   Future<void> _loadFavoriteMeals() async {
-    final repository = AppRoutes.getMealRepository();
-    if (repository == null) return;
+    final repository = context.read<MealRepository>();
 
     final result = await repository.getFavoriteMeals(page: 1, limit: 100);
     if (mounted) {
@@ -57,8 +57,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
   }
 
   Future<void> _loadUserRecipes() async {
-    final repository = AppRoutes.getMealRepository();
-    if (repository == null) return;
+    final repository = context.read<MealRepository>();
 
     final result = await repository.getUserContributions();
     if (mounted) {
@@ -100,14 +99,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> {
       _errorMessage = null;
     });
 
-    final repository = AppRoutes.getMealRepository();
-    if (repository == null) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = 'Repository not initialized';
-      });
-      return;
-    }
+    final repository = context.read<MealRepository>();
 
     final result = await repository.searchMeals(query);
 

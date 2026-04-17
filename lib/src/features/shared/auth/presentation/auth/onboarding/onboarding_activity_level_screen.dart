@@ -1,7 +1,8 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
-import 'package:da1/src/config/routes.dart';
+import 'package:da1/src/features/user/profile/data/fitness_profile_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class OnboardingActivityLevelScreen extends StatefulWidget {
@@ -56,10 +57,7 @@ class _OnboardingActivityLevelScreenState
     });
 
     try {
-      final repository = AppRoutes.getFitnessProfileRepository();
-      if (repository == null) {
-        throw Exception('Fitness profile repository not available');
-      }
+      final repository = context.read<FitnessProfileRepository>();
 
       // Check if profile already exists to prevent duplicates
       final hasProfileResult = await repository.hasFitnessProfile();

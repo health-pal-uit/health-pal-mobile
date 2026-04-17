@@ -1,7 +1,8 @@
-import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/features/shared/auth/data/fitness_goal_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class FitnessRecommendationsScreen extends StatefulWidget {
@@ -31,14 +32,7 @@ class _FitnessRecommendationsScreenState
       _errorMessage = null;
     });
 
-    final repository = AppRoutes.getFitnessGoalRepository();
-    if (repository == null) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = 'Repository not available';
-      });
-      return;
-    }
+    final repository = context.read<FitnessGoalRepository>();
 
     final result = await repository.getRecommendations();
 
@@ -67,21 +61,7 @@ class _FitnessRecommendationsScreenState
       _isApplying = true;
     });
 
-    final repository = AppRoutes.getFitnessGoalRepository();
-    if (repository == null) {
-      if (mounted) {
-        setState(() {
-          _isApplying = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Repository not available'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-      return;
-    }
+    final repository = context.read<FitnessGoalRepository>();
 
     final result = await repository.applyRecommendations();
 

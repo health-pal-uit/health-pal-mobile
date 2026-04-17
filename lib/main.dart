@@ -215,7 +215,11 @@ void main() async {
   final AuthBloc authBloc = AuthBloc(authRepository: authRepository);
   final UserBloc userBloc = UserBloc(userRepository: userRepository);
 
-  final GoRouter appRouter = AppRoutes.createRouter(authBloc);
+  final GoRouter appRouter = AppRoutes.createRouter(
+    authBloc,
+    fitnessProfileRepository,
+    googleFitRepository,
+  );
 
   // Initialize local notifications with tap handler
   await LocalNotificationService().initialize(
@@ -255,24 +259,6 @@ void main() async {
       });
     }
   });
-
-  // Set repositories for routing
-  AppRoutes.setAuthRepository(authRepository);
-  AppRoutes.setFitnessProfileRepository(fitnessProfileRepository);
-  AppRoutes.setFitnessGoalRepository(fitnessGoalRepository);
-  AppRoutes.setMealRepository(mealRepository);
-  AppRoutes.setDailyMealRepository(dailyMealRepository);
-  AppRoutes.setDailyLogRepository(dailyLogRepository);
-  AppRoutes.setDietTypeRepository(dietTypeRepository);
-  AppRoutes.setActivityRepository(activityRepository);
-  AppRoutes.setActivityRecordRepository(activityRecordRepository);
-  AppRoutes.setChatSessionRepository(chatSessionRepository);
-  AppRoutes.setChatMessageRepository(chatMessageRepository);
-  AppRoutes.setUserRepository(userRepository);
-  AppRoutes.setChallengeRepository(challengeRepository);
-  AppRoutes.setMedalRepository(medalRepository);
-  AppRoutes.setNotificationRepository(notificationRepository);
-  AppRoutes.setGoogleFitRepository(googleFitRepository);
 
   deepLinkService.initDeepLinks(
     onTokenReceived: (String token) async {
@@ -320,12 +306,58 @@ void main() async {
   );
 
   runApp(
-    MultiBlocProvider(
+    MultiRepositoryProvider(
       providers: [
-        BlocProvider<AuthBloc>(create: (context) => authBloc),
-        BlocProvider<UserBloc>(create: (context) => userBloc),
+        RepositoryProvider<FitnessGoalRepository>(
+          create: (context) => fitnessGoalRepository,
+        ),
+        RepositoryProvider<MealRepository>(create: (context) => mealRepository),
+        RepositoryProvider<DailyMealRepository>(
+          create: (context) => dailyMealRepository,
+        ),
+        RepositoryProvider<DailyLogRepository>(
+          create: (context) => dailyLogRepository,
+        ),
+        RepositoryProvider<DietTypeRepository>(
+          create: (context) => dietTypeRepository,
+        ),
+        RepositoryProvider<ActivityRepository>(
+          create: (context) => activityRepository,
+        ),
+        RepositoryProvider<ActivityRecordRepository>(
+          create: (context) => activityRecordRepository,
+        ),
+        RepositoryProvider<ChatSessionRepository>(
+          create: (context) => chatSessionRepository,
+        ),
+        RepositoryProvider<ChatMessageRepository>(
+          create: (context) => chatMessageRepository,
+        ),
+        RepositoryProvider<ChallengeRepository>(
+          create: (context) => challengeRepository,
+        ),
+        RepositoryProvider<MedalRepository>(
+          create: (context) => medalRepository,
+        ),
+        RepositoryProvider<NotificationRepository>(
+          create: (context) => notificationRepository,
+        ),
+        RepositoryProvider<FitnessProfileRepository>(
+          create: (context) => fitnessProfileRepository,
+        ),
+        RepositoryProvider<GoogleFitRepository>(
+          create: (context) => googleFitRepository,
+        ),
+        RepositoryProvider<AuthRepository>(create: (context) => authRepository),
+        RepositoryProvider<UserRepository>(create: (context) => userRepository),
       ],
-      child: App(appRouter: appRouter),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider<AuthBloc>(create: (context) => authBloc),
+          BlocProvider<UserBloc>(create: (context) => userBloc),
+        ],
+        child: App(appRouter: appRouter),
+      ),
     ),
   );
 }

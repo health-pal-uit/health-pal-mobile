@@ -1,7 +1,8 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
-import 'package:da1/src/config/routes.dart';
+import 'package:da1/src/features/shared/auth/data/fitness_goal_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class OnboardingGoalTypeScreen extends StatefulWidget {
@@ -64,10 +65,7 @@ class _OnboardingGoalTypeScreenState extends State<OnboardingGoalTypeScreen> {
     });
 
     try {
-      final repository = AppRoutes.getFitnessGoalRepository();
-      if (repository == null) {
-        throw Exception('Fitness goal repository not available');
-      }
+      final repository = context.read<FitnessGoalRepository>();
 
       final payload = {'goal_type': _selectedGoalType};
 

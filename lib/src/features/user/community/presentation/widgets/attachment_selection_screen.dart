@@ -1,9 +1,12 @@
-import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/features/user/home/data/challenge_repository.dart';
+import 'package:da1/src/features/user/home/data/meal_repository.dart';
+import 'package:da1/src/features/user/home/data/medal_repository.dart';
 import 'package:da1/src/features/user/home/domain/challenge.dart';
 import 'package:da1/src/features/user/home/domain/medal.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class AttachmentSelectionScreen extends StatefulWidget {
@@ -70,8 +73,7 @@ class _AttachmentSelectionScreenState extends State<AttachmentSelectionScreen> {
   Future<void> _loadMeals() async {
     // If there's a search query, use search API
     if (_searchQuery.isNotEmpty) {
-      final repository = AppRoutes.getMealRepository();
-      if (repository == null) throw Exception('Meal repository not available');
+      final repository = context.read<MealRepository>();
 
       final result = await repository.searchMeals(_searchQuery);
       result.fold(
@@ -86,8 +88,7 @@ class _AttachmentSelectionScreenState extends State<AttachmentSelectionScreen> {
 
   Future<void> _loadIngredients() async {
     if (_searchQuery.isNotEmpty) {
-      final repository = AppRoutes.getMealRepository();
-      if (repository == null) throw Exception('Meal repository not available');
+      final repository = context.read<MealRepository>();
 
       final result = await repository.searchIngredients(_searchQuery);
       result.fold(
@@ -100,10 +101,8 @@ class _AttachmentSelectionScreenState extends State<AttachmentSelectionScreen> {
   }
 
   Future<void> _loadChallenges() async {
-    final repository = AppRoutes.getChallengeRepository();
-    if (repository == null) {
-      throw Exception('Challenge repository not available');
-    }
+    final repository = context.read<ChallengeRepository>();
+
     final result = await repository.getChallenges();
     result.fold(
       (failure) => throw Exception(failure.toString()),
@@ -112,8 +111,7 @@ class _AttachmentSelectionScreenState extends State<AttachmentSelectionScreen> {
   }
 
   Future<void> _loadMedals() async {
-    final repository = AppRoutes.getMedalRepository();
-    if (repository == null) throw Exception('Medal repository not available');
+    final repository = context.read<MedalRepository>();
 
     final result = await repository.getMedals();
     result.fold(

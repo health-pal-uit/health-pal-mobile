@@ -1,7 +1,7 @@
 import 'package:da1/src/config/api_config.dart';
-import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/features/user/chat/data/chat_session_repository.dart';
 import 'package:da1/src/features/user/community/data/datasources/post_remote_data_source.dart';
 import 'package:da1/src/features/user/community/data/post_model.dart';
 import 'package:da1/src/features/user/chat/presentation/chat_thread_screen.dart';
@@ -9,6 +9,7 @@ import 'package:da1/src/features/user/community/presentation/widgets/post_card.d
 import 'package:da1/src/features/user/community/presentation/widgets/stat_card.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -364,21 +365,7 @@ class _ActionButtonsState extends State<_ActionButtons> {
       _isCreatingChat = true;
     });
 
-    final repository = AppRoutes.getChatSessionRepository();
-    if (repository == null) {
-      setState(() {
-        _isCreatingChat = false;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Chat service not available'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-      return;
-    }
+    final repository = context.read<ChatSessionRepository>();
 
     final result = await repository.createSession(
       otherUserId: widget.userId!,

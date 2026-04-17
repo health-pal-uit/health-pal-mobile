@@ -1,8 +1,9 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
-import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/core/services/local_notification_service.dart';
+import 'package:da1/src/features/user/home/data/daily_meal_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class MealDiaryDetailScreen extends StatefulWidget {
@@ -47,6 +48,7 @@ class _MealDiaryDetailScreenState extends State<MealDiaryDetailScreen> {
   }
 
   Future<void> _deleteMeal(Map<String, dynamic> meal) async {
+    final repository = context.read<DailyMealRepository>();
     final mealId = meal['id'] as String?;
     if (mealId == null) {
       if (mounted) {
@@ -85,22 +87,6 @@ class _MealDiaryDetailScreenState extends State<MealDiaryDetailScreen> {
     setState(() {
       _isDeleting = true;
     });
-
-    final repository = AppRoutes.getDailyMealRepository();
-    if (repository == null) {
-      if (mounted) {
-        setState(() {
-          _isDeleting = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Daily meal repository not available'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-      return;
-    }
 
     try {
       final result = await repository.deleteDailyMeal(dailyMealId: mealId);
@@ -490,21 +476,7 @@ class _MealDiaryDetailScreenState extends State<MealDiaryDetailScreen> {
       _isDeleting = true;
     });
 
-    final repository = AppRoutes.getDailyMealRepository();
-    if (repository == null) {
-      if (mounted) {
-        setState(() {
-          _isDeleting = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Daily meal repository not available'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-      return;
-    }
+    final repository = context.read<DailyMealRepository>();
 
     try {
       final result = await repository.updateDailyMeal(

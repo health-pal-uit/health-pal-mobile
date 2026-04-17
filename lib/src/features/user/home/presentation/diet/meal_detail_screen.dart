@@ -1,8 +1,9 @@
-import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
 import 'package:da1/src/core/bloc/auth/auth_bloc.dart';
 import 'package:da1/src/core/bloc/auth/auth_state.dart';
+import 'package:da1/src/features/user/home/data/daily_meal_repository.dart';
+import 'package:da1/src/features/user/home/data/meal_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -82,11 +83,7 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
       return;
     }
 
-    final repository = AppRoutes.getMealRepository();
-    if (repository == null) {
-      setState(() => _isLoadingFavorite = false);
-      return;
-    }
+    final repository = context.read<MealRepository>();
 
     final result = await repository.checkIfFavorited(mealId);
     if (mounted) {
@@ -106,8 +103,7 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
   }
 
   Future<void> _getFavIdFromList() async {
-    final repository = AppRoutes.getMealRepository();
-    if (repository == null) return;
+    final repository = context.read<MealRepository>();
 
     final result = await repository.getFavoriteMeals(page: 1, limit: 100);
     if (mounted) {
@@ -147,11 +143,7 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
 
     setState(() => _isTogglingFavorite = true);
 
-    final repository = AppRoutes.getMealRepository();
-    if (repository == null) {
-      setState(() => _isTogglingFavorite = false);
-      return;
-    }
+    final repository = context.read<MealRepository>();
 
     final result =
         _isFavorited
@@ -199,11 +191,7 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
 
     setState(() => _isLoadingIngredients = true);
 
-    final repository = AppRoutes.getMealRepository();
-    if (repository == null) {
-      setState(() => _isLoadingIngredients = false);
-      return;
-    }
+    final repository = context.read<MealRepository>();
 
     final List<Map<String, dynamic>> loadedIngredients = [];
 
@@ -263,11 +251,7 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
 
     setState(() => _isDeleting = true);
 
-    final repository = AppRoutes.getMealRepository();
-    if (repository == null) {
-      setState(() => _isDeleting = false);
-      return;
-    }
+    final repository = context.read<MealRepository>();
 
     final result = await repository.deleteContributedMeal(contributionId);
 
@@ -354,16 +338,7 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
 
     setState(() => _isAdding = true);
 
-    final repository = AppRoutes.getDailyMealRepository();
-    if (repository == null) {
-      setState(() => _isAdding = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Repository not initialized')),
-        );
-      }
-      return;
-    }
+    final repository = context.read<DailyMealRepository>();
 
     final quantityKg = _portionSize / 1000;
 

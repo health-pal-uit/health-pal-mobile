@@ -1,9 +1,10 @@
-import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/features/user/profile/data/fitness_profile_repository.dart';
 import 'package:da1/src/features/user/profile/presentation/body_fat_calculator_results_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class BodyFatCalculatorScreen extends StatefulWidget {
@@ -41,10 +42,7 @@ class _BodyFatCalculatorScreenState extends State<BodyFatCalculatorScreen> {
     });
 
     try {
-      final repository = AppRoutes.getFitnessProfileRepository();
-      if (repository == null) {
-        throw Exception('Repository not available');
-      }
+      final repository = context.read<FitnessProfileRepository>();
 
       final data = {
         'waist_cm': double.parse(_waistController.text),

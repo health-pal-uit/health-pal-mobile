@@ -1,7 +1,8 @@
-import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/features/user/home/data/meal_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -133,8 +134,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
 
     setState(() => _isSearching = true);
 
-    final repository = AppRoutes.getMealRepository();
-    if (repository == null) return;
+    final repository = context.read<MealRepository>();
 
     final result = await repository.searchIngredients(query);
 
@@ -217,16 +217,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
 
     setState(() => _isCreating = true);
 
-    final repository = AppRoutes.getMealRepository();
-    if (repository == null) {
-      setState(() => _isCreating = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Repository not initialized')),
-        );
-      }
-      return;
-    }
+    final repository = context.read<MealRepository>();
 
     final data = <String, dynamic>{
       'name': _nameController.text.trim(),

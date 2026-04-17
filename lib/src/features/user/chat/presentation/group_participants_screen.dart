@@ -1,8 +1,9 @@
-import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
+import 'package:da1/src/features/user/chat/data/chat_session_repository.dart';
 import 'package:da1/src/features/user/chat/domain/chat_participant.dart';
 import 'package:da1/src/features/user/chat/domain/chat_session.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class GroupParticipantsScreen extends StatefulWidget {
@@ -26,16 +27,13 @@ class _GroupParticipantsScreenState extends State<GroupParticipantsScreen> {
   }
 
   Future<void> _loadParticipants() async {
+    final repository = context.read<ChatSessionRepository>();
+
     setState(() {
       isLoading = true;
     });
 
     try {
-      final repository = AppRoutes.getChatSessionRepository();
-      if (repository == null) {
-        throw Exception('Chat repository not initialized');
-      }
-
       final result = await repository.getParticipants(widget.session.id);
 
       result.fold(

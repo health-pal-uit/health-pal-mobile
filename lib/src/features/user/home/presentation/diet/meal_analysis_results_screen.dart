@@ -1,8 +1,9 @@
-import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/features/user/home/data/meal_repository.dart';
 import 'package:da1/src/features/user/home/presentation/diet/meal_detail_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'dart:io';
@@ -55,14 +56,7 @@ class _MealAnalysisResultsScreenState extends State<MealAnalysisResultsScreen> {
       _errorMessages[foodName] = null;
     });
 
-    final mealRepository = AppRoutes.getMealRepository();
-    if (mealRepository == null) {
-      setState(() {
-        _loadingStates[foodName] = false;
-        _errorMessages[foodName] = 'Repository not available';
-      });
-      return;
-    }
+    final mealRepository = context.read<MealRepository>();
 
     try {
       // Search both meals and ingredients

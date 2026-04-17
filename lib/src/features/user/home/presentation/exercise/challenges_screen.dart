@@ -1,10 +1,11 @@
-import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/features/user/home/data/challenge_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:da1/src/features/user/home/domain/challenge.dart';
 import 'package:da1/src/features/user/home/presentation/exercise/challenge_detail_screen.dart';
 import 'package:da1/src/features/user/home/presentation/exercise/medals_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ChallengesScreen extends StatefulWidget {
   const ChallengesScreen({super.key});
@@ -31,7 +32,7 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
       _errorMessage = null;
     });
 
-    final result = await AppRoutes.getChallengeRepository()!.getChallenges();
+    final result = await context.read<ChallengeRepository>().getChallenges();
 
     result.fold(
       (error) {

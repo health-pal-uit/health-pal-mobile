@@ -26,20 +26,6 @@ import 'package:da1/src/features/user/home/presentation/home_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/login_screen.dart';
 import 'package:da1/src/features/user/home/presentation/widgets/custom_bottom_nav.dart';
 import 'package:da1/src/features/user/profile/data/fitness_profile_repository.dart';
-import 'package:da1/src/features/shared/auth/data/fitness_goal_repository.dart';
-import 'package:da1/src/features/user/home/data/meal_repository.dart';
-import 'package:da1/src/features/user/home/data/daily_meal_repository.dart';
-import 'package:da1/src/features/user/home/data/daily_log_repository.dart';
-import 'package:da1/src/features/user/home/data/diet_type_repository.dart';
-import 'package:da1/src/features/user/home/data/activity_repository.dart';
-import 'package:da1/src/features/user/home/data/activity_record_repository.dart';
-import 'package:da1/src/features/shared/auth/data/auth_repository.dart';
-import 'package:da1/src/features/user/chat/data/chat_session_repository.dart';
-import 'package:da1/src/features/user/chat/data/chat_message_repository.dart';
-import 'package:da1/src/features/user/home/data/user_repository.dart';
-import 'package:da1/src/features/user/home/data/challenge_repository.dart';
-import 'package:da1/src/features/user/home/data/medal_repository.dart';
-import 'package:da1/src/features/user/notifications/data/notification_repository.dart';
 import 'package:da1/src/features/user/profile/data/google_fit_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -50,161 +36,24 @@ import 'package:da1/src/core/models/user.dart';
 
 class AppRoutes {
   static FitnessProfileRepository? _fitnessProfileRepository;
-  static FitnessGoalRepository? _fitnessGoalRepository;
-  static MealRepository? _mealRepository;
-  static DailyMealRepository? _dailyMealRepository;
-  static DailyLogRepository? _dailyLogRepository;
-  static DietTypeRepository? _dietTypeRepository;
-  static ActivityRepository? _activityRepository;
-  static ActivityRecordRepository? _activityRecordRepository;
-  static AuthRepository? _authRepository;
-  static ChatSessionRepository? _chatSessionRepository;
-  static ChatMessageRepository? _chatMessageRepository;
-  static UserRepository? _userRepository;
-  static ChallengeRepository? _challengeRepository;
-  static MedalRepository? _medalRepository;
-  static NotificationRepository? _notificationRepository;
-  static GoogleFitRepository? _googleFitRepository;
 
   static void setFitnessProfileRepository(FitnessProfileRepository repository) {
     _fitnessProfileRepository = repository;
   }
 
-  static FitnessProfileRepository? getFitnessProfileRepository() {
-    return _fitnessProfileRepository;
-  }
-
-  static void setFitnessGoalRepository(FitnessGoalRepository repository) {
-    _fitnessGoalRepository = repository;
-  }
-
-  static FitnessGoalRepository? getFitnessGoalRepository() {
-    return _fitnessGoalRepository;
-  }
-
-  static void setMealRepository(MealRepository repository) {
-    _mealRepository = repository;
-  }
-
-  static MealRepository? getMealRepository() {
-    return _mealRepository;
-  }
-
-  static void setDailyMealRepository(DailyMealRepository repository) {
-    _dailyMealRepository = repository;
-  }
-
-  static DailyMealRepository? getDailyMealRepository() {
-    return _dailyMealRepository;
-  }
-
-  static void setDailyLogRepository(DailyLogRepository repository) {
-    _dailyLogRepository = repository;
-  }
-
-  static DailyLogRepository? getDailyLogRepository() {
-    return _dailyLogRepository;
-  }
-
-  static void setDietTypeRepository(DietTypeRepository repository) {
-    _dietTypeRepository = repository;
-  }
-
-  static DietTypeRepository? getDietTypeRepository() {
-    return _dietTypeRepository;
-  }
-
-  static void setActivityRepository(ActivityRepository repository) {
-    _activityRepository = repository;
-  }
-
-  static ActivityRepository? getActivityRepository() {
-    return _activityRepository;
-  }
-
-  static void setActivityRecordRepository(ActivityRecordRepository repository) {
-    _activityRecordRepository = repository;
-  }
-
-  static ActivityRecordRepository? getActivityRecordRepository() {
-    return _activityRecordRepository;
-  }
-
-  static void setAuthRepository(AuthRepository repository) {
-    _authRepository = repository;
-  }
-
-  static AuthRepository? getAuthRepository() {
-    return _authRepository;
-  }
-
-  static void setChatSessionRepository(ChatSessionRepository repository) {
-    _chatSessionRepository = repository;
-  }
-
-  static ChatSessionRepository? getChatSessionRepository() {
-    return _chatSessionRepository;
-  }
-
-  static void setChatMessageRepository(ChatMessageRepository repository) {
-    _chatMessageRepository = repository;
-  }
-
-  static ChatMessageRepository? getChatMessageRepository() {
-    return _chatMessageRepository;
-  }
-
-  static void setUserRepository(UserRepository repository) {
-    _userRepository = repository;
-  }
-
-  static UserRepository? getUserRepository() {
-    return _userRepository;
-  }
-
-  static void setChallengeRepository(ChallengeRepository repository) {
-    _challengeRepository = repository;
-  }
-
-  static ChallengeRepository? getChallengeRepository() {
-    return _challengeRepository;
-  }
-
-  static void setMedalRepository(MedalRepository repository) {
-    _medalRepository = repository;
-  }
-
-  static MedalRepository? getMedalRepository() {
-    return _medalRepository;
-  }
-
-  static void setNotificationRepository(NotificationRepository repository) {
-    _notificationRepository = repository;
-  }
-
-  static NotificationRepository? getNotificationRepository() {
-    return _notificationRepository;
-  }
-
-  static void setGoogleFitRepository(GoogleFitRepository repository) {
-    _googleFitRepository = repository;
-  }
-
-  static GoogleFitRepository? getGoogleFitRepository() {
-    return _googleFitRepository;
-  }
-
-  static GoRouter createRouter(AuthBloc authBloc) {
+  static GoRouter createRouter(
+    AuthBloc authBloc,
+    FitnessProfileRepository fitnessProfileRepo,
+    GoogleFitRepository googleFitRepo,
+  ) {
     return GoRouter(
       initialLocation: '/',
       refreshListenable: GoRouterRefreshStream(authBloc.stream),
 
       redirect: (context, state) async {
-        // Lấy state trực tiếp từ Bloc thay vì dùng authRepository thủ công
         final authState = authBloc.state;
         final bool isAuthenticated = authState is Authenticated;
-        final UserRole? role =
-            authState.role; // Cần đảm bảo AuthState đã có getter role
+        final UserRole? role = authState.role;
 
         final isOnWelcomePage = state.matchedLocation == '/welcome';
         final isOnLoginPage = state.matchedLocation == '/login';
@@ -218,27 +67,24 @@ class AppRoutes {
             state.matchedLocation.startsWith('/password-reset') ||
             state.matchedLocation.startsWith('/reset-password');
 
-        // 1. Nếu chưa đăng nhập và cố truy cập route bị khóa -> Đá về Welcome
         if (!isAuthenticated && !isOnAuthPages) {
           return '/welcome';
         }
 
-        // 2. Nếu đã đăng nhập nhưng ở trang Auth -> Đưa vào Dashboard theo Role
         if (isAuthenticated && isOnAuthPages) {
           if (role == UserRole.expert) return '/expert/dashboard';
           if (role == UserRole.pendingExpert) return '/expert/pending';
-          return '/'; // Mặc định về trang chủ user
+          return '/';
         }
 
-        // 3. Phân quyền (Role Guard) - Tránh đi lạc
         final isExpertRoute = state.matchedLocation.startsWith('/expert');
         if (isExpertRoute &&
             role != UserRole.expert &&
             role != UserRole.pendingExpert) {
-          return '/'; // User cố tình gõ url /expert -> đá về home
+          return '/';
         }
 
-        return null; // Không có lỗi gì -> Đi tiếp
+        return null;
       },
       routes: [
         GoRoute(
@@ -251,8 +97,7 @@ class AppRoutes {
           name: 'onboarding-height',
           redirect: (context, state) async {
             if (_fitnessProfileRepository != null) {
-              final result =
-                  await _fitnessProfileRepository!.hasFitnessProfile();
+              final result = await fitnessProfileRepo.hasFitnessProfile();
               return result.fold(
                 (failure) => null,
                 (hasProfile) => hasProfile ? '/' : null,
@@ -267,8 +112,7 @@ class AppRoutes {
           name: 'onboarding-weight',
           redirect: (context, state) async {
             if (_fitnessProfileRepository != null) {
-              final result =
-                  await _fitnessProfileRepository!.hasFitnessProfile();
+              final result = await fitnessProfileRepo.hasFitnessProfile();
               return result.fold(
                 (failure) => null,
                 (hasProfile) => hasProfile ? '/' : null,
@@ -286,8 +130,7 @@ class AppRoutes {
           name: 'onboarding-body-measurements',
           redirect: (context, state) async {
             if (_fitnessProfileRepository != null) {
-              final result =
-                  await _fitnessProfileRepository!.hasFitnessProfile();
+              final result = await fitnessProfileRepo.hasFitnessProfile();
               return result.fold(
                 (failure) => null,
                 (hasProfile) => hasProfile ? '/' : null,
@@ -308,8 +151,7 @@ class AppRoutes {
           name: 'onboarding-activity',
           redirect: (context, state) async {
             if (_fitnessProfileRepository != null) {
-              final result =
-                  await _fitnessProfileRepository!.hasFitnessProfile();
+              final result = await fitnessProfileRepo.hasFitnessProfile();
               return result.fold(
                 (failure) => null,
                 (hasProfile) => hasProfile ? '/' : null,
@@ -426,12 +268,10 @@ class AppRoutes {
           path: '/google-fit-sync',
           name: 'google-fit-sync',
           builder:
-              (context, state) => GoogleFitSyncScreen(
-                googleFitRepository: _googleFitRepository!,
-              ),
+              (context, state) =>
+                  GoogleFitSyncScreen(googleFitRepository: googleFitRepo),
         ),
 
-        // --- CÁC ROUTE CỦA CHUYÊN GIA ---
         GoRoute(
           path: '/expert/dashboard',
           name: 'expert-dashboard',

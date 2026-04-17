@@ -1,7 +1,8 @@
-import 'package:da1/src/config/routes.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
+import 'package:da1/src/features/user/home/data/activity_record_repository.dart';
 import 'package:da1/src/features/user/home/domain/activity.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class LogActivityScreen extends StatefulWidget {
@@ -36,16 +37,7 @@ class _LogActivityScreenState extends State<LogActivityScreen> {
       return;
     }
 
-    final repository = AppRoutes.getActivityRecordRepository();
-    if (repository == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Activity record repository not available'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
+    final repository = context.read<ActivityRecordRepository>();
 
     setState(() {
       _isLoading = true;
