@@ -2,40 +2,40 @@ import 'package:da1/src/app.dart';
 import 'package:da1/src/config/api_config.dart';
 import 'package:da1/src/config/env.dart';
 import 'package:da1/src/config/routes.dart';
-import 'package:da1/src/data/repositories/auth_repository.dart';
-import 'package:da1/src/data/repositories/user_repository.dart';
-import 'package:da1/src/data/repositories/user_repository_impl.dart';
-import 'package:da1/src/data/datasources/user_remote_data_source.dart';
-import 'package:da1/src/data/repositories/fitness_profile_repository.dart';
-import 'package:da1/src/data/datasources/fitness_profile_remote_data_source.dart';
-import 'package:da1/src/data/repositories/fitness_goal_repository.dart';
-import 'package:da1/src/data/datasources/fitness_goal_remote_data_source.dart';
-import 'package:da1/src/data/repositories/meal_repository.dart';
-import 'package:da1/src/data/datasources/meal_remote_data_source.dart';
-import 'package:da1/src/data/repositories/daily_meal_repository.dart';
-import 'package:da1/src/data/datasources/daily_meal_remote_data_source.dart';
-import 'package:da1/src/data/repositories/daily_log_repository.dart';
-import 'package:da1/src/data/datasources/daily_log_remote_data_source.dart';
-import 'package:da1/src/data/repositories/diet_type_repository.dart';
-import 'package:da1/src/data/datasources/diet_type_remote_data_source.dart';
-import 'package:da1/src/data/repositories/activity_repository.dart';
-import 'package:da1/src/data/datasources/activity_remote_data_source.dart';
-import 'package:da1/src/data/repositories/activity_record_repository.dart';
-import 'package:da1/src/data/datasources/activity_record_remote_data_source.dart';
-import 'package:da1/src/data/repositories/chat_session_repository.dart';
-import 'package:da1/src/data/datasources/chat_session_remote_data_source.dart';
-import 'package:da1/src/data/repositories/chat_message_repository.dart';
-import 'package:da1/src/data/datasources/chat_message_remote_data_source.dart';
-import 'package:da1/src/data/repositories/challenge_repository.dart';
-import 'package:da1/src/data/datasources/challenge_remote_data_source.dart';
-import 'package:da1/src/data/repositories/medal_repository.dart';
-import 'package:da1/src/data/datasources/medal_remote_data_source.dart';
-import 'package:da1/src/data/repositories/notification_repository.dart';
-import 'package:da1/src/data/datasources/notification_remote_data_source.dart';
-import 'package:da1/src/data/repositories/google_fit_repository.dart';
-import 'package:da1/src/data/datasources/google_fit_remote_data_source.dart';
-import 'package:da1/src/data/repositories/device_repository.dart';
-import 'package:da1/src/data/datasources/device_remote_data_source.dart';
+import 'package:da1/src/features/shared/auth/data/auth_repository.dart';
+import 'package:da1/src/features/user/home/data/user_repository.dart';
+import 'package:da1/src/features/user/home/data/datasources/user_repository_impl.dart';
+import 'package:da1/src/features/user/home/data/datasources/user_remote_data_source.dart';
+import 'package:da1/src/features/user/profile/data/fitness_profile_repository.dart';
+import 'package:da1/src/features/user/profile/data/datasources/fitness_profile_remote_data_source.dart';
+import 'package:da1/src/features/shared/auth/data/fitness_goal_repository.dart';
+import 'package:da1/src/features/shared/auth/data/datasources/fitness_goal_remote_data_source.dart';
+import 'package:da1/src/features/user/home/data/meal_repository.dart';
+import 'package:da1/src/features/user/home/data/datasources/meal_remote_data_source.dart';
+import 'package:da1/src/features/user/home/data/daily_meal_repository.dart';
+import 'package:da1/src/features/user/home/data/datasources/daily_meal_remote_data_source.dart';
+import 'package:da1/src/features/user/home/data/daily_log_repository.dart';
+import 'package:da1/src/features/user/home/data/datasources/daily_log_remote_data_source.dart';
+import 'package:da1/src/features/user/home/data/diet_type_repository.dart';
+import 'package:da1/src/features/user/home/data/datasources/diet_type_remote_data_source.dart';
+import 'package:da1/src/features/user/home/data/activity_repository.dart';
+import 'package:da1/src/features/user/home/data/datasources/activity_remote_data_source.dart';
+import 'package:da1/src/features/user/home/data/activity_record_repository.dart';
+import 'package:da1/src/features/user/home/data/datasources/activity_record_remote_data_source.dart';
+import 'package:da1/src/features/user/chat/data/chat_session_repository.dart';
+import 'package:da1/src/features/user/chat/data/datasources/chat_session_remote_data_source.dart';
+import 'package:da1/src/features/user/chat/data/chat_message_repository.dart';
+import 'package:da1/src/features/user/chat/data/datasources/chat_message_remote_data_source.dart';
+import 'package:da1/src/features/user/home/data/challenge_repository.dart';
+import 'package:da1/src/features/user/home/data/datasources/challenge_remote_data_source.dart';
+import 'package:da1/src/features/user/home/data/medal_repository.dart';
+import 'package:da1/src/features/user/home/data/datasources/medal_remote_data_source.dart';
+import 'package:da1/src/features/user/notifications/data/notification_repository.dart';
+import 'package:da1/src/features/user/notifications/data/datasources/notification_remote_data_source.dart';
+import 'package:da1/src/features/user/profile/data/google_fit_repository.dart';
+import 'package:da1/src/features/user/profile/data/datasources/google_fit_remote_data_source.dart';
+import 'package:da1/src/features/shared/notifications/data/device_repository.dart';
+import 'package:da1/src/features/shared/notifications/data/datasources/device_remote_data_source.dart';
 import 'package:da1/src/core/services/deep_link_service.dart';
 import 'package:da1/src/core/services/local_notification_service.dart';
 import 'package:da1/src/core/services/device_registration_service.dart';
@@ -44,16 +44,17 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:da1/src/presentation/bloc/auth/auth.dart';
-import 'package:da1/src/presentation/bloc/user/user.dart';
-import 'package:da1/src/data/repositories/auth_repository_impl.dart';
-import 'package:da1/src/data/datasources/auth_local_data_source.dart';
-import 'package:da1/src/data/datasources/auth_remote_data_source.dart';
+import 'package:da1/src/core/bloc/auth/auth.dart';
+import 'package:da1/src/core/bloc/user/user.dart';
+import 'package:da1/src/features/shared/auth/data/auth_repository_impl.dart';
+import 'package:da1/src/features/shared/auth/data/datasources/auth_local_data_source.dart';
+import 'package:da1/src/features/shared/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:go_router/go_router.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
-import 'package:da1/src/domain/entities/user.dart';
+import 'package:da1/src/core/models/user.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 import 'firebase_options.dart';
 
@@ -72,16 +73,6 @@ void main() async {
   // Set up background message handler
   FirebaseMessaging.onBackgroundMessage(
     DeviceRegistrationService.backgroundMessageHandler,
-  );
-
-  // Initialize local notifications with tap handler
-  await LocalNotificationService().initialize(
-    onNotificationTap: (postId) {
-      // Navigate to community screen when notification is tapped
-      if (postId != null) {
-        AppRoutes.router.go('/community');
-      }
-    },
   );
 
   SystemChrome.setPreferredOrientations(<DeviceOrientation>[
@@ -224,6 +215,21 @@ void main() async {
   final AuthBloc authBloc = AuthBloc(authRepository: authRepository);
   final UserBloc userBloc = UserBloc(userRepository: userRepository);
 
+  final GoRouter appRouter = AppRoutes.createRouter(
+    authBloc,
+    fitnessProfileRepository,
+    googleFitRepository,
+  );
+
+  // Initialize local notifications with tap handler
+  await LocalNotificationService().initialize(
+    onNotificationTap: (postId) {
+      // Navigate to community screen when notification is tapped
+      if (postId != null) {
+        appRouter.go('/community');
+      }
+    },
+  );
   // Check authentication status on app startup
   authBloc.add(CheckAuthStatus());
 
@@ -241,36 +247,18 @@ void main() async {
       // Handle notification taps when app is in background
       deviceService.setupNotificationTapHandler((postId) {
         if (postId != null) {
-          AppRoutes.router.go('/community');
+          appRouter.go('/community');
         }
       });
 
       // Handle notification when app was terminated
       await deviceService.handleInitialMessage((postId) {
         if (postId != null) {
-          AppRoutes.router.go('/community');
+          appRouter.go('/community');
         }
       });
     }
   });
-
-  // Set repositories for routing
-  AppRoutes.setAuthRepository(authRepository);
-  AppRoutes.setFitnessProfileRepository(fitnessProfileRepository);
-  AppRoutes.setFitnessGoalRepository(fitnessGoalRepository);
-  AppRoutes.setMealRepository(mealRepository);
-  AppRoutes.setDailyMealRepository(dailyMealRepository);
-  AppRoutes.setDailyLogRepository(dailyLogRepository);
-  AppRoutes.setDietTypeRepository(dietTypeRepository);
-  AppRoutes.setActivityRepository(activityRepository);
-  AppRoutes.setActivityRecordRepository(activityRecordRepository);
-  AppRoutes.setChatSessionRepository(chatSessionRepository);
-  AppRoutes.setChatMessageRepository(chatMessageRepository);
-  AppRoutes.setUserRepository(userRepository);
-  AppRoutes.setChallengeRepository(challengeRepository);
-  AppRoutes.setMedalRepository(medalRepository);
-  AppRoutes.setNotificationRepository(notificationRepository);
-  AppRoutes.setGoogleFitRepository(googleFitRepository);
 
   deepLinkService.initDeepLinks(
     onTokenReceived: (String token) async {
@@ -295,7 +283,7 @@ void main() async {
       _pendingResetPasswordDeepLink = '/reset-password';
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_pendingResetPasswordDeepLink != null) {
-          AppRoutes.router.go(_pendingResetPasswordDeepLink!);
+          appRouter.go(_pendingResetPasswordDeepLink!);
           _pendingResetPasswordDeepLink = null;
         }
       });
@@ -308,22 +296,68 @@ void main() async {
         final currentState = authBloc.state;
         if (currentState is Authenticated) {
           // User is signed in, navigate to Google Fit sync screen
-          AppRoutes.router.go('/google-fit-sync');
+          appRouter.go('/google-fit-sync');
         } else {
           // User is not signed in, navigate to home
-          AppRoutes.router.go('/');
+          appRouter.go('/');
         }
       });
     },
   );
 
   runApp(
-    MultiBlocProvider(
+    MultiRepositoryProvider(
       providers: [
-        BlocProvider<AuthBloc>(create: (context) => authBloc),
-        BlocProvider<UserBloc>(create: (context) => userBloc),
+        RepositoryProvider<FitnessGoalRepository>(
+          create: (context) => fitnessGoalRepository,
+        ),
+        RepositoryProvider<MealRepository>(create: (context) => mealRepository),
+        RepositoryProvider<DailyMealRepository>(
+          create: (context) => dailyMealRepository,
+        ),
+        RepositoryProvider<DailyLogRepository>(
+          create: (context) => dailyLogRepository,
+        ),
+        RepositoryProvider<DietTypeRepository>(
+          create: (context) => dietTypeRepository,
+        ),
+        RepositoryProvider<ActivityRepository>(
+          create: (context) => activityRepository,
+        ),
+        RepositoryProvider<ActivityRecordRepository>(
+          create: (context) => activityRecordRepository,
+        ),
+        RepositoryProvider<ChatSessionRepository>(
+          create: (context) => chatSessionRepository,
+        ),
+        RepositoryProvider<ChatMessageRepository>(
+          create: (context) => chatMessageRepository,
+        ),
+        RepositoryProvider<ChallengeRepository>(
+          create: (context) => challengeRepository,
+        ),
+        RepositoryProvider<MedalRepository>(
+          create: (context) => medalRepository,
+        ),
+        RepositoryProvider<NotificationRepository>(
+          create: (context) => notificationRepository,
+        ),
+        RepositoryProvider<FitnessProfileRepository>(
+          create: (context) => fitnessProfileRepository,
+        ),
+        RepositoryProvider<GoogleFitRepository>(
+          create: (context) => googleFitRepository,
+        ),
+        RepositoryProvider<AuthRepository>(create: (context) => authRepository),
+        RepositoryProvider<UserRepository>(create: (context) => userRepository),
       ],
-      child: const App(),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider<AuthBloc>(create: (context) => authBloc),
+          BlocProvider<UserBloc>(create: (context) => userBloc),
+        ],
+        child: App(appRouter: appRouter),
+      ),
     ),
   );
 }

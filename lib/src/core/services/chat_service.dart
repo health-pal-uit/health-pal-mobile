@@ -1,5 +1,5 @@
-import 'package:da1/src/domain/entities/chat_message.dart';
-import 'package:da1/src/data/models/chat_model.dart';
+import 'package:da1/src/features/user/chat/domain/chat_message.dart';
+import 'package:da1/src/features/user/chat/data/chat_model.dart';
 
 class ChatService {
   static final ChatService _instance = ChatService._internal();
