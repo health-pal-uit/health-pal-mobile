@@ -33,10 +33,10 @@ class SignUpScreenState extends State<SignUpScreen> {
   @override
   void initState() {
     super.initState();
-    void listener() => setState(() {});
-    _usernameFocusNode.addListener(listener);
-    _emailFocusNode.addListener(listener);
-    _passwordFocusNode.addListener(listener);
+    // Rebuild UI on focus change to update border/fill colors
+    _usernameFocusNode.addListener(() => setState(() {}));
+    _emailFocusNode.addListener(() => setState(() {}));
+    _passwordFocusNode.addListener(() => setState(() {}));
   }
 
   @override
@@ -61,7 +61,7 @@ class SignUpScreenState extends State<SignUpScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
+            colorScheme: const ColorScheme.light(
               primary: AppColors.primary,
               onPrimary: Colors.white,
               surface: Colors.white,
@@ -72,10 +72,10 @@ class SignUpScreenState extends State<SignUpScreen> {
         );
       },
     );
+
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
-        // Format as displayed: MM/DD/YYYY
         _dateOfBirthController.text =
             '${picked.month.toString().padLeft(2, '0')}/${picked.day.toString().padLeft(2, '0')}/${picked.year}';
       });
@@ -86,9 +86,9 @@ class SignUpScreenState extends State<SignUpScreen> {
     if (isLoading) return;
 
     if (_formKey.currentState!.validate()) {
-      // Format date as DD/MM/YYYY for API
       String formattedDate = '';
       if (_selectedDate != null) {
+        // Format date as DD/MM/YYYY for API
         formattedDate =
             '${_selectedDate!.day.toString().padLeft(2, '0')}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.year}';
       }
@@ -105,19 +105,6 @@ class SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
-  BoxDecoration _fieldBoxDecoration() {
-    return BoxDecoration(
-      borderRadius: BorderRadius.circular(8),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.1),
-          blurRadius: 6,
-          offset: const Offset(0, 2),
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
@@ -130,7 +117,9 @@ class SignUpScreenState extends State<SignUpScreen> {
         if (state is Unauthenticated) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Đăng ký thành công! Vui lòng kiểm tra email.'),
+              content: Text(
+                'Registration successful! Please check your email.',
+              ),
               backgroundColor: Colors.green,
             ),
           );
@@ -146,252 +135,155 @@ class SignUpScreenState extends State<SignUpScreen> {
 
           return Scaffold(
             resizeToAvoidBottomInset: true,
+            backgroundColor: Colors.white,
             body: SafeArea(
               child: Stack(
                 children: [
                   Form(
                     key: _formKey,
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 30,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              const SizedBox(height: 30),
-                              Row(
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.arrow_back),
-                                    onPressed: () => context.pop(),
-                                  ),
-                                  Expanded(
-                                    child: Text(
-                                      "Sign Up",
-                                      style: AppTypography.headline,
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 48),
-                                ],
-                              ),
-                              const SizedBox(height: 30),
+                          _buildHeader(context),
+                          const SizedBox(height: 40),
 
-                              // --- FIELD 1: EMAIL ---
-                              Container(
-                                decoration: _fieldBoxDecoration(),
-                                child: TextFormField(
-                                  controller: _emailController,
-                                  focusNode: _emailFocusNode,
-                                  style: AppTypography.body,
-                                  keyboardType: TextInputType.emailAddress,
-                                  decoration: _fieldInputDecoration(
-                                    hintText: "Enter your email",
-                                    icon: Icons.email_outlined,
-                                    hasFocus: _emailFocusNode.hasFocus,
-                                  ),
-                                  validator:
-                                      (value) =>
-                                          value!.isEmpty
-                                              ? "Email is required"
-                                              : null,
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-
-                              // --- FIELD 2: USERNAME ---
-                              Container(
-                                decoration: _fieldBoxDecoration(),
-                                child: TextFormField(
-                                  controller: _usernameController,
-                                  focusNode: _usernameFocusNode,
-                                  style: AppTypography.body,
-                                  decoration: _fieldInputDecoration(
-                                    hintText: "Enter your username",
-                                    icon: Icons.account_circle_outlined,
-                                    hasFocus: _usernameFocusNode.hasFocus,
-                                  ),
-                                  validator:
-                                      (value) =>
-                                          value!.isEmpty
-                                              ? "Username is required"
-                                              : null,
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-
-                              // --- FIELD 3: GENDER ---
-                              Container(
-                                decoration: _fieldBoxDecoration(),
-                                child: DropdownButtonFormField<String>(
-                                  initialValue: _selectedGender,
-                                  style: AppTypography.body,
-                                  decoration: _fieldInputDecoration(
-                                    hintText: "Select your gender",
-                                    icon: Icons.person_outline,
-                                    hasFocus: false,
-                                  ),
-                                  items: const [
-                                    DropdownMenuItem(
-                                      value: 'true',
-                                      child: Text('Male'),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: 'false',
-                                      child: Text('Female'),
-                                    ),
-                                  ],
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _selectedGender = value!;
-                                    });
-                                  },
-                                  validator:
-                                      (value) =>
-                                          value == null || value.isEmpty
-                                              ? "Gender is required"
-                                              : null,
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-
-                              // --- FIELD 4: DATE OF BIRTH ---
-                              Container(
-                                decoration: _fieldBoxDecoration(),
-                                child: TextFormField(
-                                  controller: _dateOfBirthController,
-                                  style: AppTypography.body,
-                                  readOnly: true,
-                                  decoration: _fieldInputDecoration(
-                                    hintText: "Select your date of birth",
-                                    icon: Icons.cake_outlined,
-                                    hasFocus: false,
-                                  ),
-                                  onTap: () => _selectDate(context),
-                                  validator:
-                                      (value) =>
-                                          value!.isEmpty
-                                              ? "Date of birth is required"
-                                              : null,
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-
-                              // --- FIELD 4: PASSWORD ---
-                              Container(
-                                decoration: _fieldBoxDecoration(),
-                                child: TextFormField(
-                                  controller: _passwordController,
-                                  focusNode: _passwordFocusNode,
-                                  obscureText: _isPasswordObscured,
-                                  style: AppTypography.body,
-                                  decoration: _fieldInputDecoration(
-                                    hintText: "Enter your password",
-                                    icon: Icons.lock_outline,
-                                    hasFocus: _passwordFocusNode.hasFocus,
-                                    suffixIcon: IconButton(
-                                      icon: Icon(
-                                        _isPasswordObscured
-                                            ? Icons.visibility_off
-                                            : Icons.visibility,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                      onPressed: () {
-                                        setState(() {
-                                          _isPasswordObscured =
-                                              !_isPasswordObscured;
-                                        });
-                                      },
-                                    ),
-                                  ),
-                                  validator:
-                                      (value) =>
-                                          value!.length < 6
-                                              ? "Password must be 6+ chars"
-                                              : null,
-                                ),
-                              ),
-                            ],
+                          _buildTextField(
+                            controller: _emailController,
+                            focusNode: _emailFocusNode,
+                            hintText: "Enter your email",
+                            icon: Icons.email_outlined,
+                            keyboardType: TextInputType.emailAddress,
+                            validator:
+                                (value) =>
+                                    value!.isEmpty ? "Email is required" : null,
                           ),
+                          const SizedBox(height: 20),
 
-                          // --- BUTTONS ---
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                          _buildTextField(
+                            controller: _usernameController,
+                            focusNode: _usernameFocusNode,
+                            hintText: "Enter your username",
+                            icon: Icons.account_circle_outlined,
+                            validator:
+                                (value) =>
+                                    value!.isEmpty
+                                        ? "Username is required"
+                                        : null,
+                          ),
+                          const SizedBox(height: 20),
+
+                          _buildDropdownField(),
+                          const SizedBox(height: 20),
+
+                          _buildTextField(
+                            controller: _dateOfBirthController,
+                            hintText: "Select your date of birth",
+                            icon: Icons.cake_outlined,
+                            readOnly: true,
+                            onTap: () => _selectDate(context),
+                            validator:
+                                (value) =>
+                                    value!.isEmpty
+                                        ? "Date of birth is required"
+                                        : null,
+                          ),
+                          const SizedBox(height: 20),
+
+                          _buildTextField(
+                            controller: _passwordController,
+                            focusNode: _passwordFocusNode,
+                            hintText: "Enter your password",
+                            icon: Icons.lock_outline,
+                            obscureText: _isPasswordObscured,
+                            validator:
+                                (value) =>
+                                    value!.length < 6
+                                        ? "Password must be 6+ chars"
+                                        : null,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _isPasswordObscured
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                color: AppColors.textSecondary,
+                              ),
+                              onPressed:
+                                  () => setState(
+                                    () =>
+                                        _isPasswordObscured =
+                                            !_isPasswordObscured,
+                                  ),
+                            ),
+                          ),
+                          const SizedBox(height: 30),
+
+                          _buildSignUpButton(context, isLoading),
+                          const SizedBox(height: 16),
+
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const SizedBox(height: 30),
-                              ElevatedButton(
-                                onPressed:
-                                    () => _onSignUpPressed(context, isLoading),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      isLoading
-                                          ? Colors.grey
-                                          : AppColors.primary,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(30),
-                                  ),
-                                ),
+                              Text(
+                                "Already have an account?",
+                                style: AppTypography.caption,
+                              ),
+                              TextButton(
+                                onPressed: () => context.pop(),
                                 child: Text(
-                                  isLoading ? "Signing Up..." : "Sign Up",
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
+                                  "Sign in",
+                                  style: AppTypography.captionLink,
                                 ),
                               ),
-                              const SizedBox(height: 10),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    "Already have an account?",
-                                    style: AppTypography.caption,
-                                  ),
-                                  TextButton(
-                                    onPressed: () => context.pop(),
-                                    child: Text(
-                                      "Sign in",
-                                      style: AppTypography.captionLink,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-                              Row(
-                                children: const [
-                                  Expanded(child: Divider()),
-                                  Padding(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                    ),
-                                    child: Text("OR"),
-                                  ),
-                                  Expanded(child: Divider()),
-                                ],
-                              ),
-                              const SizedBox(height: 20),
-                              SignInButton(
-                                Buttons.Google,
-                                text: "Continue with Google",
-                                onPressed: () {
-                                  // TODO: Thêm logic Google Sign Up
-                                },
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                  horizontal: 12,
-                                ),
-                              ),
-                              const SizedBox(height: 30),
                             ],
                           ),
+                          const SizedBox(height: 10),
+
+                          _buildDivider(),
+                          const SizedBox(height: 20),
+
+                          SignInButton(
+                            Buttons.Google,
+                            text: "Continue with Google",
+                            onPressed: () {
+                              // TODO: Add Google Sign Up logic
+                            },
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 8,
+                              horizontal: 12,
+                            ),
+                          ),
+
+                          const SizedBox(height: 40),
+
+                          //expert registration
+                          const Divider(),
+                          const SizedBox(height: 16),
+                          Text(
+                            "Are you a healthcare professional?",
+                            textAlign: TextAlign.center,
+                            style: AppTypography.caption.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => context.push('/expert/signup'),
+                            child: Text(
+                              "Register as an Expert",
+                              style: AppTypography.body.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
                         ],
                       ),
                     ),
@@ -410,32 +302,150 @@ class SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  InputDecoration _fieldInputDecoration({
+  Widget _buildHeader(BuildContext context) {
+    return Row(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
+        Expanded(
+          child: Text(
+            "Sign Up",
+            style: AppTypography.headline,
+            textAlign: TextAlign.center,
+          ),
+        ),
+        const SizedBox(width: 48),
+      ],
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
     required String hintText,
     required IconData icon,
-    bool hasFocus = false,
+    FocusNode? focusNode,
+    TextInputType? keyboardType,
+    bool obscureText = false,
+    bool readOnly = false,
+    VoidCallback? onTap,
     Widget? suffixIcon,
+    String? Function(String?)? validator,
   }) {
-    return InputDecoration(
-      filled: true,
-      fillColor:
-          hasFocus ? AppColors.backgroundDark : AppColors.backgroundLight,
-      prefixIcon: Icon(icon),
-      suffixIcon: suffixIcon,
-      hintText: hintText,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: AppColors.textSecondary),
+    final hasFocus = focusNode?.hasFocus ?? false;
+
+    return Container(
+      decoration: _fieldBoxDecoration(),
+      child: TextFormField(
+        controller: controller,
+        focusNode: focusNode,
+        obscureText: obscureText,
+        keyboardType: keyboardType,
+        readOnly: readOnly,
+        onTap: onTap,
+        style: AppTypography.body,
+        validator: validator,
+        decoration: InputDecoration(
+          filled: true,
+          fillColor:
+              hasFocus ? AppColors.backgroundDark : AppColors.backgroundLight,
+          prefixIcon: Icon(icon),
+          suffixIcon: suffixIcon,
+          hintText: hintText,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: AppColors.textSecondary),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Colors.blue, width: 2),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Colors.red),
+          ),
+        ),
       ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Colors.blue, width: 2),
+    );
+  }
+
+  Widget _buildDropdownField() {
+    return Container(
+      decoration: _fieldBoxDecoration(),
+      child: DropdownButtonFormField<String>(
+        initialValue: _selectedGender,
+        style: AppTypography.body,
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: AppColors.backgroundLight,
+          prefixIcon: const Icon(Icons.person_outline),
+          hintText: "Select your gender",
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: AppColors.textSecondary),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Colors.blue, width: 2),
+          ),
+        ),
+        items: const [
+          DropdownMenuItem(value: 'true', child: Text('Male')),
+          DropdownMenuItem(value: 'false', child: Text('Female')),
+        ],
+        onChanged: (value) => setState(() => _selectedGender = value!),
+        validator:
+            (value) =>
+                value == null || value.isEmpty ? "Gender is required" : null,
       ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Colors.red),
+    );
+  }
+
+  Widget _buildSignUpButton(BuildContext context, bool isLoading) {
+    return ElevatedButton(
+      onPressed: () => _onSignUpPressed(context, isLoading),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isLoading ? Colors.grey : AppColors.primary,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
       ),
+      child: Text(
+        isLoading ? "Signing Up..." : "Sign Up",
+        style: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Row(
+      children: const [
+        Expanded(child: Divider()),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8),
+          child: Text("OR", style: TextStyle(color: Colors.grey)),
+        ),
+        Expanded(child: Divider()),
+      ],
+    );
+  }
+
+  BoxDecoration _fieldBoxDecoration() {
+    return BoxDecoration(
+      borderRadius: BorderRadius.circular(8),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.05),
+          blurRadius: 6,
+          offset: const Offset(0, 2),
+        ),
+      ],
     );
   }
 }
