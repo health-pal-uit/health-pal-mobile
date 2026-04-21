@@ -224,8 +224,8 @@ class AppRoutes {
           path: '/email-verification',
           name: 'email-verification',
           builder: (context, state) {
-            final email = state.extra as String;
-            return EmailVerificationScreen(email: email);
+            final data = (state.extra as Map<String, dynamic>?) ?? {};
+            return EmailVerificationScreen(data: data);
           },
         ),
         GoRoute(

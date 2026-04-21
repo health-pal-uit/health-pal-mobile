@@ -7,9 +7,9 @@ import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
-  final String email;
+  final Map<String, dynamic> data;
 
-  const EmailVerificationScreen({super.key, required this.email});
+  const EmailVerificationScreen({super.key, required this.data});
 
   @override
   State<EmailVerificationScreen> createState() =>
@@ -17,6 +17,9 @@ class EmailVerificationScreen extends StatefulWidget {
 }
 
 class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
+  late String email;
+  late bool isExpertMode;
+
   late Timer _resendTimer;
   int _countdown = 60;
   bool _canResend = false;
@@ -26,6 +29,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   @override
   void initState() {
     super.initState();
+    email = widget.data['email'] ?? '';
+    isExpertMode = widget.data['isExpertMode'] ?? false;
+
     _startResendTimer();
     _startPolling();
   }
@@ -57,7 +63,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
   void _startPolling() {
     _pollTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      context.read<AuthBloc>().add(CheckVerificationStatus(widget.email));
+      context.read<AuthBloc>().add(CheckVerificationStatus(email));
     });
   }
 
@@ -83,7 +89,11 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
         if (state is VerificationSuccess) {
           _pollTimer.cancel();
           _resendTimer.cancel();
-          context.go('/login');
+          if (isExpertMode) {
+            context.go('/expert/signup');
+          } else {
+            context.go('/login');
+          }
         }
 
         if (state is AuthFailure) {
@@ -113,7 +123,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  "We've sent a confirmation link to:\n${widget.email}",
+                  "We've sent a confirmation link to:\n$email",
                   textAlign: TextAlign.center,
                   style: AppTypography.body.copyWith(
                     color: AppColors.textSecondary,
