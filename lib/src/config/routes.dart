@@ -1,3 +1,4 @@
+import 'package:da1/src/features/expert/auth/presentation/expert_registration_screen.dart';
 import 'package:da1/src/features/user/advisor/presentation/advisor_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/email_verification_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/forgot_password_screen.dart';
@@ -345,6 +346,11 @@ class AppRoutes {
               path: '/profile',
               name: 'profile',
               builder: (context, state) => ProfileScreen(),
+            ),
+            GoRoute(
+              path: '/expert/signup',
+              name: 'expert-signup',
+              builder: (context, state) => const ExpertRegistrationScreen(),
             ),
           ],
         ),

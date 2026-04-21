@@ -3,6 +3,7 @@ import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class ExpertRegistrationScreen extends StatefulWidget {
@@ -19,6 +20,7 @@ class _ExpertRegistrationScreenState extends State<ExpertRegistrationScreen> {
   final _licenseIdController = TextEditingController();
   final _bioController = TextEditingController();
   final _feeController = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
 
   String? _selectedRoleId;
   File? _licensePhoto;
@@ -29,6 +31,19 @@ class _ExpertRegistrationScreenState extends State<ExpertRegistrationScreen> {
     {'id': 'role-uuid-2', 'name': 'Fitness Coach'},
     {'id': 'role-uuid-3', 'name': 'Therapist'},
   ];
+
+  Future<void> _pickImage() async {
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
+
+    if (image != null) {
+      setState(() {
+        _licensePhoto = File(image.path);
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -145,9 +160,7 @@ class _ExpertRegistrationScreenState extends State<ExpertRegistrationScreen> {
                 //license_photo
                 _buildLabel("Upload License/Certificate"),
                 GestureDetector(
-                  onTap: () {
-                    // TODO: Open Image Picker
-                  },
+                  onTap: _pickImage,
                   child: Container(
                     height: 150,
                     decoration: BoxDecoration(
