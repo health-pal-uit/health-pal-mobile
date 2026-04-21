@@ -15,6 +15,7 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class SignUpScreenState extends State<SignUpScreen> {
+  bool _isExpertMode = false;
   final _formKey = GlobalKey<FormState>();
 
   final _usernameController = TextEditingController();
@@ -125,7 +126,10 @@ class SignUpScreenState extends State<SignUpScreen> {
           );
           context.push(
             '/email-verification',
-            extra: _emailController.text.trim(),
+            extra: {
+              'email': _emailController.text.trim(),
+              'isExpertMode': _isExpertMode,
+            },
           );
         }
       },
@@ -264,26 +268,51 @@ class SignUpScreenState extends State<SignUpScreen> {
                           const SizedBox(height: 40),
 
                           //expert registration
-                          const Divider(),
-                          const SizedBox(height: 16),
-                          Text(
-                            "Are you a healthcare professional?",
-                            textAlign: TextAlign.center,
-                            style: AppTypography.caption.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () => context.push('/expert/signup'),
-                            child: Text(
-                              "Register as an Expert",
-                              style: AppTypography.body.copyWith(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.bold,
+                          if (!_isExpertMode) ...[
+                            const Divider(),
+                            const SizedBox(height: 16),
+                            Text(
+                              "Are you a healthcare professional?",
+                              textAlign: TextAlign.center,
+                              style: AppTypography.caption.copyWith(
+                                color: AppColors.textSecondary,
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 20),
+                            TextButton(
+                              onPressed:
+                                  () => setState(() => _isExpertMode = true),
+                              child: Text(
+                                "Register as an Expert",
+                                style: AppTypography.body.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                          ] else ...[
+                            const Divider(),
+                            const SizedBox(height: 16),
+                            Text(
+                              "Step 1/2: Create your account first.\nYou will upload credentials after verifying your email.",
+                              textAlign: TextAlign.center,
+                              style: AppTypography.caption.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed:
+                                  () => setState(() => _isExpertMode = false),
+                              child: Text(
+                                "Register as a normal user instead",
+                                style: AppTypography.captionLink.copyWith(
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                          ],
                         ],
                       ),
                     ),
@@ -307,11 +336,17 @@ class SignUpScreenState extends State<SignUpScreen> {
       children: [
         IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (_isExpertMode) {
+              setState(() => _isExpertMode = false);
+            } else {
+              context.pop();
+            }
+          },
         ),
         Expanded(
           child: Text(
-            "Sign Up",
+            _isExpertMode ? "Expert Registration" : "Sign Up",
             style: AppTypography.headline,
             textAlign: TextAlign.center,
           ),
