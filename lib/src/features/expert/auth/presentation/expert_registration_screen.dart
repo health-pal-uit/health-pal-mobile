@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/features/expert/auth/data/expert_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -24,7 +26,7 @@ class _ExpertRegistrationScreenState extends State<ExpertRegistrationScreen> {
 
   String? _selectedRoleId;
   File? _licensePhoto;
-  final bool _isLoading = false;
+  bool _isLoading = false;
 
   final List<Map<String, String>> _expertRoles = [
     {'id': 'role-uuid-1', 'name': 'Nutritionist'},
@@ -53,7 +55,7 @@ class _ExpertRegistrationScreenState extends State<ExpertRegistrationScreen> {
     super.dispose();
   }
 
-  void _onSubmit() {
+  void _onSubmit() async {
     if (_formKey.currentState!.validate()) {
       if (_licensePhoto == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -64,8 +66,41 @@ class _ExpertRegistrationScreenState extends State<ExpertRegistrationScreen> {
         );
         return;
       }
-      // TODO: Put AuthBloc / ExpertBloc to call API POST /experts/me
-      // print("Ready to submit to backend!");
+
+      setState(() => _isLoading = true);
+
+      final repository = context.read<ExpertRepository>();
+
+      final result = await repository.registerExpert(
+        roleId: _selectedRoleId!,
+        licenseId: _licenseIdController.text.trim(),
+        bio: _bioController.text.trim(),
+        fee: int.parse(_feeController.text.trim()),
+        licensePhoto: _licensePhoto!,
+      );
+
+      if (!mounted) return;
+
+      result.fold(
+        (error) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(error.toString().replaceAll('Exception: ', '')),
+              backgroundColor: Colors.red,
+            ),
+          );
+        },
+        (_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Application submitted successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          context.go('/expert/pending');
+        },
+      );
     }
   }
 
