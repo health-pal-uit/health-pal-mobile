@@ -106,6 +106,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<UserModel> getCurrentUser() async {
     final response = await dio.get(ApiConfig.getProfile);
-    return UserModel.fromJson(response.data['data']);
+    final userData = response.data['data'];
+    return UserModel.fromJson(userData);
   }
 }

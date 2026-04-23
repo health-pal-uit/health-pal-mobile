@@ -28,6 +28,22 @@ class User extends Equatable {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
+    String roleString = 'user';
+    if (json['role'] != null) {
+      if (json['role'] is Map<String, dynamic> &&
+          json['role']['name'] != null) {
+        roleString = json['role']['name'];
+      } else if (json['role'] is String) {
+        roleString = json['role'];
+      }
+    }
+
+    UserRole parsedRole = UserRole.user;
+    if (roleString == 'expert') parsedRole = UserRole.expert;
+    if (roleString == 'pending_expert' || roleString == 'pendingExpert') {
+      parsedRole = UserRole.pendingExpert;
+    }
+
     return User(
       id: json['id'] as String,
       username: json['username'] as String?,
@@ -40,14 +56,8 @@ class User extends Equatable {
               ? DateTime.parse(json['birth_date'] as String)
               : null,
       avatarUrl: json['avatar_url'] as String?,
-      isVerified: json['is_verified'] as bool?,
-      role:
-          json['role'] != null
-              ? UserRole.values.firstWhere(
-                (e) => e.name == json['role'],
-                orElse: () => UserRole.user,
-              )
-              : null,
+      isVerified: json['isVerified'] as bool?,
+      role: parsedRole,
     );
   }
 

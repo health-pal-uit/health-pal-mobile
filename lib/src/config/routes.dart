@@ -53,6 +53,9 @@ class AppRoutes {
 
       redirect: (context, state) async {
         final authState = authBloc.state;
+        if (authState is AuthLoading || authState is AuthInitial) {
+          return null;
+        }
         final bool isAuthenticated = authState is Authenticated;
         final UserRole? role = authState.role;
 
