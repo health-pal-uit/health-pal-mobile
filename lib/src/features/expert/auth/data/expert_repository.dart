@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:da1/src/core/errors/failure.dart';
+import 'package:da1/src/features/expert/auth/data/datasources/expert_remote_data_source.dart';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 
@@ -13,9 +15,9 @@ abstract class ExpertRepository {
 }
 
 class ExpertRepositoryImpl implements ExpertRepository {
-  final Dio dio;
+  final ExpertRemoteDataSource remoteDataSource;
 
-  ExpertRepositoryImpl({required this.dio});
+  ExpertRepositoryImpl({required this.remoteDataSource});
 
   @override
   Future<Either<Exception, void>> registerExpert({
@@ -26,20 +28,13 @@ class ExpertRepositoryImpl implements ExpertRepository {
     required File licensePhoto,
   }) async {
     try {
-      String fileName = licensePhoto.path.split('/').last;
-
-      FormData formData = FormData.fromMap({
-        'expert_role_id': roleId,
-        'license_id': licenseId,
-        'bio': bio,
-        'token_per_minute': fee,
-        'license_photo': await MultipartFile.fromFile(
-          licensePhoto.path,
-          filename: fileName,
-        ),
-      });
-
-      await dio.post('/experts/me', data: formData);
+      await remoteDataSource.registerExpert(
+        roleId: roleId,
+        licenseId: licenseId,
+        bio: bio,
+        fee: fee,
+        licensePhoto: licensePhoto,
+      );
 
       return const Right(null);
     } on DioException catch (e) {
@@ -48,6 +43,16 @@ class ExpertRepositoryImpl implements ExpertRepository {
       return Left(Exception(errorMessage));
     } catch (e) {
       return Left(Exception('An unexpected error occurred.'));
+    }
+  }
+
+  Future<Either<Failure, List<Map<String, dynamic>>>> getExpertRoles() async {
+    try {
+      final response = await remoteDataSource.getExpertRoles();
+      final roles = List<Map<String, dynamic>>.from(response);
+      return Right(roles);
+    } catch (e) {
+      return Left(ServerFailure('Failed to load expert roles: $e'));
     }
   }
 }

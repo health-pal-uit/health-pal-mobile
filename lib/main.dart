@@ -2,6 +2,7 @@ import 'package:da1/src/app.dart';
 import 'package:da1/src/config/api_config.dart';
 import 'package:da1/src/config/env.dart';
 import 'package:da1/src/config/routes.dart';
+import 'package:da1/src/features/expert/auth/data/datasources/expert_remote_data_source.dart';
 import 'package:da1/src/features/expert/auth/data/expert_repository.dart';
 import 'package:da1/src/features/shared/auth/data/auth_repository.dart';
 import 'package:da1/src/features/user/home/data/user_repository.dart';
@@ -213,7 +214,10 @@ void main() async {
     remoteDataSource: deviceRemoteDataSource,
   );
 
-  final ExpertRepository expertRepository = ExpertRepositoryImpl(dio: dio);
+  final expertRemoteDataSource = ExpertRemoteDataSourceImpl(dio: dio);
+  final ExpertRepository expertRepository = ExpertRepositoryImpl(
+    remoteDataSource: expertRemoteDataSource,
+  );
 
   final AuthBloc authBloc = AuthBloc(authRepository: authRepository);
   final UserBloc userBloc = UserBloc(userRepository: userRepository);

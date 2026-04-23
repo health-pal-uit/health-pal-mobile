@@ -28,11 +28,7 @@ class _ExpertRegistrationScreenState extends State<ExpertRegistrationScreen> {
   File? _licensePhoto;
   bool _isLoading = false;
 
-  final List<Map<String, String>> _expertRoles = [
-    {'id': 'role-uuid-1', 'name': 'Nutritionist'},
-    {'id': 'role-uuid-2', 'name': 'Fitness Coach'},
-    {'id': 'role-uuid-3', 'name': 'Therapist'},
-  ];
+  final List<Map<String, String>> _expertRoles = [];
 
   Future<void> _pickImage() async {
     final XFile? image = await _picker.pickImage(
