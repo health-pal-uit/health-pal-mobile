@@ -1,6 +1,7 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
 import 'package:da1/src/core/bloc/auth/auth.dart';
+import 'package:da1/src/features/shared/auth/data/datasources/auth_local_data_source.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_signin_button/button_list.dart';
@@ -109,7 +110,7 @@ class SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
+      listener: (context, state) async {
         if (state is AuthFailure) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.message), backgroundColor: Colors.red),
@@ -124,7 +125,15 @@ class SignUpScreenState extends State<SignUpScreen> {
               backgroundColor: Colors.green,
             ),
           );
-          context.push(
+
+          final localDataSource = context.read<AuthLocalDataSource>();
+          final router = GoRouter.of(context);
+
+          if (_isExpertMode) {
+            await localDataSource.saveExpertIntent(true);
+          }
+
+          router.push(
             '/email-verification',
             extra: {
               'email': _emailController.text.trim(),

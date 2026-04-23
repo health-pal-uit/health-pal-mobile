@@ -1,6 +1,7 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
 import 'package:da1/src/core/bloc/auth/auth.dart';
+import 'package:da1/src/features/shared/auth/data/datasources/auth_local_data_source.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
@@ -60,25 +61,29 @@ class LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
+      listener: (context, state) async {
         if (state is AuthFailure) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.message), backgroundColor: Colors.red),
           );
         }
         if (state is Authenticated) {
-          final isExpert = widget.extraData?['isExpertMode'] ?? false;
+          final localDataSource = context.read<AuthLocalDataSource>();
+          final router = GoRouter.of(context);
+          final messenger = ScaffoldMessenger.of(context);
+          final isExpertIntent = await localDataSource.getExpertIntent();
 
-          ScaffoldMessenger.of(context).showSnackBar(
+          messenger.showSnackBar(
             SnackBar(
               content: Text("Login Successful! Welcome, ${state.user.email}"),
               backgroundColor: Colors.green,
             ),
           );
-          if (isExpert) {
-            context.go('/expert/signup');
+
+          if (isExpertIntent) {
+            router.go('/expert/signup');
           } else {
-            context.go('/');
+            router.go('/');
           }
         }
       },
