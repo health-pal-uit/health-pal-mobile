@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/core/bloc/auth/auth.dart';
 import 'package:da1/src/features/expert/auth/data/expert_repository.dart';
+import 'package:da1/src/features/shared/auth/data/datasources/auth_local_data_source.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -66,6 +68,10 @@ class _ExpertRegistrationScreenState extends State<ExpertRegistrationScreen> {
       setState(() => _isLoading = true);
 
       final repository = context.read<ExpertRepository>();
+      final localDataSource = context.read<AuthLocalDataSource>();
+      final authBloc = context.read<AuthBloc>();
+      final messenger = ScaffoldMessenger.of(context);
+      final router = GoRouter.of(context);
 
       final result = await repository.registerExpert(
         roleId: _selectedRoleId!,
@@ -80,21 +86,27 @@ class _ExpertRegistrationScreenState extends State<ExpertRegistrationScreen> {
       result.fold(
         (error) {
           setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
+          messenger.showSnackBar(
             SnackBar(
               content: Text(error.toString().replaceAll('Exception: ', '')),
               backgroundColor: Colors.red,
             ),
           );
         },
-        (_) {
-          ScaffoldMessenger.of(context).showSnackBar(
+        (_) async {
+          await localDataSource.clearExpertIntent();
+
+          messenger.showSnackBar(
             const SnackBar(
               content: Text('Application submitted successfully!'),
               backgroundColor: Colors.green,
             ),
           );
-          context.go('/expert/pending');
+          authBloc.add(LoadCurrentUser());
+          await Future.delayed(const Duration(milliseconds: 500));
+          if (mounted) {
+            router.go('/expert/pending');
+          }
         },
       );
     }

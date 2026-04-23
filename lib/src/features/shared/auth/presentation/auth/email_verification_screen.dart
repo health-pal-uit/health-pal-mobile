@@ -90,7 +90,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
           _pollTimer.cancel();
           _resendTimer.cancel();
 
-          context.go('/login', extra: {'isExpertMode': isExpertMode});
+          context.go('/login');
         }
 
         if (state is AuthFailure) {
