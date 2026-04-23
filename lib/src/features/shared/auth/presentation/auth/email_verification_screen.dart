@@ -89,17 +89,14 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
         if (state is VerificationSuccess) {
           _pollTimer.cancel();
           _resendTimer.cancel();
-          if (isExpertMode) {
-            context.go('/expert/signup');
-          } else {
-            context.go('/login');
-          }
+
+          context.go('/login', extra: {'isExpertMode': isExpertMode});
         }
 
         if (state is AuthFailure) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text('Lỗi: ${state.message}')));
+          ).showSnackBar(SnackBar(content: Text('Error: ${state.message}')));
         }
       },
       child: Scaffold(

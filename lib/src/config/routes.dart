@@ -198,7 +198,10 @@ class AppRoutes {
         GoRoute(
           path: '/login',
           name: 'login',
-          builder: (context, state) => const LoginScreen(),
+          builder: (context, state) {
+            final data = (state.extra as Map<String, dynamic>?) ?? {};
+            return LoginScreen(extraData: data);
+          },
         ),
         GoRoute(
           path: '/signup',

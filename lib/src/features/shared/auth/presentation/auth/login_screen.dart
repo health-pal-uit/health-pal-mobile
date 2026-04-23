@@ -7,7 +7,9 @@ import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:go_router/go_router.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final Map<String, dynamic>? extraData;
+
+  const LoginScreen({super.key, this.extraData});
 
   @override
   LoginScreenState createState() => LoginScreenState();
@@ -65,13 +67,19 @@ class LoginScreenState extends State<LoginScreen> {
           );
         }
         if (state is Authenticated) {
+          final isExpert = widget.extraData?['isExpertMode'] ?? false;
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text("Login Successful! Welcome, ${state.user.email}"),
               backgroundColor: Colors.green,
             ),
           );
-          context.go('/');
+          if (isExpert) {
+            context.go('/expert/signup');
+          } else {
+            context.go('/');
+          }
         }
       },
       child: BlocBuilder<AuthBloc, AuthState>(
