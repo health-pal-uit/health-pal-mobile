@@ -39,8 +39,11 @@ class User extends Equatable {
     }
 
     UserRole parsedRole = UserRole.user;
-    if (roleString == 'expert') parsedRole = UserRole.expert;
-    if (roleString == 'pending_expert' || roleString == 'pendingExpert') {
+    if (roleString == 'expert') {
+      parsedRole = UserRole.expert;
+    } else if (roleString == 'pending_expert' ||
+        roleString == 'pendingExpert' ||
+        roleString == 'pending-expert') {
       parsedRole = UserRole.pendingExpert;
     }
 

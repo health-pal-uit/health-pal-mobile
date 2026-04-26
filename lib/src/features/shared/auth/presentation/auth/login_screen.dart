@@ -1,6 +1,7 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
 import 'package:da1/src/core/bloc/auth/auth.dart';
+import 'package:da1/src/core/models/user.dart';
 import 'package:da1/src/features/shared/auth/data/datasources/auth_local_data_source.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -80,8 +81,14 @@ class LoginScreenState extends State<LoginScreen> {
             ),
           );
 
+          final role = state.user.role;
+
           if (isExpertIntent) {
             router.go('/expert/signup');
+          } else if (role == UserRole.pendingExpert) {
+            router.go('/expert/pending');
+          } else if (role == UserRole.expert) {
+            router.go('/expert/dashboard');
           } else {
             router.go('/');
           }
