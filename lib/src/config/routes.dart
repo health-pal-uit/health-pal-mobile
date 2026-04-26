@@ -11,6 +11,7 @@ import 'package:da1/src/features/shared/auth/presentation/auth/onboarding/onboar
 import 'package:da1/src/features/shared/auth/presentation/auth/onboarding/onboarding_activity_level_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/onboarding/onboarding_goal_type_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/signup_screen.dart';
+import 'package:da1/src/features/shared/auth/presentation/auth/expert_signup_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/welcome/welcome_scroll_screen.dart';
 import 'package:da1/src/features/user/community/presentation/community_screen.dart';
 import 'package:da1/src/features/user/community/presentation/personal_profile_screen.dart';
@@ -25,6 +26,7 @@ import 'package:da1/src/features/user/home/presentation/step/steps_screen.dart';
 import 'package:da1/src/features/user/profile/presentation/profile_screen.dart';
 import 'package:da1/src/features/user/home/presentation/home_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/login_screen.dart';
+import 'package:da1/src/features/shared/auth/presentation/auth/expert_login_screen.dart';
 import 'package:da1/src/features/user/home/presentation/widgets/custom_bottom_nav.dart';
 import 'package:da1/src/features/user/profile/data/fitness_profile_repository.dart';
 import 'package:da1/src/features/user/profile/data/google_fit_repository.dart';
@@ -61,11 +63,15 @@ class AppRoutes {
 
         final isOnWelcomePage = state.matchedLocation == '/welcome';
         final isOnLoginPage = state.matchedLocation == '/login';
+        final isOnExpertLoginPage = state.matchedLocation == '/expert/login';
         final isOnSignupPage = state.matchedLocation == '/signup';
+        final isOnExpertSignupPage = state.matchedLocation == '/expert/signup';
         final isOnAuthPages =
             isOnWelcomePage ||
             isOnLoginPage ||
+            isOnExpertLoginPage ||
             isOnSignupPage ||
+            isOnExpertSignupPage ||
             state.matchedLocation.startsWith('/email-verification') ||
             state.matchedLocation.startsWith('/forgot-password') ||
             state.matchedLocation.startsWith('/password-reset') ||
@@ -82,7 +88,11 @@ class AppRoutes {
         }
 
         final isExpertRoute = state.matchedLocation.startsWith('/expert');
+        final isExpertLoginPage = state.matchedLocation == '/expert/login';
+
         if (isExpertRoute &&
+            !isExpertLoginPage &&
+            !isOnExpertSignupPage &&
             role != UserRole.expert &&
             role != UserRole.pendingExpert) {
           return '/';
@@ -204,9 +214,22 @@ class AppRoutes {
           },
         ),
         GoRoute(
+          path: '/expert/login',
+          name: 'expert-login',
+          builder: (context, state) {
+            final data = (state.extra as Map<String, dynamic>?) ?? {};
+            return ExpertLoginScreen(extraData: data);
+          },
+        ),
+        GoRoute(
           path: '/signup',
           name: 'signup',
           builder: (context, state) => const SignUpScreen(),
+        ),
+        GoRoute(
+          path: '/expert/signup',
+          name: 'expert-signup',
+          builder: (context, state) => const ExpertSignUpScreen(),
         ),
         GoRoute(
           path: '/forgot-password',
@@ -354,8 +377,8 @@ class AppRoutes {
               builder: (context, state) => ProfileScreen(),
             ),
             GoRoute(
-              path: '/expert/signup',
-              name: 'expert-signup',
+              path: '/expert/registration',
+              name: 'expert-registration',
               builder: (context, state) => const ExpertRegistrationScreen(),
             ),
           ],

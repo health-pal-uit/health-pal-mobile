@@ -7,16 +7,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:go_router/go_router.dart';
 
-class LoginScreen extends StatefulWidget {
+class ExpertLoginScreen extends StatefulWidget {
   final Map<String, dynamic>? extraData;
 
-  const LoginScreen({super.key, this.extraData});
+  const ExpertLoginScreen({super.key, this.extraData});
 
   @override
-  LoginScreenState createState() => LoginScreenState();
+  ExpertLoginScreenState createState() => ExpertLoginScreenState();
 }
 
-class LoginScreenState extends State<LoginScreen> {
+class ExpertLoginScreenState extends State<ExpertLoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -80,13 +80,10 @@ class LoginScreenState extends State<LoginScreen> {
 
           final role = state.user.role;
 
-          // ✅ Regular user login - route based on role
           if (role == UserRole.pendingExpert) {
             router.go('/expert/pending');
-          } else if (role == UserRole.expert) {
-            router.go('/expert/dashboard');
           } else {
-            router.go('/');
+            router.go('/expert/registration');
           }
         }
       },
@@ -118,7 +115,7 @@ class LoginScreenState extends State<LoginScreen> {
                           const SizedBox(height: 20),
                           _buildSignUpLink(context),
                           const SizedBox(height: 10),
-                          _buildSwitchToExpertLink(context),
+                          _buildSwitchToRegularUserLink(context),
                           const SizedBox(height: 10),
                           _buildDivider(),
                           const SizedBox(height: 20),
@@ -159,7 +156,7 @@ class LoginScreenState extends State<LoginScreen> {
           children: [
             Expanded(
               child: Text(
-                "Sign In",
+                "Expert Sign In",
                 style: AppTypography.headline,
                 textAlign: TextAlign.center,
               ),
@@ -313,22 +310,22 @@ class LoginScreenState extends State<LoginScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text("Don’t have an account?", style: AppTypography.caption),
+        Text("Don't have an account?", style: AppTypography.caption),
         TextButton(
-          onPressed: () => context.push('/signup'),
+          onPressed: () => context.push('/expert/signup'),
           child: Text("Sign up", style: AppTypography.captionLink),
         ),
       ],
     );
   }
 
-  Widget _buildSwitchToExpertLink(BuildContext context) {
+  Widget _buildSwitchToRegularUserLink(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text("Are you an expert?", style: AppTypography.caption),
+        Text("Regular user?", style: AppTypography.caption),
         TextButton(
-          onPressed: () => context.go('/expert/login'),
+          onPressed: () => context.go('/login'),
           child: Text("Sign in here", style: AppTypography.captionLink),
         ),
       ],
