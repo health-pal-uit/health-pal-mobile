@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:da1/src/core/bloc/auth/auth.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/features/shared/auth/data/datasources/auth_local_data_source.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
   final Map<String, dynamic> data;
@@ -85,18 +86,28 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
+      listener: (context, state) async {
+        final messenger = ScaffoldMessenger.of(context);
+
         if (state is VerificationSuccess) {
           _pollTimer.cancel();
           _resendTimer.cancel();
 
-          context.go('/login');
+          final localDataSource = context.read<AuthLocalDataSource>();
+          final router = GoRouter.of(context);
+
+          if (isExpertMode) {
+            await localDataSource.saveExpertIntent(true);
+          }
+
+          if (!mounted) return;
+          router.go('/login');
         }
 
         if (state is AuthFailure) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error: ${state.message}')));
+          messenger.showSnackBar(
+            SnackBar(content: Text('Error: ${state.message}')),
+          );
         }
       },
       child: Scaffold(

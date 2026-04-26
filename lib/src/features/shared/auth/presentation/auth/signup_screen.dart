@@ -1,7 +1,6 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
 import 'package:da1/src/core/bloc/auth/auth.dart';
-import 'package:da1/src/features/shared/auth/data/datasources/auth_local_data_source.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_signin_button/button_list.dart';
@@ -109,17 +108,18 @@ class SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final router = GoRouter.of(context);
+
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) async {
         final scaffoldMessenger = ScaffoldMessenger.of(context);
-        final router = GoRouter.of(context);
-        final localDataSource = context.read<AuthLocalDataSource>();
 
         if (state is AuthFailure) {
           scaffoldMessenger.showSnackBar(
             SnackBar(content: Text(state.message), backgroundColor: Colors.red),
           );
         }
+
         if (state is Unauthenticated) {
           scaffoldMessenger.showSnackBar(
             const SnackBar(
@@ -130,42 +130,17 @@ class SignUpScreenState extends State<SignUpScreen> {
             ),
           );
 
-          if (_isExpertMode) {
-            await localDataSource.saveExpertIntent(true);
-          }
+          await Future.delayed(const Duration(milliseconds: 500));
 
-          await Future.delayed(const Duration(milliseconds: 300));
+          if (!mounted) return;
 
-          router.push(
+          await router.push(
             '/email-verification',
             extra: {
               'email': _emailController.text.trim(),
               'isExpertMode': _isExpertMode,
             },
           );
-        }
-
-        if (state is Authenticated) {
-          scaffoldMessenger.showSnackBar(
-            const SnackBar(
-              content: Text('Registration successful!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-
-          if (_isExpertMode) {
-            await localDataSource.saveExpertIntent(true);
-            await Future.delayed(const Duration(milliseconds: 300));
-            router.push(
-              '/email-verification',
-              extra: {
-                'email': _emailController.text.trim(),
-                'isExpertMode': _isExpertMode,
-              },
-            );
-          } else {
-            router.go('/');
-          }
         }
       },
       child: BlocBuilder<AuthBloc, AuthState>(
