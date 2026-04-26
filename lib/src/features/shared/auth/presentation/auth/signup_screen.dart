@@ -111,13 +111,17 @@ class SignUpScreenState extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) async {
+        final scaffoldMessenger = ScaffoldMessenger.of(context);
+        final router = GoRouter.of(context);
+        final localDataSource = context.read<AuthLocalDataSource>();
+
         if (state is AuthFailure) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          scaffoldMessenger.showSnackBar(
             SnackBar(content: Text(state.message), backgroundColor: Colors.red),
           );
         }
         if (state is Unauthenticated) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          scaffoldMessenger.showSnackBar(
             const SnackBar(
               content: Text(
                 'Registration successful! Please check your email.',
@@ -126,12 +130,11 @@ class SignUpScreenState extends State<SignUpScreen> {
             ),
           );
 
-          final localDataSource = context.read<AuthLocalDataSource>();
-          final router = GoRouter.of(context);
-
           if (_isExpertMode) {
             await localDataSource.saveExpertIntent(true);
           }
+
+          await Future.delayed(const Duration(milliseconds: 300));
 
           router.push(
             '/email-verification',
@@ -140,6 +143,29 @@ class SignUpScreenState extends State<SignUpScreen> {
               'isExpertMode': _isExpertMode,
             },
           );
+        }
+
+        if (state is Authenticated) {
+          scaffoldMessenger.showSnackBar(
+            const SnackBar(
+              content: Text('Registration successful!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          if (_isExpertMode) {
+            await localDataSource.saveExpertIntent(true);
+            await Future.delayed(const Duration(milliseconds: 300));
+            router.push(
+              '/email-verification',
+              extra: {
+                'email': _emailController.text.trim(),
+                'isExpertMode': _isExpertMode,
+              },
+            );
+          } else {
+            router.go('/');
+          }
         }
       },
       child: BlocBuilder<AuthBloc, AuthState>(
