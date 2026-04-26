@@ -5,6 +5,8 @@ import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 
 abstract class ExpertRepository {
+  Future<Either<Failure, List<Map<String, dynamic>>>> getExpertRoles();
+
   Future<Either<Exception, void>> registerExpert({
     required String roleId,
     required String licenseId,
@@ -46,6 +48,7 @@ class ExpertRepositoryImpl implements ExpertRepository {
     }
   }
 
+  @override
   Future<Either<Failure, List<Map<String, dynamic>>>> getExpertRoles() async {
     try {
       final response = await remoteDataSource.getExpertRoles();

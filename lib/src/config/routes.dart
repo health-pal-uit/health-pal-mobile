@@ -89,10 +89,14 @@ class AppRoutes {
 
         final isExpertRoute = state.matchedLocation.startsWith('/expert');
         final isExpertLoginPage = state.matchedLocation == '/expert/login';
+        final isExpertRegistrationPage =
+            state.matchedLocation == '/expert/registration';
 
+        // ✅ Expert routes that don't require expert role
         if (isExpertRoute &&
             !isExpertLoginPage &&
             !isOnExpertSignupPage &&
+            !isExpertRegistrationPage &&
             role != UserRole.expert &&
             role != UserRole.pendingExpert) {
           return '/';
@@ -322,6 +326,11 @@ class AppRoutes {
                 ),
               ),
         ),
+        GoRoute(
+          path: '/expert/registration',
+          name: 'expert-registration',
+          builder: (context, state) => const ExpertRegistrationScreen(),
+        ),
 
         ShellRoute(
           builder: (context, state, child) {
@@ -375,11 +384,6 @@ class AppRoutes {
               path: '/profile',
               name: 'profile',
               builder: (context, state) => ProfileScreen(),
-            ),
-            GoRoute(
-              path: '/expert/registration',
-              name: 'expert-registration',
-              builder: (context, state) => const ExpertRegistrationScreen(),
             ),
           ],
         ),

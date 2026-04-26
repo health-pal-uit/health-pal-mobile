@@ -30,7 +30,39 @@ class _ExpertRegistrationScreenState extends State<ExpertRegistrationScreen> {
   File? _licensePhoto;
   bool _isLoading = false;
 
-  final List<Map<String, String>> _expertRoles = [];
+  final List<Map<String, dynamic>> _expertRoles = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadExpertRoles();
+  }
+
+  Future<void> _loadExpertRoles() async {
+    final repository = context.read<ExpertRepository>();
+    final result = await repository.getExpertRoles();
+
+    result.fold(
+      (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to load specialties: ${error.message}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      (roles) {
+        if (mounted) {
+          setState(() {
+            _expertRoles.clear();
+            _expertRoles.addAll(roles);
+          });
+        }
+      },
+    );
+  }
 
   Future<void> _pickImage() async {
     final XFile? image = await _picker.pickImage(
@@ -77,7 +109,7 @@ class _ExpertRegistrationScreenState extends State<ExpertRegistrationScreen> {
         roleId: _selectedRoleId!,
         licenseId: _licenseIdController.text.trim(),
         bio: _bioController.text.trim(),
-        fee: int.parse(_feeController.text.trim()),
+        fee: double.parse(_feeController.text.trim()).round(),
         licensePhoto: _licensePhoto!,
       );
 
@@ -144,20 +176,51 @@ class _ExpertRegistrationScreenState extends State<ExpertRegistrationScreen> {
 
                 //expert_role_id
                 _buildLabel("Area of Expertise"),
-                DropdownButtonFormField<String>(
-                  initialValue: _selectedRoleId,
-                  decoration: _inputDecoration(hint: "Select your specialty"),
-                  items:
-                      _expertRoles.map((role) {
-                        return DropdownMenuItem(
-                          value: role['id'],
-                          child: Text(role['name']!),
-                        );
-                      }).toList(),
-                  onChanged: (val) => setState(() => _selectedRoleId = val),
-                  validator:
-                      (val) => val == null ? "Please select a specialty" : null,
-                ),
+                _expertRoles.isEmpty
+                    ? Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 16,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: AppColors.textSecondary,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Row(
+                          children: [
+                            SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Text('Loading specialties...'),
+                          ],
+                        ),
+                      )
+                    : DropdownButtonFormField<String>(
+                        initialValue: _selectedRoleId,
+                        decoration:
+                            _inputDecoration(hint: "Select your specialty"),
+                        items: _expertRoles
+                            .map<DropdownMenuItem<String>>((role) {
+                              return DropdownMenuItem<String>(
+                                value: role['id'] as String,
+                                child: Text(role['name'] ?? ''),
+                              );
+                            })
+                            .toList(),
+                        onChanged: (val) =>
+                            setState(() => _selectedRoleId = val),
+                        validator: (val) =>
+                            val == null
+                                ? "Please select a specialty"
+                                : null,
+                      ),
                 const SizedBox(height: 24),
 
                 //license_id
@@ -188,11 +251,11 @@ class _ExpertRegistrationScreenState extends State<ExpertRegistrationScreen> {
                 _buildLabel("Consultation Fee (Tokens/min)"),
                 TextFormField(
                   controller: _feeController,
-                  keyboardType: TextInputType.number,
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
                   decoration: _inputDecoration(hint: "e.g., 50"),
                   validator: (val) {
                     if (val == null || val.isEmpty) return "Fee is required";
-                    if (int.tryParse(val) == null) {
+                    if (double.tryParse(val) == null) {
                       return "Must be a valid number";
                     }
                     return null;
