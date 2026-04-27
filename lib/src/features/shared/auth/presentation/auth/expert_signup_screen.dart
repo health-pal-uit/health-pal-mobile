@@ -3,18 +3,16 @@ import 'package:da1/src/config/theme/typography.dart';
 import 'package:da1/src/core/bloc/auth/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_signin_button/button_list.dart';
-import 'package:flutter_signin_button/button_view.dart';
 import 'package:go_router/go_router.dart';
 
-class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
+class ExpertSignUpScreen extends StatefulWidget {
+  const ExpertSignUpScreen({super.key});
 
   @override
-  SignUpScreenState createState() => SignUpScreenState();
+  ExpertSignUpScreenState createState() => ExpertSignUpScreenState();
 }
 
-class SignUpScreenState extends State<SignUpScreen> {
+class ExpertSignUpScreenState extends State<ExpertSignUpScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final _usernameController = TextEditingController();
@@ -133,11 +131,12 @@ class SignUpScreenState extends State<SignUpScreen> {
 
           if (!mounted) return;
 
+          // ✅ Route to email verification with isExpertMode=true
           await router.push(
             '/email-verification',
             extra: {
               'email': _emailController.text.trim(),
-              'isExpertMode': false,
+              'isExpertMode': true,
             },
           );
         }
@@ -163,6 +162,8 @@ class SignUpScreenState extends State<SignUpScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           _buildHeader(context),
+                          const SizedBox(height: 20),
+                          _buildInfoText(),
                           const SizedBox(height: 40),
 
                           _buildTextField(
@@ -197,8 +198,8 @@ class SignUpScreenState extends State<SignUpScreen> {
                             controller: _dateOfBirthController,
                             hintText: "Select your date of birth",
                             icon: Icons.cake_outlined,
-                            readOnly: true,
                             onTap: () => _selectDate(context),
+                            readOnly: true,
                             validator:
                                 (value) =>
                                     value!.isEmpty
@@ -255,33 +256,13 @@ class SignUpScreenState extends State<SignUpScreen> {
                             ],
                           ),
                           const SizedBox(height: 10),
-
-                          _buildDivider(),
-                          const SizedBox(height: 20),
-
-                          SignInButton(
-                            Buttons.Google,
-                            text: "Continue with Google",
-                            onPressed: () {
-                              // TODO: Add Google Sign Up logic
-                            },
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 8,
-                              horizontal: 12,
-                            ),
-                          ),
-
-                          const SizedBox(height: 40),
                         ],
                       ),
                     ),
                   ),
                   if (isLoading)
                     Container(
-                      color: Colors.black.withValues(alpha: 0.5),
+                      color: Colors.black.withValues(alpha: 0.3),
                       child: const Center(child: CircularProgressIndicator()),
                     ),
                 ],
@@ -302,7 +283,7 @@ class SignUpScreenState extends State<SignUpScreen> {
         ),
         Expanded(
           child: Text(
-            "Sign Up",
+            "Expert Sign Up",
             style: AppTypography.headline,
             textAlign: TextAlign.center,
           ),
@@ -312,27 +293,44 @@ class SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
+  Widget _buildInfoText() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        "Step 1/3: Create your account\nYou'll upload your credentials after verifying your email.",
+        textAlign: TextAlign.center,
+        style: AppTypography.caption.copyWith(
+          color: AppColors.primary,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+
   Widget _buildTextField({
     required TextEditingController controller,
+    FocusNode? focusNode,
     required String hintText,
     required IconData icon,
-    FocusNode? focusNode,
-    TextInputType? keyboardType,
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
     bool obscureText = false,
+    Widget? suffixIcon,
     bool readOnly = false,
     VoidCallback? onTap,
-    Widget? suffixIcon,
-    String? Function(String?)? validator,
   }) {
     final hasFocus = focusNode?.hasFocus ?? false;
-
     return Container(
       decoration: _fieldBoxDecoration(),
       child: TextFormField(
         controller: controller,
         focusNode: focusNode,
-        obscureText: obscureText,
         keyboardType: keyboardType,
+        obscureText: obscureText,
         readOnly: readOnly,
         onTap: onTap,
         style: AppTypography.body,
@@ -411,19 +409,6 @@ class SignUpScreenState extends State<SignUpScreen> {
           color: Colors.white,
         ),
       ),
-    );
-  }
-
-  Widget _buildDivider() {
-    return Row(
-      children: const [
-        Expanded(child: Divider()),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8),
-          child: Text("OR", style: TextStyle(color: Colors.grey)),
-        ),
-        Expanded(child: Divider()),
-      ],
     );
   }
 

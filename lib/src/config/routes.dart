@@ -1,3 +1,6 @@
+import 'package:da1/src/features/expert/auth/presentation/expert_pending_screen.dart';
+import 'package:da1/src/features/expert/auth/presentation/expert_registration_screen.dart';
+import 'package:da1/src/features/expert/dashboard/presentation/expert_dashboard_screen.dart';
 import 'package:da1/src/features/user/advisor/presentation/advisor_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/email_verification_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/forgot_password_screen.dart';
@@ -10,6 +13,7 @@ import 'package:da1/src/features/shared/auth/presentation/auth/onboarding/onboar
 import 'package:da1/src/features/shared/auth/presentation/auth/onboarding/onboarding_activity_level_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/onboarding/onboarding_goal_type_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/signup_screen.dart';
+import 'package:da1/src/features/shared/auth/presentation/auth/expert_signup_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/welcome/welcome_scroll_screen.dart';
 import 'package:da1/src/features/user/community/presentation/community_screen.dart';
 import 'package:da1/src/features/user/community/presentation/personal_profile_screen.dart';
@@ -24,6 +28,7 @@ import 'package:da1/src/features/user/home/presentation/step/steps_screen.dart';
 import 'package:da1/src/features/user/profile/presentation/profile_screen.dart';
 import 'package:da1/src/features/user/home/presentation/home_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/login_screen.dart';
+import 'package:da1/src/features/shared/auth/presentation/auth/expert_login_screen.dart';
 import 'package:da1/src/features/user/home/presentation/widgets/custom_bottom_nav.dart';
 import 'package:da1/src/features/user/profile/data/fitness_profile_repository.dart';
 import 'package:da1/src/features/user/profile/data/google_fit_repository.dart';
@@ -52,16 +57,28 @@ class AppRoutes {
 
       redirect: (context, state) async {
         final authState = authBloc.state;
+        if (authState is AuthLoading || authState is AuthInitial) {
+          return null;
+        }
         final bool isAuthenticated = authState is Authenticated;
         final UserRole? role = authState.role;
-
         final isOnWelcomePage = state.matchedLocation == '/welcome';
         final isOnLoginPage = state.matchedLocation == '/login';
+        final isOnExpertLoginPage = state.matchedLocation == '/expert/login';
         final isOnSignupPage = state.matchedLocation == '/signup';
+        final isOnExpertSignupPage = state.matchedLocation == '/expert/signup';
+        final isOnExpertRegistrationPage =
+            state.matchedLocation == '/expert/registration';
+        final isOnExpertPendingPage =
+            state.matchedLocation == '/expert/pending';
         final isOnAuthPages =
             isOnWelcomePage ||
             isOnLoginPage ||
+            isOnExpertLoginPage ||
             isOnSignupPage ||
+            isOnExpertSignupPage ||
+            isOnExpertRegistrationPage ||
+            isOnExpertPendingPage ||
             state.matchedLocation.startsWith('/email-verification') ||
             state.matchedLocation.startsWith('/forgot-password') ||
             state.matchedLocation.startsWith('/password-reset') ||
@@ -77,8 +94,22 @@ class AppRoutes {
           return '/';
         }
 
+        // ✅ Force pendingExpert users to pending screen
+        if (isAuthenticated &&
+            role == UserRole.pendingExpert &&
+            !isOnExpertPendingPage) {
+          return '/expert/pending';
+        }
+
         final isExpertRoute = state.matchedLocation.startsWith('/expert');
+        final isExpertLoginPage = state.matchedLocation == '/expert/login';
+
+        // ✅ Expert routes that don't require expert role
         if (isExpertRoute &&
+            !isExpertLoginPage &&
+            !isOnExpertSignupPage &&
+            !isOnExpertRegistrationPage &&
+            !isOnExpertPendingPage &&
             role != UserRole.expert &&
             role != UserRole.pendingExpert) {
           return '/';
@@ -194,12 +225,28 @@ class AppRoutes {
         GoRoute(
           path: '/login',
           name: 'login',
-          builder: (context, state) => const LoginScreen(),
+          builder: (context, state) {
+            final data = (state.extra as Map<String, dynamic>?) ?? {};
+            return LoginScreen(extraData: data);
+          },
+        ),
+        GoRoute(
+          path: '/expert/login',
+          name: 'expert-login',
+          builder: (context, state) {
+            final data = (state.extra as Map<String, dynamic>?) ?? {};
+            return ExpertLoginScreen(extraData: data);
+          },
         ),
         GoRoute(
           path: '/signup',
           name: 'signup',
           builder: (context, state) => const SignUpScreen(),
+        ),
+        GoRoute(
+          path: '/expert/signup',
+          name: 'expert-signup',
+          builder: (context, state) => const ExpertSignUpScreen(),
         ),
         GoRoute(
           path: '/forgot-password',
@@ -223,8 +270,8 @@ class AppRoutes {
           path: '/email-verification',
           name: 'email-verification',
           builder: (context, state) {
-            final email = state.extra as String;
-            return EmailVerificationScreen(email: email);
+            final data = (state.extra as Map<String, dynamic>?) ?? {};
+            return EmailVerificationScreen(data: data);
           },
         ),
         GoRoute(
@@ -275,22 +322,17 @@ class AppRoutes {
         GoRoute(
           path: '/expert/dashboard',
           name: 'expert-dashboard',
-          builder:
-              (context, state) => const Scaffold(
-                body: Center(
-                  child: Text('Trang Quản lý Chuyên gia (Dashboard)'),
-                ),
-              ),
+          builder: (context, state) => const ExpertDashboardScreen(),
         ),
         GoRoute(
           path: '/expert/pending',
           name: 'expert-pending',
-          builder:
-              (context, state) => const Scaffold(
-                body: Center(
-                  child: Text('Tài khoản chuyên gia đang chờ duyệt'),
-                ),
-              ),
+          builder: (context, state) => const ExpertPendingScreen(),
+        ),
+        GoRoute(
+          path: '/expert/registration',
+          name: 'expert-registration',
+          builder: (context, state) => const ExpertRegistrationScreen(),
         ),
 
         ShellRoute(

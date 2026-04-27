@@ -15,6 +15,25 @@ class UserModel extends User {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    String roleString = 'user';
+    if (json['role'] != null) {
+      if (json['role'] is Map<String, dynamic> &&
+          json['role']['name'] != null) {
+        roleString = json['role']['name'];
+      } else if (json['role'] is String) {
+        roleString = json['role'];
+      }
+    }
+
+    UserRole parsedRole = UserRole.user;
+    if (roleString == 'expert') {
+      parsedRole = UserRole.expert;
+    } else if (roleString == 'pending_expert' ||
+        roleString == 'pendingExpert' ||
+        roleString == 'pending-expert') {
+      parsedRole = UserRole.pendingExpert;
+    }
+
     return UserModel(
       id: json['id'],
       username: json['username'],
@@ -28,7 +47,7 @@ class UserModel extends User {
               : null,
       avatarUrl: json['avatar_url'],
       isVerified: json['isVerified'],
-      role: json['role']?['name'],
+      role: parsedRole,
     );
   }
 
