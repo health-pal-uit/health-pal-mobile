@@ -71,106 +71,124 @@ class _ExpertDashboardScreenState extends State<ExpertDashboardScreen> {
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.only(top: 60, left: 24, right: 24, bottom: 32),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFFA9500), Color(0xFFFF8C00)],
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        String displayName = 'Guest';
+        if (state is Authenticated) {
+          displayName = state.user.fullName ?? state.user.username ?? 'Expert';
+        }
+
+        return Container(
+          padding: const EdgeInsets.only(
+            top: 60,
+            left: 24,
+            right: 24,
+            bottom: 32,
+          ),
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFFFA9500), Color(0xFFFF8C00)],
+            ),
+          ),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Hello, Dr. Anderson',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Hello, $displayName',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Welcome back to your dashboard',
+                          style: TextStyle(
+                            color: const Color(0xFFFFEDD4),
+                            fontSize: 14,
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Welcome back to your dashboard',
-                      style: TextStyle(
-                        color: const Color(0xFFFFEDD4),
-                        fontSize: 14,
-                        fontFamily: 'Poppins',
-                      ),
+                  ),
+                  // Optional: Add an avatar or a logout button here
+                  GestureDetector(
+                    onTap:
+                        () => context.read<AuthBloc>().add(SignOutRequested()),
+                    child: const CircleAvatar(
+                      backgroundColor: Colors.white24,
+                      radius: 20,
+                      child: Icon(Icons.logout, color: Colors.white, size: 20),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              // Consultation Status Toggle Card
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Consultation Status',
+                          style: TextStyle(
+                            color: const Color(0xFFFFEDD4),
+                            fontSize: 14,
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _isOnline ? 'Online' : 'Offline',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Switch(
+                      value: _isOnline,
+                      onChanged: (value) {
+                        setState(() {
+                          _isOnline = value;
+                        });
+                      },
+                      activeThumbColor: Colors.greenAccent,
+                      inactiveThumbColor: Colors.white70,
+                      inactiveTrackColor: Colors.black26,
                     ),
                   ],
-                ),
-              ),
-              // Optional: Add an avatar or a logout button here
-              GestureDetector(
-                onTap: () => context.read<AuthBloc>().add(SignOutRequested()),
-                child: const CircleAvatar(
-                  backgroundColor: Colors.white24,
-                  radius: 20,
-                  child: Icon(Icons.logout, color: Colors.white, size: 20),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 24),
-          // Consultation Status Toggle Card
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Consultation Status',
-                      style: TextStyle(
-                        color: const Color(0xFFFFEDD4),
-                        fontSize: 14,
-                        fontFamily: 'Poppins',
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _isOnline ? 'Online' : 'Offline',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                Switch(
-                  value: _isOnline,
-                  onChanged: (value) {
-                    setState(() {
-                      _isOnline = value;
-                    });
-                  },
-                  activeThumbColor: Colors.greenAccent,
-                  inactiveThumbColor: Colors.white70,
-                  inactiveTrackColor: Colors.black26,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 

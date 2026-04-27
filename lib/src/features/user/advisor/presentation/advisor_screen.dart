@@ -1,15 +1,8 @@
-import 'dart:async';
 import 'package:da1/src/config/api_config.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
-import 'package:da1/src/core/services/chat_service.dart';
 import 'package:da1/src/features/shared/auth/data/datasources/auth_local_data_source.dart';
+import 'package:da1/src/features/user/advisor/presentation/advisor_ai_chat_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:da1/src/features/user/chat/domain/chat_message.dart';
-import 'package:da1/src/features/user/advisor/presentation/widgets/chat_message_widget.dart';
-import 'package:da1/src/features/user/advisor/presentation/widgets/clear_chat_dialog.dart';
-import 'package:da1/src/features/user/advisor/presentation/widgets/empty_state_widget.dart';
-import 'package:da1/src/features/user/advisor/presentation/widgets/typing_indicator.dart';
-import 'package:da1/src/features/user/chat/data/datasources/chat_remote_data_source.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -20,24 +13,73 @@ class AdvisorScreen extends StatefulWidget {
   State<AdvisorScreen> createState() => _AdvisorScreenState();
 }
 
+// Expert Model
+class Expert {
+  final String id;
+  final String bio;
+  final int tokenPerMinute;
+  final String licenseId;
+  final String? licenseUrl;
+  final bool isVerified;
+  final double ratingAvg;
+  final int ratingCount;
+  final String userId;
+  final String username;
+  final String? fullname;
+  final String? avatarUrl;
+  final String roleName;
+  final bool canDoVideo;
+
+  Expert({
+    required this.id,
+    required this.bio,
+    required this.tokenPerMinute,
+    required this.licenseId,
+    this.licenseUrl,
+    required this.isVerified,
+    required this.ratingAvg,
+    required this.ratingCount,
+    required this.userId,
+    required this.username,
+    this.fullname,
+    this.avatarUrl,
+    required this.roleName,
+    required this.canDoVideo,
+  });
+
+  factory Expert.fromJson(Map<String, dynamic> json) {
+    return Expert(
+      id: json['id'] ?? '',
+      bio: json['bio'] ?? '',
+      tokenPerMinute: json['token_per_minute'] ?? 0,
+      licenseId: json['license_id'] ?? '',
+      licenseUrl: json['license_url'],
+      isVerified: json['is_verified'] ?? false,
+      ratingAvg: (json['rating_avg'] ?? 0).toDouble(),
+      ratingCount: json['rating_count'] ?? 0,
+      userId: json['user']?['id'] ?? '',
+      username: json['user']?['username'] ?? '',
+      fullname: json['user']?['fullname'],
+      avatarUrl: json['user']?['avatar_url'],
+      roleName: json['expert_role']?['name'] ?? '',
+      canDoVideo: json['expert_role']?['can_do_video'] ?? false,
+    );
+  }
+}
+
 class _AdvisorScreenState extends State<AdvisorScreen> {
-  final _chatService = ChatService();
-  final TextEditingController _inputController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
-  bool _isTyping = false;
-  late final ChatRemoteDataSource _chatDataSource;
+  late final Dio _dio;
+  List<Expert> _experts = [];
+  bool _loadingExperts = false;
 
   @override
   void initState() {
     super.initState();
-    _inputController.addListener(() {
-      setState(() {});
-    });
 
     final secureStorage = const FlutterSecureStorage();
     final localDataSource = AuthLocalDataSourceImpl(storage: secureStorage);
 
-    final dio = Dio(
+    _dio = Dio(
       BaseOptions(
         baseUrl: ApiConfig.baseUrl,
         connectTimeout: const Duration(seconds: 30),
@@ -45,7 +87,7 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
       ),
     );
 
-    dio.interceptors.add(
+    _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           final token = await localDataSource.getToken();
@@ -57,97 +99,44 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
       ),
     );
 
-    _chatDataSource = ChatRemoteDataSourceImpl(dio: dio);
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_chatService.messages.isNotEmpty) {
-        _scrollToBottom();
-      }
+      _loadExperts();
     });
   }
 
   @override
   void dispose() {
-    _inputController.dispose();
-    _scrollController.dispose();
     super.dispose();
   }
 
-  void _scrollToBottom() {
-    if (_scrollController.hasClients) {
-      Timer(const Duration(milliseconds: 100), () {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      });
-    }
-  }
-
-  Future<void> _getAIResponse(String userMessage) async {
-    setState(() {
-      _isTyping = true;
-    });
+  Future<void> _loadExperts() async {
+    if (!mounted) return;
+    setState(() => _loadingExperts = true);
 
     try {
-      final response = await _chatDataSource.sendMessage(
-        message: userMessage,
-        history: _chatService.apiHistory,
-      );
+      final response = await _dio.get('/experts');
 
       if (!mounted) return;
 
-      _chatService.updateApiHistory(response.history);
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data['data'] is List) {
+          final expertsList =
+              (data['data'] as List)
+                  .map((e) => Expert.fromJson(e as Map<String, dynamic>))
+                  .toList();
 
-      final aiMessage = ChatMessage(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        text: response.reply,
-        sender: MessageSender.ai,
-        timestamp: DateTime.now(),
-      );
-
-      _chatService.addMessage(aiMessage);
-
-      setState(() {
-        _isTyping = false;
-      });
-
-      _scrollToBottom();
+          setState(() {
+            _experts = expertsList;
+            _loadingExperts = false;
+          });
+        }
+      }
     } catch (e) {
       if (!mounted) return;
-
-      setState(() {
-        _isTyping = false;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to get response: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      setState(() => _loadingExperts = false);
+      debugPrint('Error loading experts: $e');
     }
-  }
-
-  void _handleSend() {
-    final text = _inputController.text.trim();
-    if (text.isEmpty) return;
-
-    final userMessage = ChatMessage(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      text: text,
-      sender: MessageSender.user,
-      timestamp: DateTime.now(),
-    );
-
-    _chatService.addMessage(userMessage);
-    setState(() {});
-
-    _inputController.clear();
-    _scrollToBottom();
-
-    _getAIResponse(text);
   }
 
   @override
@@ -157,159 +146,352 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            // Enhanced Header
             Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    AppColors.primary,
+                    AppColors.primary.withValues(alpha: 0.8),
+                  ],
+                ),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'AI Advisor',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Ask anything, get instant advice',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
+                  const Text(
+                    'Find Expert Advisors',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
-                  if (_chatService.messages.isNotEmpty)
-                    IconButton(
-                      icon: const Icon(Icons.add),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder:
-                              (context) => ClearChatDialog(
-                                onConfirm: () {
-                                  setState(() {
-                                    _chatService.clearChat();
-                                  });
-                                },
-                              ),
-                        );
-                      },
-                      tooltip: 'New Session',
+                  const SizedBox(height: 8),
+                  Text(
+                    'Connect with health professionals',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withValues(alpha: 0.9),
                     ),
+                  ),
                 ],
               ),
             ),
 
+            // Experts List
             Expanded(
               child:
-                  _chatService.messages.isEmpty
-                      ? EmptyStateWidget(
-                        onSuggestionTap: (suggestion) {
-                          final userMessage = ChatMessage(
-                            id:
-                                DateTime.now().millisecondsSinceEpoch
-                                    .toString(),
-                            text: suggestion,
-                            sender: MessageSender.user,
-                            timestamp: DateTime.now(),
-                          );
-
-                          _chatService.addMessage(userMessage);
-                          setState(() {});
-                          _scrollToBottom();
-                          _getAIResponse(suggestion);
-                        },
+                  _loadingExperts
+                      ? const Center(child: CircularProgressIndicator())
+                      : _experts.isEmpty
+                      ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.people_outline,
+                              size: 80,
+                              color: Colors.grey[300],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No Experts Available',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Check back soon',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                          ],
+                        ),
                       )
                       : ListView.builder(
-                        controller: _scrollController,
                         padding: const EdgeInsets.all(16),
-                        itemCount:
-                            _chatService.messages.length + (_isTyping ? 1 : 0),
+                        itemCount: _experts.length,
                         itemBuilder: (context, index) {
-                          if (index < _chatService.messages.length) {
-                            return ChatMessageWidget(
-                              message: _chatService.messages[index],
-                            );
-                          } else {
-                            return const TypingIndicator();
-                          }
+                          final expert = _experts[index];
+                          return _buildExpertCard(expert);
                         },
                       ),
-            ),
-
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border(top: BorderSide(color: Colors.grey[200]!)),
-              ),
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.attach_file, color: Colors.grey[400]),
-                    onPressed: () {},
-                  ),
-                  Expanded(
-                    child: Container(
-                      constraints: const BoxConstraints(maxHeight: 120),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: TextField(
-                        controller: _inputController,
-                        maxLines: null,
-                        textInputAction: TextInputAction.newline,
-                        decoration: const InputDecoration(
-                          hintText: 'Type your question…',
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
-                          ),
-                        ),
-                        onSubmitted: (_) => _handleSend(),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color:
-                          _inputController.text.trim().isEmpty
-                              ? AppColors.primary.withValues(alpha: 0.4)
-                              : AppColors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.send, size: 20),
-                      color: Colors.white,
-                      onPressed:
-                          _inputController.text.trim().isEmpty
-                              ? null
-                              : _handleSend,
-                    ),
-                  ),
-                ],
-              ),
             ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AdvisorAiChatScreen(),
+            ),
+          );
+        },
+        backgroundColor: AppColors.primary,
+        icon: const Icon(Icons.smart_toy),
+        label: const Text('AI Chat'),
+        tooltip: 'Ask AI Advisor',
+      ),
+    );
+  }
+
+  Widget _buildExpertCard(Expert expert) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey[200]!, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Top Section - Avatar and Quick Info
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Avatar with Verified Badge
+                Stack(
+                  children: [
+                    Container(
+                      width: 70,
+                      height: 70,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                        border:
+                            expert.isVerified
+                                ? Border.all(color: Colors.green, width: 2)
+                                : null,
+                      ),
+                      child:
+                          expert.avatarUrl != null
+                              ? ClipOval(
+                                child: Image.network(
+                                  expert.avatarUrl!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder:
+                                      (context, error, stackTrace) => Icon(
+                                        Icons.person,
+                                        color: AppColors.primary,
+                                        size: 36,
+                                      ),
+                                ),
+                              )
+                              : Icon(
+                                Icons.person,
+                                color: AppColors.primary,
+                                size: 36,
+                              ),
+                    ),
+                    if (expert.isVerified)
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.green,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.check,
+                            color: Colors.white,
+                            size: 14,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(width: 16),
+                // Name, Role and Rating
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        expert.fullname ?? expert.username,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black87,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          expert.roleName,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.star, color: Colors.amber, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            '$expert.ratingAvg.toStringAsFixed(1)',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          Text(
+                            ' (${expert.ratingCount})',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Divider(height: 1, color: Colors.grey[200]),
+          // Bio Section
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'About',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  expert.bio,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey[700],
+                    height: 1.5,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          Divider(height: 1, color: Colors.grey[200]),
+          // Fee and Action
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Consultation Rate',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.primary.withValues(alpha: 0.1),
+                            AppColors.primary.withValues(alpha: 0.05),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${expert.tokenPerMinute} Tokens/min',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (expert.canDoVideo)
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Booking call with ${expert.fullname ?? expert.username}...',
+                          ),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      elevation: 0,
+                    ),
+                    icon: const Icon(Icons.videocam, size: 18),
+                    label: const Text(
+                      'Book Call',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
