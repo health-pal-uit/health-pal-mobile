@@ -94,11 +94,18 @@ class AppRoutes {
           return '/';
         }
 
-        // ✅ Force pendingExpert users to pending screen
         if (isAuthenticated &&
             role == UserRole.pendingExpert &&
             !isOnExpertPendingPage) {
           return '/expert/pending';
+        }
+
+        if (isAuthenticated && role == UserRole.expert) {
+          final isOnExpertDashboard =
+              state.matchedLocation == '/expert/dashboard';
+          if (!isOnExpertDashboard) {
+            return '/expert/dashboard';
+          }
         }
 
         final isExpertRoute = state.matchedLocation.startsWith('/expert');

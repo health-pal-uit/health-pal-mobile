@@ -1,6 +1,7 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
 import 'package:da1/src/core/bloc/auth/auth.dart';
+import 'package:da1/src/features/expert/dashboard/presentation/widgets/expert_bottom_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -44,7 +45,14 @@ class _ExpertDashboardScreenState extends State<ExpertDashboardScreen> {
             ),
           ],
         ),
-        bottomNavigationBar: _buildBottomNav(),
+        bottomNavigationBar: ExpertBottomNav(
+          currentIndex: _bottomNavIndex,
+          onTap: (index) {
+            setState(() {
+              _bottomNavIndex = index;
+            });
+          },
+        ),
       ),
     );
   }
@@ -426,44 +434,6 @@ class _ExpertDashboardScreenState extends State<ExpertDashboardScreen> {
         const SizedBox(height: 4),
         Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
       ],
-    );
-  }
-
-  Widget _buildBottomNav() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.shade300, width: 1)),
-      ),
-      child: BottomNavigationBar(
-        currentIndex: _bottomNavIndex,
-        onTap: (index) {
-          setState(() {
-            _bottomNavIndex = index;
-          });
-        },
-        backgroundColor: Colors.white,
-        elevation: 0,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard_outlined),
-            activeIcon: Icon(Icons.dashboard),
-            label: 'Dashboard',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_balance_wallet_outlined),
-            activeIcon: Icon(Icons.account_balance_wallet),
-            label: 'Wallet',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings_outlined),
-            activeIcon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
-      ),
     );
   }
 }
