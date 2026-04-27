@@ -1,6 +1,8 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
+import 'package:da1/src/core/bloc/auth/auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -319,7 +321,8 @@ class ExpertPendingScreen extends StatelessWidget {
           height: 48,
           child: OutlinedButton(
             onPressed: () {
-              context.go('/');
+              context.read<AuthBloc>().add(SignOutRequested());
+              context.go('/welcome');
             },
             style: OutlinedButton.styleFrom(
               backgroundColor: Colors.white,
@@ -329,7 +332,7 @@ class ExpertPendingScreen extends StatelessWidget {
               ),
             ),
             child: Text(
-              'Back to Home',
+              'Log Out',
               style: TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 14,
