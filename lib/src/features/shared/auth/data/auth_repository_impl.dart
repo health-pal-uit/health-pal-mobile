@@ -31,16 +31,10 @@ class AuthRepositoryImpl implements AuthRepository {
 
       await localDataSource.saveToken(loginResponse.accessToken);
 
-      Map<String, dynamic> decodedToken = JwtDecoder.decode(
-        loginResponse.accessToken,
-      );
+      // ✅ Fetch complete user data with role after login
+      final userResult = await getCurrentUser();
 
-      final String userId = decodedToken['sub'];
-      final String userEmail = decodedToken['email'];
-
-      final user = User(id: userId, email: userEmail);
-
-      return Right(user);
+      return userResult.fold((failure) => Left(failure), (user) => Right(user));
     } on DioException catch (e) {
       return Left(ServerFailure(e.message ?? 'Lỗi không xác định'));
     } on FormatException catch (e) {
@@ -137,13 +131,10 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await localDataSource.saveToken(token);
 
-      Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
-      final String userId = decodedToken['sub'];
-      final String userEmail = decodedToken['email'];
+      // ✅ Fetch complete user data with role after Google login
+      final userResult = await getCurrentUser();
 
-      final user = User(id: userId, email: userEmail);
-
-      return Right(user);
+      return userResult.fold((failure) => Left(failure), (user) => Right(user));
     } on FormatException catch (e) {
       return Left(ServerFailure('Lỗi giải mã token: ${e.message}'));
     } catch (e) {

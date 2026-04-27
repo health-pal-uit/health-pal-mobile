@@ -178,49 +178,43 @@ class _ExpertRegistrationScreenState extends State<ExpertRegistrationScreen> {
                 _buildLabel("Area of Expertise"),
                 _expertRoles.isEmpty
                     ? Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 16,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: AppColors.textSecondary,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Row(
-                          children: [
-                            SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
-                            ),
-                            SizedBox(width: 12),
-                            Text('Loading specialties...'),
-                          ],
-                        ),
-                      )
-                    : DropdownButtonFormField<String>(
-                        initialValue: _selectedRoleId,
-                        decoration:
-                            _inputDecoration(hint: "Select your specialty"),
-                        items: _expertRoles
-                            .map<DropdownMenuItem<String>>((role) {
-                              return DropdownMenuItem<String>(
-                                value: role['id'] as String,
-                                child: Text(role['name'] ?? ''),
-                              );
-                            })
-                            .toList(),
-                        onChanged: (val) =>
-                            setState(() => _selectedRoleId = val),
-                        validator: (val) =>
-                            val == null
-                                ? "Please select a specialty"
-                                : null,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 16,
                       ),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: AppColors.textSecondary),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Row(
+                        children: [
+                          SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          SizedBox(width: 12),
+                          Text('Loading specialties...'),
+                        ],
+                      ),
+                    )
+                    : DropdownButtonFormField<String>(
+                      initialValue: _selectedRoleId,
+                      decoration: _inputDecoration(
+                        hint: "Select your specialty",
+                      ),
+                      items:
+                          _expertRoles.map<DropdownMenuItem<String>>((role) {
+                            return DropdownMenuItem<String>(
+                              value: role['id'] as String,
+                              child: Text(role['name'] ?? ''),
+                            );
+                          }).toList(),
+                      onChanged: (val) => setState(() => _selectedRoleId = val),
+                      validator:
+                          (val) =>
+                              val == null ? "Please select a specialty" : null,
+                    ),
                 const SizedBox(height: 24),
 
                 //license_id

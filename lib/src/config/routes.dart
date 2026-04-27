@@ -1,4 +1,6 @@
+import 'package:da1/src/features/expert/auth/presentation/expert_pending_screen.dart';
 import 'package:da1/src/features/expert/auth/presentation/expert_registration_screen.dart';
+import 'package:da1/src/features/expert/dashboard/presentation/expert_dashboard_screen.dart';
 import 'package:da1/src/features/user/advisor/presentation/advisor_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/email_verification_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/forgot_password_screen.dart';
@@ -60,18 +62,23 @@ class AppRoutes {
         }
         final bool isAuthenticated = authState is Authenticated;
         final UserRole? role = authState.role;
-
         final isOnWelcomePage = state.matchedLocation == '/welcome';
         final isOnLoginPage = state.matchedLocation == '/login';
         final isOnExpertLoginPage = state.matchedLocation == '/expert/login';
         final isOnSignupPage = state.matchedLocation == '/signup';
         final isOnExpertSignupPage = state.matchedLocation == '/expert/signup';
+        final isOnExpertRegistrationPage =
+            state.matchedLocation == '/expert/registration';
+        final isOnExpertPendingPage =
+            state.matchedLocation == '/expert/pending';
         final isOnAuthPages =
             isOnWelcomePage ||
             isOnLoginPage ||
             isOnExpertLoginPage ||
             isOnSignupPage ||
             isOnExpertSignupPage ||
+            isOnExpertRegistrationPage ||
+            isOnExpertPendingPage ||
             state.matchedLocation.startsWith('/email-verification') ||
             state.matchedLocation.startsWith('/forgot-password') ||
             state.matchedLocation.startsWith('/password-reset') ||
@@ -87,16 +94,22 @@ class AppRoutes {
           return '/';
         }
 
+        // ✅ Force pendingExpert users to pending screen
+        if (isAuthenticated &&
+            role == UserRole.pendingExpert &&
+            !isOnExpertPendingPage) {
+          return '/expert/pending';
+        }
+
         final isExpertRoute = state.matchedLocation.startsWith('/expert');
         final isExpertLoginPage = state.matchedLocation == '/expert/login';
-        final isExpertRegistrationPage =
-            state.matchedLocation == '/expert/registration';
 
         // ✅ Expert routes that don't require expert role
         if (isExpertRoute &&
             !isExpertLoginPage &&
             !isOnExpertSignupPage &&
-            !isExpertRegistrationPage &&
+            !isOnExpertRegistrationPage &&
+            !isOnExpertPendingPage &&
             role != UserRole.expert &&
             role != UserRole.pendingExpert) {
           return '/';
@@ -309,22 +322,12 @@ class AppRoutes {
         GoRoute(
           path: '/expert/dashboard',
           name: 'expert-dashboard',
-          builder:
-              (context, state) => const Scaffold(
-                body: Center(
-                  child: Text('Trang Quản lý Chuyên gia (Dashboard)'),
-                ),
-              ),
+          builder: (context, state) => const ExpertDashboardScreen(),
         ),
         GoRoute(
           path: '/expert/pending',
           name: 'expert-pending',
-          builder:
-              (context, state) => const Scaffold(
-                body: Center(
-                  child: Text('Tài khoản chuyên gia đang chờ duyệt'),
-                ),
-              ),
+          builder: (context, state) => const ExpertPendingScreen(),
         ),
         GoRoute(
           path: '/expert/registration',

@@ -1,7 +1,6 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/config/theme/typography.dart';
 import 'package:da1/src/core/bloc/auth/auth.dart';
-import 'package:da1/src/core/models/user.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
@@ -78,14 +77,10 @@ class LoginScreenState extends State<LoginScreen> {
             ),
           );
 
-          final role = state.user.role;
-
-          // ✅ Regular user login - route based on role
-          if (role == UserRole.pendingExpert) {
-            router.go('/expert/pending');
-          } else if (role == UserRole.expert) {
-            router.go('/expert/dashboard');
-          } else {
+          // ✅ Navigate to root to trigger redirect logic based on role
+          // The redirect() in routes.dart will handle all routing
+          await Future.delayed(const Duration(milliseconds: 300));
+          if (mounted) {
             router.go('/');
           }
         }
