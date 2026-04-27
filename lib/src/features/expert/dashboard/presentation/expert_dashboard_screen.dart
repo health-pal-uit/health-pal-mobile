@@ -262,7 +262,7 @@ class _ExpertDashboardScreenState extends State<ExpertDashboardScreen> {
           Center(
             child: TextButton(
               onPressed: () {
-                // Navigate to wallet details
+                context.go('/expert/wallet');
               },
               child: Text(
                 'View Wallet Details',

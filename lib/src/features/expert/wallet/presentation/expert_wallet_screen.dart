@@ -83,7 +83,7 @@ class _ExpertWalletScreenState extends State<ExpertWalletScreen> {
                                 TextSpan(
                                   text: '2,450 ',
                                   style: TextStyle(
-                                    color: Color(0xFF0A0A0A),
+                                    color: Colors.white,
                                     fontSize: 36,
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -91,7 +91,7 @@ class _ExpertWalletScreenState extends State<ExpertWalletScreen> {
                                 TextSpan(
                                   text: 'Tokens',
                                   style: TextStyle(
-                                    color: Color(0xFF0A0A0A),
+                                    color: Colors.white,
                                     fontSize: 20,
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -118,7 +118,7 @@ class _ExpertWalletScreenState extends State<ExpertWalletScreen> {
                                   const Text(
                                     '+675 T',
                                     style: TextStyle(
-                                      color: Color(0xFF0A0A0A),
+                                      color: Colors.white,
                                       fontSize: 20,
                                       fontWeight: FontWeight.w400,
                                     ),
@@ -140,7 +140,7 @@ class _ExpertWalletScreenState extends State<ExpertWalletScreen> {
                                   const Text(
                                     '+1,850 T',
                                     style: TextStyle(
-                                      color: Color(0xFF0A0A0A),
+                                      color: Colors.white,
                                       fontSize: 20,
                                       fontWeight: FontWeight.w400,
                                     ),
