@@ -14,6 +14,13 @@ class ExpertSettingsScreen extends StatefulWidget {
 
 class _ExpertSettingsScreenState extends State<ExpertSettingsScreen> {
   int _bottomNavIndex = 3; // Settings is at index 3
+  double _consultationRate = 5.0;
+  bool _offerFreeSessions = true;
+  int _freeSessions = 2;
+  final List<String> _uploadedDocs = [
+    'Medical_Degree_2018.pdf',
+    'Board_Certification.pdf',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -24,71 +31,479 @@ class _ExpertSettingsScreenState extends State<ExpertSettingsScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.backgroundLight,
-        appBar: AppBar(
-          backgroundColor: AppColors.primary,
-          elevation: 0,
-          centerTitle: true,
-          automaticallyImplyLeading: false,
-          title: const Text(
-            'Settings',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-        ),
+        backgroundColor: Colors.white,
         body: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Account Section
-                _buildSectionHeader('Account'),
-                const SizedBox(height: 16),
-                ..._buildAccountSettings(),
-                const SizedBox(height: 32),
-
-                // Notification Section
-                _buildSectionHeader('Notifications'),
-                const SizedBox(height: 16),
-                ..._buildNotificationSettings(),
-                const SizedBox(height: 32),
-
-                // Privacy Section
-                _buildSectionHeader('Privacy & Security'),
-                const SizedBox(height: 16),
-                ..._buildPrivacySettings(),
-                const SizedBox(height: 32),
-
-                // Logout Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      _showLogoutDialog(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red.shade500,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      'Log Out',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+          child: Column(
+            children: [
+              // Orange Header
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.only(left: 24, top: 16, bottom: 16),
+                decoration: const BoxDecoration(color: Color(0xFFFA9500)),
+                child: const Text(
+                  'Profile & Fee Settings',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
-              ],
-            ),
+              ),
+              // Content
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Verification Status
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0FDF4),
+                        border: Border.all(
+                          color: const Color(0xFFB9F8CF),
+                          width: 1.25,
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.check_circle,
+                            color: Color(0xFF00A63E),
+                            size: 24,
+                          ),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Text(
+                                'Professionally Verified ✓',
+                                style: TextStyle(
+                                  color: Color(0xFF0D542B),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'Your credentials have been verified',
+                                style: TextStyle(
+                                  color: Color(0xFF008236),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // Professional Details Section
+                    const Text(
+                      'Professional Details',
+                      style: TextStyle(
+                        color: Color(0xFF101828),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildInputField(
+                      'Medical Specialty',
+                      'Cardiology',
+                      enabled: false,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildInputField(
+                      'Years of Experience',
+                      '12',
+                      enabled: false,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildInputField(
+                      'Current Workplace',
+                      'City General Hospital',
+                      enabled: false,
+                    ),
+                    const SizedBox(height: 24),
+                    // Consultation Fee Setup Section
+                    const Text(
+                      'Consultation Fee Setup',
+                      style: TextStyle(
+                        color: Color(0xFF101828),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [const Color(0xFFFFF7ED), Colors.white],
+                        ),
+                        border: Border.all(
+                          color: const Color(0xFFFFEDD4),
+                          width: 1.25,
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Consultation Rate (Tokens/Minute)',
+                            style: TextStyle(
+                              color: Color(0xFF364153),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Slider(
+                                  value: _consultationRate,
+                                  min: 1,
+                                  max: 10,
+                                  divisions: 9,
+                                  activeColor: const Color(0xFF030213),
+                                  inactiveColor: const Color(0xFFECECF0),
+                                  onChanged: (value) {
+                                    setState(() => _consultationRate = value);
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  '${_consultationRate.toInt()} T/min',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          const Text(
+                            'Patients will be charged 5 tokens per minute during video consultations.',
+                            style: TextStyle(
+                              color: Color(0xFF6A7282),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              border: Border(
+                                top: BorderSide(
+                                  color: const Color(0xFFFFEDD4),
+                                  width: 1.25,
+                                ),
+                              ),
+                            ),
+                            child: RichText(
+                              text: TextSpan(
+                                children: [
+                                  const TextSpan(
+                                    text:
+                                        'Estimated earnings for 30-min consultation: ',
+                                    style: TextStyle(
+                                      color: Color(0xFF364153),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text:
+                                        '${(_consultationRate * 30).toInt()} Tokens',
+                                    style: const TextStyle(
+                                      color: Color(0xFFFA9500),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // Free Sessions Section
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEFF6FF),
+                        border: Border.all(
+                          color: const Color(0xFFDBEAFE),
+                          width: 1.25,
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: const [
+                                    Text(
+                                      'Offer Free Initial Sessions',
+                                      style: TextStyle(
+                                        color: Color(0xFF101828),
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      'Attract new patients with complimentary consultations',
+                                      style: TextStyle(
+                                        color: Color(0xFF4A5565),
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Switch(
+                                value: _offerFreeSessions,
+                                activeThumbColor: const Color(0xFF030213),
+                                onChanged: (value) {
+                                  setState(() => _offerFreeSessions = value);
+                                },
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          if (_offerFreeSessions) ...[
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  top: BorderSide(
+                                    color: const Color(0xFFBEDBFF),
+                                    width: 1.25,
+                                  ),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Number of Free Sessions',
+                                    style: TextStyle(
+                                      color: Color(0xFF364153),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF3F3F5),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            '$_freeSessions',
+                                            style: const TextStyle(
+                                              color: Color(0xFF0A0A0A),
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.remove,
+                                            size: 20,
+                                          ),
+                                          onPressed: () {
+                                            if (_freeSessions > 1) {
+                                              setState(() => _freeSessions--);
+                                            }
+                                          },
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.add, size: 20),
+                                          onPressed: () {
+                                            setState(() => _freeSessions++);
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'New patients will receive $_freeSessions free consultation session(s)',
+                                    style: const TextStyle(
+                                      color: Color(0xFF4A5565),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // Certificate Upload Section
+                    const Text(
+                      'Certificate Upload',
+                      style: TextStyle(
+                        color: Color(0xFF101828),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF9FAFB),
+                        border: Border.all(
+                          color: const Color(0xFFD1D5DC),
+                          width: 1.25,
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Column(
+                        children: [
+                          const Icon(
+                            Icons.cloud_upload_outlined,
+                            size: 48,
+                            color: Color(0xFFD1D5DC),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Upload Medical Certificates',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Color(0xFF364153),
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Drag and drop files here or click to browse',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Color(0xFF6A7282),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () {},
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: const Color(0xFF0A0A0A),
+                              side: BorderSide(
+                                color: Colors.black.withValues(alpha: 0.10),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text(
+                              'Select Files',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Uploaded Documents
+                    const Text(
+                      'Uploaded Documents',
+                      style: TextStyle(
+                        color: Color(0xFF364153),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ..._buildUploadedDocuments(),
+                    const SizedBox(height: 24),
+                    // Save Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Profile changes saved successfully!',
+                              ),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Save Profile Changes',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
         bottomNavigationBar: ExpertBottomNav(
@@ -104,236 +519,103 @@ class _ExpertSettingsScreenState extends State<ExpertSettingsScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        color: Color(0xFF101828),
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-      ),
-    );
-  }
-
-  List<Widget> _buildAccountSettings() {
-    return [
-      _buildSettingsTile(
-        icon: Icons.person,
-        title: 'Profile Information',
-        subtitle: 'Update your profile details',
-        onTap: () {},
-      ),
-      _buildSettingsTile(
-        icon: Icons.lock,
-        title: 'Change Password',
-        subtitle: 'Update your password',
-        onTap: () {},
-      ),
-      _buildSettingsTile(
-        icon: Icons.email,
-        title: 'Email Address',
-        subtitle: 'doctor@example.com',
-        onTap: () {},
-      ),
-    ];
-  }
-
-  List<Widget> _buildNotificationSettings() {
-    return [
-      _buildNotificationToggle(
-        icon: Icons.notifications,
-        title: 'Push Notifications',
-        subtitle: 'Receive booking and appointment alerts',
-        value: true,
-      ),
-      _buildNotificationToggle(
-        icon: Icons.email_outlined,
-        title: 'Email Notifications',
-        subtitle: 'Receive email for important updates',
-        value: true,
-      ),
-      _buildNotificationToggle(
-        icon: Icons.sms,
-        title: 'SMS Notifications',
-        subtitle: 'Receive SMS for urgent messages',
-        value: false,
-      ),
-    ];
-  }
-
-  List<Widget> _buildPrivacySettings() {
-    return [
-      _buildSettingsTile(
-        icon: Icons.visibility,
-        title: 'Visibility Settings',
-        subtitle: 'Control your visibility to patients',
-        onTap: () {},
-      ),
-      _buildSettingsTile(
-        icon: Icons.privacy_tip,
-        title: 'Privacy Policy',
-        subtitle: 'Review our privacy policy',
-        onTap: () {},
-      ),
-      _buildSettingsTile(
-        icon: Icons.description,
-        title: 'Terms of Service',
-        subtitle: 'Review terms and conditions',
-        onTap: () {},
-      ),
-    ];
-  }
-
-  Widget _buildSettingsTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(icon, color: AppColors.primary, size: 20),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          color: Color(0xFF101828),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: const TextStyle(
-                          color: Color(0xFF6A7282),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.chevron_right, color: Color(0xFFC1C7D0)),
-              ],
+  Widget _buildInputField(String label, String value, {bool enabled = true}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFF364153),
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF3F3F5),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            value,
+            style: const TextStyle(
+              color: Color(0xFF717182),
+              fontSize: 16,
+              fontWeight: FontWeight.w400,
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 
-  Widget _buildNotificationToggle({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required bool value,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: ShapeDecoration(
-        color: Colors.white,
-        shape: RoundedRectangleBorder(
-          side: BorderSide(color: Colors.grey.shade200, width: 1),
-          borderRadius: BorderRadius.circular(12),
+  List<Widget> _buildUploadedDocuments() {
+    return _uploadedDocs.map((doc) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF7ED),
+          border: Border.all(color: const Color(0xFFFFEDD4), width: 1.25),
+          borderRadius: BorderRadius.circular(14),
         ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: AppColors.primary, size: 20),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Color(0xFF101828),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: Color(0xFF6A7282),
-                    fontSize: 12,
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Center(
+                child: Text(
+                  'PDF',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
                     fontWeight: FontWeight.w400,
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
-          Switch(
-            value: value,
-            onChanged: (newValue) {
-              setState(() {});
-            },
-            activeThumbColor: AppColors.primary,
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Log Out'),
-            content: const Text('Are you sure you want to log out?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    doc,
+                    style: const TextStyle(
+                      color: Color(0xFF101828),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Uploaded successfully',
+                    style: TextStyle(
+                      color: Color(0xFF6A7282),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ],
               ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  context.read<AuthBloc>().add(SignOutRequested());
-                  context.go('/welcome');
-                },
-                child: const Text(
-                  'Log Out',
-                  style: TextStyle(color: Colors.red),
-                ),
-              ),
-            ],
-          ),
-    );
+            ),
+            IconButton(
+              icon: const Icon(Icons.close, size: 20),
+              onPressed: () {
+                setState(() => _uploadedDocs.remove(doc));
+              },
+            ),
+          ],
+        ),
+      );
+    }).toList();
   }
 
   void _handleNavigation(BuildContext context, int index) {

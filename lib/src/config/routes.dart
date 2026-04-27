@@ -105,7 +105,6 @@ class AppRoutes {
 
         if (isAuthenticated && role == UserRole.expert) {
           final isOnExpertRoute = state.matchedLocation.startsWith('/expert/');
-          // Allow experts to visit any expert route
           if (!isOnExpertRoute) {
             return '/expert/dashboard';
           }
@@ -114,7 +113,6 @@ class AppRoutes {
         final isExpertRoute = state.matchedLocation.startsWith('/expert');
         final isExpertLoginPage = state.matchedLocation == '/expert/login';
 
-        // ✅ Expert routes that don't require expert role
         if (isExpertRoute &&
             !isExpertLoginPage &&
             !isOnExpertSignupPage &&
