@@ -39,7 +39,7 @@ class _ExpertDashboardScreenState extends State<ExpertDashboardScreen> {
                   _buildUpcomingAppointments(),
                   const SizedBox(height: 32),
                   _buildPerformanceMetrics(),
-                  const SizedBox(height: 40), // Bottom padding
+                  const SizedBox(height: 40),
                 ]),
               ),
             ),
@@ -51,6 +51,19 @@ class _ExpertDashboardScreenState extends State<ExpertDashboardScreen> {
             setState(() {
               _bottomNavIndex = index;
             });
+            switch (index) {
+              case 0:
+                break;
+              case 1:
+                context.go('/expert/schedule');
+                break;
+              case 2:
+                context.go('/expert/wallet');
+                break;
+              case 3:
+                context.go('/expert/settings');
+                break;
+            }
           },
         ),
       ),

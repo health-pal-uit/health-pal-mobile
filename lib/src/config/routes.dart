@@ -1,6 +1,9 @@
 import 'package:da1/src/features/expert/auth/presentation/expert_pending_screen.dart';
 import 'package:da1/src/features/expert/auth/presentation/expert_registration_screen.dart';
 import 'package:da1/src/features/expert/dashboard/presentation/expert_dashboard_screen.dart';
+import 'package:da1/src/features/expert/schedule/presentation/schedule_management_screen.dart';
+import 'package:da1/src/features/expert/wallet/presentation/expert_wallet_screen.dart';
+import 'package:da1/src/features/expert/settings/presentation/expert_settings_screen.dart';
 import 'package:da1/src/features/user/advisor/presentation/advisor_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/email_verification_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/forgot_password_screen.dart';
@@ -101,9 +104,9 @@ class AppRoutes {
         }
 
         if (isAuthenticated && role == UserRole.expert) {
-          final isOnExpertDashboard =
-              state.matchedLocation == '/expert/dashboard';
-          if (!isOnExpertDashboard) {
+          final isOnExpertRoute = state.matchedLocation.startsWith('/expert/');
+          // Allow experts to visit any expert route
+          if (!isOnExpertRoute) {
             return '/expert/dashboard';
           }
         }
@@ -330,6 +333,21 @@ class AppRoutes {
           path: '/expert/dashboard',
           name: 'expert-dashboard',
           builder: (context, state) => const ExpertDashboardScreen(),
+        ),
+        GoRoute(
+          path: '/expert/schedule',
+          name: 'expert-schedule',
+          builder: (context, state) => const ScheduleManagementScreen(),
+        ),
+        GoRoute(
+          path: '/expert/wallet',
+          name: 'expert-wallet',
+          builder: (context, state) => const ExpertWalletScreen(),
+        ),
+        GoRoute(
+          path: '/expert/settings',
+          name: 'expert-settings',
+          builder: (context, state) => const ExpertSettingsScreen(),
         ),
         GoRoute(
           path: '/expert/pending',
