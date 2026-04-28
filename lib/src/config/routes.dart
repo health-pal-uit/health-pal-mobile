@@ -25,9 +25,12 @@ import 'package:da1/src/features/user/home/presentation/diet/meal_scan_screen.da
 import 'package:da1/src/features/user/home/presentation/exercise/activity_analytics_screen.dart';
 import 'package:da1/src/features/user/home/presentation/exercise/add_activity_screen.dart';
 import 'package:da1/src/features/user/notifications/presentation/notifications_screen.dart';
-import 'package:da1/src/features/user/profile/presentation/integrations/google_fit_sync_screen.dart';
+import 'package:da1/src/features/user/profile/bloc/health_sync_bloc.dart';
+import 'package:da1/src/features/user/profile/data/fitness_sync_api.dart';
+import 'package:da1/src/features/user/profile/data/health_connect_service.dart';
 import 'package:da1/src/features/user/community/data/post_model.dart';
 import 'package:da1/src/features/user/home/presentation/step/steps_screen.dart';
+import 'package:da1/src/features/user/profile/presentation/integrations/health_connect_screen.dart';
 import 'package:da1/src/features/user/profile/presentation/profile_screen.dart';
 import 'package:da1/src/features/user/home/presentation/home_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/login_screen.dart';
@@ -35,7 +38,9 @@ import 'package:da1/src/features/shared/auth/presentation/auth/expert_login_scre
 import 'package:da1/src/features/user/home/presentation/widgets/custom_bottom_nav.dart';
 import 'package:da1/src/features/user/profile/data/fitness_profile_repository.dart';
 import 'package:da1/src/features/user/profile/data/google_fit_repository.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:async';
 import 'package:da1/src/core/bloc/auth/auth_bloc.dart';
@@ -320,11 +325,21 @@ class AppRoutes {
           builder: (context, state) => const NotificationsScreen(),
         ),
         GoRoute(
-          path: '/google-fit-sync',
-          name: 'google-fit-sync',
-          builder:
-              (context, state) =>
-                  GoogleFitSyncScreen(googleFitRepository: googleFitRepo),
+          path: '/health-connect',
+          name: 'health-connect',
+          builder: (context, state) {
+            return BlocProvider(
+              create:
+                  (context) => HealthSyncBloc(
+                    healthService: HealthConnectService(),
+                    apiService: FitnessSyncApi(
+                      Dio(),
+                      baseUrl: 'http://10.0.2.2:3001',
+                    ),
+                  ),
+              child: const HealthConnectScreen(),
+            );
+          },
         ),
 
         GoRoute(

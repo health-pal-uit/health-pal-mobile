@@ -34,7 +34,7 @@ class LocalNotificationService {
     );
 
     await _notificationsPlugin.initialize(
-      initSettings,
+      settings: initSettings,
       onDidReceiveNotificationResponse: _onNotificationTapped,
     );
 
@@ -42,7 +42,6 @@ class LocalNotificationService {
   }
 
   void _onNotificationTapped(NotificationResponse response) {
-    // Handle notification tap with payload (post_id)
     if (response.payload != null && _onNotificationTapCallback != null) {
       _onNotificationTapCallback!(response.payload);
     }
@@ -98,10 +97,10 @@ class LocalNotificationService {
     );
 
     await _notificationsPlugin.show(
-      id,
-      title,
-      body,
-      notificationDetails,
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: notificationDetails,
       payload: payload,
     );
   }
@@ -135,7 +134,7 @@ class LocalNotificationService {
   }
 
   Future<void> cancelNotification(int id) async {
-    await _notificationsPlugin.cancel(id);
+    await _notificationsPlugin.cancel(id: id);
   }
 
   Future<void> cancelAllNotifications() async {
