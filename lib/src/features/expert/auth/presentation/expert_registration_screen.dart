@@ -126,6 +126,7 @@ class _ExpertRegistrationScreenState extends State<ExpertRegistrationScreen> {
           );
         },
         (_) async {
+          setState(() => _isLoading = false);
           await localDataSource.clearExpertIntent();
 
           messenger.showSnackBar(

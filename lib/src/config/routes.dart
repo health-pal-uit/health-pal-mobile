@@ -85,8 +85,6 @@ class AppRoutes {
             isOnExpertLoginPage ||
             isOnSignupPage ||
             isOnExpertSignupPage ||
-            isOnExpertRegistrationPage ||
-            isOnExpertPendingPage ||
             state.matchedLocation.startsWith('/email-verification') ||
             state.matchedLocation.startsWith('/forgot-password') ||
             state.matchedLocation.startsWith('/password-reset') ||
@@ -100,6 +98,10 @@ class AppRoutes {
           if (role == UserRole.expert) return '/expert/dashboard';
           if (role == UserRole.pendingExpert) return '/expert/pending';
           return '/';
+        }
+
+        if (isOnExpertRegistrationPage) {
+          return null;
         }
 
         if (isAuthenticated &&
