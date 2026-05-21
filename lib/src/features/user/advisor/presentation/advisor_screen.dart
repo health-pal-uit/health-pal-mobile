@@ -13,7 +13,6 @@ class AdvisorScreen extends StatefulWidget {
   State<AdvisorScreen> createState() => _AdvisorScreenState();
 }
 
-// Expert Model
 class Expert {
   final String id;
   final String bio;
@@ -72,10 +71,12 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
   List<Expert> _experts = [];
   bool _loadingExperts = false;
 
+  String _searchQuery = '';
+  String _selectedRole = 'All';
+
   @override
   void initState() {
     super.initState();
-
     final secureStorage = const FlutterSecureStorage();
     final localDataSource = AuthLocalDataSourceImpl(storage: secureStorage);
 
@@ -104,23 +105,18 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
     });
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
   Future<void> _loadExperts() async {
     if (!mounted) return;
     setState(() => _loadingExperts = true);
 
     try {
       final response = await _dio.get('/experts');
-
       if (!mounted) return;
 
       if (response.statusCode == 200) {
         final data = response.data;
-        if (data['data'] is List) {
+
+        if (data != null && data['data'] is List) {
           final expertsList =
               (data['data'] as List)
                   .map((e) => Expert.fromJson(e as Map<String, dynamic>))
@@ -130,13 +126,33 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
             _experts = expertsList;
             _loadingExperts = false;
           });
+        } else {
+          setState(() => _loadingExperts = false);
         }
+      } else {
+        setState(() => _loadingExperts = false);
       }
     } catch (e) {
       if (!mounted) return;
       setState(() => _loadingExperts = false);
       debugPrint('Error loading experts: $e');
     }
+  }
+
+  List<Expert> get _filteredExperts {
+    return _experts.where((expert) {
+      final matchesRole =
+          _selectedRole == 'All' || expert.roleName == _selectedRole;
+      final nameToSearch = (expert.fullname ?? expert.username).toLowerCase();
+      final matchesSearch = nameToSearch.contains(_searchQuery.toLowerCase());
+      return matchesRole && matchesSearch;
+    }).toList();
+  }
+
+  List<String> get _availableRoles {
+    final roles = _experts.map((e) => e.roleName).toSet().toList();
+    roles.sort();
+    return ['All', ...roles];
   }
 
   @override
@@ -146,87 +162,9 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Enhanced Header
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    AppColors.primary,
-                    AppColors.primary.withValues(alpha: 0.8),
-                  ],
-                ),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Find Expert Advisors',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Connect with health professionals',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white.withValues(alpha: 0.9),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Experts List
-            Expanded(
-              child:
-                  _loadingExperts
-                      ? const Center(child: CircularProgressIndicator())
-                      : _experts.isEmpty
-                      ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.people_outline,
-                              size: 80,
-                              color: Colors.grey[300],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No Experts Available',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Check back soon',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[500],
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                      : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _experts.length,
-                        itemBuilder: (context, index) {
-                          final expert = _experts[index];
-                          return _buildExpertCard(expert);
-                        },
-                      ),
-            ),
+            _buildHeader(),
+            if (!_loadingExperts && _experts.isNotEmpty) _buildFilterRow(),
+            _buildExpertsList(),
           ],
         ),
       ),
@@ -240,9 +178,157 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
           );
         },
         backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.smart_toy),
-        label: const Text('AI Chat'),
-        tooltip: 'Ask AI Advisor',
+        icon: const Icon(Icons.smart_toy, color: Colors.white),
+        label: const Text(
+          'AI Chat',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
+        ),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Find Expert Advisors',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Book a session with certified health professionals',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.white.withValues(alpha: 0.9),
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Search Bar
+          TextField(
+            onChanged: (value) => setState(() => _searchQuery = value),
+            decoration: InputDecoration(
+              hintText: 'Search by name...',
+              hintStyle: TextStyle(color: Colors.grey[400]),
+              prefixIcon: const Icon(Icons.search, color: Colors.grey),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding: const EdgeInsets.symmetric(vertical: 0),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterRow() {
+    return Container(
+      height: 60,
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: _availableRoles.length,
+        itemBuilder: (context, index) {
+          final role = _availableRoles[index];
+          final isSelected = _selectedRole == role;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              label: Text(role),
+              selected: isSelected,
+              onSelected: (selected) {
+                if (selected) setState(() => _selectedRole = role);
+              },
+              selectedColor: AppColors.primary.withValues(alpha: 0.2),
+              labelStyle: TextStyle(
+                color: isSelected ? AppColors.primary : Colors.grey[700],
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+              backgroundColor: Colors.white,
+              side: BorderSide(
+                color: isSelected ? AppColors.primary : Colors.grey[300]!,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildExpertsList() {
+    final displayList = _filteredExperts;
+
+    return Expanded(
+      child:
+          _loadingExperts
+              ? const Center(child: CircularProgressIndicator())
+              : displayList.isEmpty
+              ? _buildEmptyState()
+              : RefreshIndicator(
+                onRefresh: _loadExperts,
+                child: ListView.builder(
+                  padding: const EdgeInsets.only(
+                    left: 16,
+                    right: 16,
+                    bottom: 80,
+                    top: 8,
+                  ),
+                  itemCount: displayList.length,
+                  itemBuilder: (context, index) {
+                    return _buildExpertCard(displayList[index]);
+                  },
+                ),
+              ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.search_off, size: 80, color: Colors.grey[300]),
+          const SizedBox(height: 16),
+          Text(
+            'No Experts Found',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Try adjusting your filters or search term',
+            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+          ),
+        ],
       ),
     );
   }
@@ -256,26 +342,24 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
         border: Border.all(color: Colors.grey[200]!, width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 12,
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         children: [
-          // Top Section - Avatar and Quick Info
           Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Avatar with Verified Badge
                 Stack(
                   children: [
                     Container(
-                      width: 70,
-                      height: 70,
+                      width: 64,
+                      height: 64,
                       decoration: BoxDecoration(
                         color: AppColors.primary.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
@@ -291,17 +375,17 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
                                   expert.avatarUrl!,
                                   fit: BoxFit.cover,
                                   errorBuilder:
-                                      (context, error, stackTrace) => Icon(
+                                      (_, _, _) => Icon(
                                         Icons.person,
                                         color: AppColors.primary,
-                                        size: 36,
+                                        size: 32,
                                       ),
                                 ),
                               )
                               : Icon(
                                 Icons.person,
                                 color: AppColors.primary,
-                                size: 36,
+                                size: 32,
                               ),
                     ),
                     if (expert.isVerified)
@@ -309,22 +393,21 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
                         bottom: 0,
                         right: 0,
                         child: Container(
-                          padding: const EdgeInsets.all(4),
+                          padding: const EdgeInsets.all(2),
                           decoration: const BoxDecoration(
                             color: Colors.green,
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
-                            Icons.check,
+                            Icons.verified,
                             color: Colors.white,
-                            size: 14,
+                            size: 16,
                           ),
                         ),
                       ),
                   ],
                 ),
                 const SizedBox(width: 16),
-                // Name, Role and Rating
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -333,49 +416,43 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
                         expert.fullname ?? expert.username,
                         style: const TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.bold,
                           color: Colors.black87,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          expert.roleName,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
+                      Text(
+                        expert.roleName,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       Row(
                         children: [
-                          const Icon(Icons.star, color: Colors.amber, size: 16),
+                          const Icon(
+                            Icons.star_rounded,
+                            color: Colors.amber,
+                            size: 18,
+                          ),
                           const SizedBox(width: 4),
                           Text(
-                            '$expert.ratingAvg.toStringAsFixed(1)',
+                            expert.ratingAvg.toStringAsFixed(1),
                             style: const TextStyle(
                               fontSize: 13,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.bold,
                               color: Colors.black87,
                             ),
                           ),
                           Text(
-                            ' (${expert.ratingCount})',
+                            ' (${expert.ratingCount} reviews)',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey[600],
+                              color: Colors.grey[500],
                             ),
                           ),
                         ],
@@ -386,36 +463,29 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
               ],
             ),
           ),
-          Divider(height: 1, color: Colors.grey[200]),
-          // Bio Section
+
+          Divider(height: 1, color: Colors.grey[100]),
+
+          // Communication Methods Badges
           Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
               children: [
-                Text(
-                  'About',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  expert.bio,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey[700],
-                    height: 1.5,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                _buildCommBadge(Icons.chat_bubble_outline, 'Chat', true),
+                const SizedBox(width: 12),
+                _buildCommBadge(Icons.call_outlined, 'Audio', true),
+                const SizedBox(width: 12),
+                _buildCommBadge(
+                  Icons.videocam_outlined,
+                  'Video',
+                  expert.canDoVideo,
                 ),
               ],
             ),
           ),
-          Divider(height: 1, color: Colors.grey[200]),
+
+          Divider(height: 1, color: Colors.grey[100]),
+
           // Fee and Action
           Padding(
             padding: const EdgeInsets.all(16),
@@ -426,73 +496,81 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Consultation Rate',
+                      'Rate',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey[600],
+                        color: Colors.grey[500],
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            AppColors.primary.withValues(alpha: 0.1),
-                            AppColors.primary.withValues(alpha: 0.05),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '${expert.tokenPerMinute} Tokens/min',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
-                        ),
+                    Text(
+                      '${expert.tokenPerMinute} Tokens/min',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
                       ),
                     ),
                   ],
                 ),
-                if (expert.canDoVideo)
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Booking call with ${expert.fullname ?? expert.username}...',
-                          ),
-                          backgroundColor: Colors.green,
+                ElevatedButton(
+                  onPressed: () {
+                    // TODO: Navigate to BookingFormScreen
+                    // context.push('/bookings/new', extra: expert);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Opening booking form for ${expert.fullname ?? expert.username}...',
                         ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      elevation: 0,
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
                     ),
-                    icon: const Icon(Icons.videocam, size: 18),
-                    label: const Text(
-                      'Book Call',
-                      style: TextStyle(fontWeight: FontWeight.w600),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
+                    elevation: 0,
                   ),
+                  child: const Text(
+                    'Book Now',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCommBadge(IconData icon, String label, bool isSupported) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 16,
+          color: isSupported ? Colors.grey[700] : Colors.grey[300],
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: isSupported ? Colors.grey[700] : Colors.grey[300],
+            decoration:
+                isSupported ? TextDecoration.none : TextDecoration.lineThrough,
+          ),
+        ),
+      ],
     );
   }
 }
