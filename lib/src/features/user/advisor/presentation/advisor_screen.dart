@@ -1,10 +1,7 @@
-import 'package:da1/src/config/api_config.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
-import 'package:da1/src/features/shared/auth/data/datasources/auth_local_data_source.dart';
+import 'package:da1/src/features/user/advisor/data/advisor_repository.dart';
 import 'package:da1/src/features/user/advisor/presentation/advisor_ai_chat_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:da1/src/features/user/advisor/domain/expert.dart';
 import 'package:go_router/go_router.dart';
 
@@ -16,39 +13,16 @@ class AdvisorScreen extends StatefulWidget {
 }
 
 class _AdvisorScreenState extends State<AdvisorScreen> {
-  late final Dio _dio;
+  final AdvisorRepository _repository = AdvisorRepository();
+
   List<Expert> _experts = [];
   bool _loadingExperts = false;
-
   String _searchQuery = '';
   String _selectedRole = 'All';
 
   @override
   void initState() {
     super.initState();
-    final secureStorage = const FlutterSecureStorage();
-    final localDataSource = AuthLocalDataSourceImpl(storage: secureStorage);
-
-    _dio = Dio(
-      BaseOptions(
-        baseUrl: ApiConfig.baseUrl,
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
-      ),
-    );
-
-    _dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) async {
-          final token = await localDataSource.getToken();
-          if (token != null) {
-            options.headers['Authorization'] = 'Bearer $token';
-          }
-          return handler.next(options);
-        },
-      ),
-    );
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadExperts();
     });
@@ -59,28 +33,13 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
     setState(() => _loadingExperts = true);
 
     try {
-      final response = await _dio.get('/experts');
+      final expertsList = await _repository.fetchExperts();
       if (!mounted) return;
 
-      if (response.statusCode == 200) {
-        final data = response.data;
-
-        if (data != null && data['data'] is List) {
-          final expertsList =
-              (data['data'] as List)
-                  .map((e) => Expert.fromJson(e as Map<String, dynamic>))
-                  .toList();
-
-          setState(() {
-            _experts = expertsList;
-            _loadingExperts = false;
-          });
-        } else {
-          setState(() => _loadingExperts = false);
-        }
-      } else {
-        setState(() => _loadingExperts = false);
-      }
+      setState(() {
+        _experts = expertsList;
+        _loadingExperts = false;
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() => _loadingExperts = false);
