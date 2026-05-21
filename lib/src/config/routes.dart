@@ -4,6 +4,7 @@ import 'package:da1/src/features/expert/dashboard/presentation/expert_dashboard_
 import 'package:da1/src/features/expert/schedule/presentation/schedule_management_screen.dart';
 import 'package:da1/src/features/expert/wallet/presentation/expert_wallet_screen.dart';
 import 'package:da1/src/features/expert/settings/presentation/expert_settings_screen.dart';
+import 'package:da1/src/features/user/advisor/domain/expert.dart';
 import 'package:da1/src/features/user/advisor/presentation/advisor_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/email_verification_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/forgot_password_screen.dart';
@@ -18,6 +19,7 @@ import 'package:da1/src/features/shared/auth/presentation/auth/onboarding/onboar
 import 'package:da1/src/features/shared/auth/presentation/auth/signup_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/expert_signup_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/welcome/welcome_scroll_screen.dart';
+import 'package:da1/src/features/user/advisor/presentation/booking_advisor_screen.dart';
 import 'package:da1/src/features/user/community/presentation/community_screen.dart';
 import 'package:da1/src/features/user/community/presentation/personal_profile_screen.dart';
 import 'package:da1/src/features/user/home/presentation/diet/food_search_screen.dart';
@@ -341,6 +343,15 @@ class AppRoutes {
                   ),
               child: const HealthConnectScreen(),
             );
+          },
+        ),
+
+        GoRoute(
+          path: '/bookings/new',
+          name: 'booking-form',
+          builder: (context, state) {
+            final expert = state.extra as Expert;
+            return AdvisorBookingScreen(expert: expert);
           },
         ),
 

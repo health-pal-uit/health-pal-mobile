@@ -5,65 +5,14 @@ import 'package:da1/src/features/user/advisor/presentation/advisor_ai_chat_scree
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:da1/src/features/user/advisor/domain/expert.dart';
+import 'package:go_router/go_router.dart';
 
 class AdvisorScreen extends StatefulWidget {
   const AdvisorScreen({super.key});
 
   @override
   State<AdvisorScreen> createState() => _AdvisorScreenState();
-}
-
-class Expert {
-  final String id;
-  final String bio;
-  final int tokenPerMinute;
-  final String licenseId;
-  final String? licenseUrl;
-  final bool isVerified;
-  final double ratingAvg;
-  final int ratingCount;
-  final String userId;
-  final String username;
-  final String? fullname;
-  final String? avatarUrl;
-  final String roleName;
-  final bool canDoVideo;
-
-  Expert({
-    required this.id,
-    required this.bio,
-    required this.tokenPerMinute,
-    required this.licenseId,
-    this.licenseUrl,
-    required this.isVerified,
-    required this.ratingAvg,
-    required this.ratingCount,
-    required this.userId,
-    required this.username,
-    this.fullname,
-    this.avatarUrl,
-    required this.roleName,
-    required this.canDoVideo,
-  });
-
-  factory Expert.fromJson(Map<String, dynamic> json) {
-    return Expert(
-      id: json['id'] ?? '',
-      bio: json['bio'] ?? '',
-      tokenPerMinute: json['token_per_minute'] ?? 0,
-      licenseId: json['license_id'] ?? '',
-      licenseUrl: json['license_url'],
-      isVerified: json['is_verified'] ?? false,
-      ratingAvg: (json['rating_avg'] ?? 0).toDouble(),
-      ratingCount: json['rating_count'] ?? 0,
-      userId: json['user']?['id'] ?? '',
-      username: json['user']?['username'] ?? '',
-      fullname: json['user']?['fullname'],
-      avatarUrl: json['user']?['avatar_url'],
-      roleName: json['expert_role']?['name'] ?? '',
-      canDoVideo: json['expert_role']?['can_do_video'] ?? false,
-    );
-  }
 }
 
 class _AdvisorScreenState extends State<AdvisorScreen> {
@@ -516,15 +465,7 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    // TODO: Navigate to BookingFormScreen
-                    // context.push('/bookings/new', extra: expert);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Opening booking form for ${expert.fullname ?? expert.username}...',
-                        ),
-                      ),
-                    );
+                    context.push('/bookings/new', extra: expert);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
