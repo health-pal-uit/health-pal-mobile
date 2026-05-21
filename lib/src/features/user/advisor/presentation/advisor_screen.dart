@@ -242,211 +242,216 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
   }
 
   Widget _buildExpertCard(Expert expert) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Stack(
-                  children: [
-                    Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                        border:
-                            expert.isVerified
-                                ? Border.all(color: Colors.green, width: 2)
-                                : null,
-                      ),
-                      child:
-                          expert.avatarUrl != null
-                              ? ClipOval(
-                                child: Image.network(
-                                  expert.avatarUrl!,
-                                  fit: BoxFit.cover,
-                                  errorBuilder:
-                                      (_, _, _) => Icon(
-                                        Icons.person,
-                                        color: AppColors.primary,
-                                        size: 32,
-                                      ),
+    return GestureDetector(
+      onTap: () {
+        context.push('/advisor/detail', extra: expert);
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey[200]!, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Stack(
+                    children: [
+                      Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                          border:
+                              expert.isVerified
+                                  ? Border.all(color: Colors.green, width: 2)
+                                  : null,
+                        ),
+                        child:
+                            expert.avatarUrl != null
+                                ? ClipOval(
+                                  child: Image.network(
+                                    expert.avatarUrl!,
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (_, _, _) => Icon(
+                                          Icons.person,
+                                          color: AppColors.primary,
+                                          size: 32,
+                                        ),
+                                  ),
+                                )
+                                : Icon(
+                                  Icons.person,
+                                  color: AppColors.primary,
+                                  size: 32,
                                 ),
-                              )
-                              : Icon(
-                                Icons.person,
-                                color: AppColors.primary,
-                                size: 32,
-                              ),
-                    ),
-                    if (expert.isVerified)
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: const BoxDecoration(
-                            color: Colors.green,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.verified,
-                            color: Colors.white,
-                            size: 16,
+                      ),
+                      if (expert.isVerified)
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: const BoxDecoration(
+                              color: Colors.green,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.verified,
+                              color: Colors.white,
+                              size: 16,
+                            ),
                           ),
                         ),
-                      ),
-                  ],
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
+                    ],
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          expert.fullname ?? expert.username,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          expert.roleName,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.star_rounded,
+                              color: Colors.amber,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              expert.ratingAvg.toStringAsFixed(1),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            Text(
+                              ' (${expert.ratingCount} reviews)',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Divider(height: 1, color: Colors.grey[100]),
+
+            // Communication Methods Badges
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  _buildCommBadge(Icons.chat_bubble_outline, 'Chat', true),
+                  const SizedBox(width: 12),
+                  _buildCommBadge(Icons.call_outlined, 'Audio', true),
+                  const SizedBox(width: 12),
+                  _buildCommBadge(
+                    Icons.videocam_outlined,
+                    'Video',
+                    expert.canDoVideo,
+                  ),
+                ],
+              ),
+            ),
+
+            Divider(height: 1, color: Colors.grey[100]),
+
+            // Fee and Action
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        expert.fullname ?? expert.username,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                        'Rate',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[500],
+                          fontWeight: FontWeight.w500,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        expert.roleName,
+                        '${expert.tokenPerMinute} Tokens/min',
                         style: TextStyle(
-                          fontSize: 13,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
                           color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.star_rounded,
-                            color: Colors.amber,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            expert.ratingAvg.toStringAsFixed(1),
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          Text(
-                            ' (${expert.ratingCount} reviews)',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[500],
-                            ),
-                          ),
-                        ],
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-          ),
-
-          Divider(height: 1, color: Colors.grey[100]),
-
-          // Communication Methods Badges
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                _buildCommBadge(Icons.chat_bubble_outline, 'Chat', true),
-                const SizedBox(width: 12),
-                _buildCommBadge(Icons.call_outlined, 'Audio', true),
-                const SizedBox(width: 12),
-                _buildCommBadge(
-                  Icons.videocam_outlined,
-                  'Video',
-                  expert.canDoVideo,
-                ),
-              ],
-            ),
-          ),
-
-          Divider(height: 1, color: Colors.grey[100]),
-
-          // Fee and Action
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Rate',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[500],
-                        fontWeight: FontWeight.w500,
+                  ElevatedButton(
+                    onPressed: () {
+                      context.push('/bookings/new', extra: expert);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${expert.tokenPerMinute} Tokens/min',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
+                      elevation: 0,
                     ),
-                  ],
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    context.push('/bookings/new', extra: expert);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
+                    child: const Text(
+                      'Book Now',
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
                   ),
-                  child: const Text(
-                    'Book Now',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

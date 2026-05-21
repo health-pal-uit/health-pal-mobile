@@ -20,6 +20,7 @@ import 'package:da1/src/features/shared/auth/presentation/auth/signup_screen.dar
 import 'package:da1/src/features/shared/auth/presentation/auth/expert_signup_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/welcome/welcome_scroll_screen.dart';
 import 'package:da1/src/features/user/advisor/presentation/booking_advisor_screen.dart';
+import 'package:da1/src/features/user/advisor/presentation/advisor_detail_screen.dart';
 import 'package:da1/src/features/user/community/presentation/community_screen.dart';
 import 'package:da1/src/features/user/community/presentation/personal_profile_screen.dart';
 import 'package:da1/src/features/user/home/presentation/diet/food_search_screen.dart';
@@ -345,7 +346,14 @@ class AppRoutes {
             );
           },
         ),
-
+        GoRoute(
+          path: '/advisor/detail',
+          name: 'advisor-detail',
+          builder: (context, state) {
+            final expert = state.extra as Expert;
+            return AdvisorDetailScreen(expert: expert);
+          },
+        ),
         GoRoute(
           path: '/bookings/new',
           name: 'booking-form',
