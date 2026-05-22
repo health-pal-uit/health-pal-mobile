@@ -72,4 +72,35 @@ class AdvisorRepository {
       throw Exception('Failed to load ratings: $e');
     }
   }
+
+  Future<bool> createBooking({
+    required String expertId,
+    required String callType,
+    required String scheduledAt,
+    required String clientNote,
+  }) async {
+    try {
+      final payload = {
+        "expert_id": expertId,
+        "call_type": callType,
+        "scheduled_at": scheduledAt,
+        "client_note": clientNote,
+      };
+
+      final response = await _dio.post('/bookings/me', data: payload);
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return true;
+      }
+      return false;
+    } on DioException catch (e) {
+      String errMsg = 'There was an error, please try again later.';
+      if (e.response?.data != null && e.response!.data['message'] != null) {
+        errMsg = e.response!.data['message'].toString();
+      }
+      throw Exception(errMsg);
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
 }

@@ -113,13 +113,27 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Find Expert Advisors',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Find Expert',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              IconButton(
+                onPressed: () => context.push('/bookings/me'),
+                icon: const Icon(
+                  Icons.calendar_month_rounded,
+                  color: Colors.white,
+                  size: 28,
+                ),
+                tooltip: 'My Appointments',
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           Text(

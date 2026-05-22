@@ -21,6 +21,7 @@ import 'package:da1/src/features/shared/auth/presentation/auth/expert_signup_scr
 import 'package:da1/src/features/shared/auth/presentation/auth/welcome/welcome_scroll_screen.dart';
 import 'package:da1/src/features/user/advisor/presentation/booking_advisor_screen.dart';
 import 'package:da1/src/features/user/advisor/presentation/advisor_detail_screen.dart';
+import 'package:da1/src/features/user/advisor/presentation/my_appointments_screen.dart';
 import 'package:da1/src/features/user/community/presentation/community_screen.dart';
 import 'package:da1/src/features/user/community/presentation/personal_profile_screen.dart';
 import 'package:da1/src/features/user/home/presentation/diet/food_search_screen.dart';
@@ -353,6 +354,11 @@ class AppRoutes {
             final expert = state.extra as Expert;
             return AdvisorDetailScreen(expert: expert);
           },
+        ),
+        GoRoute(
+          path: '/bookings/me',
+          name: 'my-appointments',
+          builder: (context, state) => const MyAppointmentsScreen(),
         ),
         GoRoute(
           path: '/bookings/new',

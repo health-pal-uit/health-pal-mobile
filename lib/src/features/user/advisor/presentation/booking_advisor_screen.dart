@@ -1,12 +1,9 @@
-import 'package:da1/src/config/api_config.dart';
 import 'package:da1/src/config/theme/app_colors.dart';
-import 'package:da1/src/features/shared/auth/data/datasources/auth_local_data_source.dart';
+import 'package:da1/src/features/user/advisor/data/advisor_repository.dart';
+import 'package:da1/src/features/user/advisor/domain/expert.dart';
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:da1/src/features/user/advisor/domain/expert.dart';
 
 class AdvisorBookingScreen extends StatefulWidget {
   final Expert expert;
@@ -18,7 +15,7 @@ class AdvisorBookingScreen extends StatefulWidget {
 }
 
 class _AdvisorBookingScreenState extends State<AdvisorBookingScreen> {
-  late final Dio _dio;
+  final AdvisorRepository _repository = AdvisorRepository();
 
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
@@ -40,28 +37,11 @@ class _AdvisorBookingScreenState extends State<AdvisorBookingScreen> {
   @override
   void initState() {
     super.initState();
-    _setupDio();
     _generateDates();
 
-    // Auto-select first available feature if default isn't preferred
     if (!widget.expert.canDoVideo && _selectedCallType == 'video') {
       _selectedCallType = 'audio';
     }
-  }
-
-  void _setupDio() {
-    final secureStorage = const FlutterSecureStorage();
-    final localDataSource = AuthLocalDataSourceImpl(storage: secureStorage);
-    _dio = Dio(BaseOptions(baseUrl: ApiConfig.baseUrl));
-    _dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) async {
-          final token = await localDataSource.getToken();
-          if (token != null) options.headers['Authorization'] = 'Bearer $token';
-          return handler.next(options);
-        },
-      ),
-    );
   }
 
   void _generateDates() {
@@ -83,7 +63,7 @@ class _AdvisorBookingScreenState extends State<AdvisorBookingScreen> {
     if (_selectedDate == null || _selectedTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Vui lòng chọn ngày và giờ hẹn!'),
+          content: Text('Please select date and time!'),
           backgroundColor: Colors.red,
         ),
       );
@@ -101,7 +81,7 @@ class _AdvisorBookingScreenState extends State<AdvisorBookingScreen> {
     if (localDateTime.isBefore(DateTime.now())) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Không thể chọn thời gian trong quá khứ!'),
+          content: Text('You cannot select a time in the past!'),
           backgroundColor: Colors.red,
         ),
       );
@@ -113,18 +93,16 @@ class _AdvisorBookingScreenState extends State<AdvisorBookingScreen> {
     try {
       final scheduledAtUtc = localDateTime.toUtc().toIso8601String();
 
-      final payload = {
-        "expert_id": widget.expert.id,
-        "call_type": _selectedCallType,
-        "scheduled_at": scheduledAtUtc,
-        "client_note": _noteController.text.trim(),
-      };
-
-      final response = await _dio.post('/bookings/me', data: payload);
+      final success = await _repository.createBooking(
+        expertId: widget.expert.id,
+        callType: _selectedCallType,
+        scheduledAt: scheduledAtUtc,
+        clientNote: _noteController.text.trim(),
+      );
 
       if (!mounted) return;
 
-      if (response.statusCode == 201 || response.statusCode == 200) {
+      if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Booking successful!'),
@@ -133,19 +111,13 @@ class _AdvisorBookingScreenState extends State<AdvisorBookingScreen> {
         );
         context.pop();
       }
-    } on DioException catch (e) {
-      if (!mounted) return;
-      String errMsg = 'Có lỗi xảy ra, vui lòng thử lại sau.';
-      if (e.response?.data != null && e.response?.data['message'] != null) {
-        errMsg = e.response?.data['message'].toString() ?? errMsg;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errMsg), backgroundColor: Colors.red),
-      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text(e.toString().replaceAll('Exception: ', '')),
+          backgroundColor: Colors.red,
+        ),
       );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -303,13 +275,16 @@ class _AdvisorBookingScreenState extends State<AdvisorBookingScreen> {
           final isSelected =
               _selectedDate?.day == date.day &&
               _selectedDate?.month == date.month;
-          final isToday = index == 0;
+          final isToday =
+              date.day == DateTime.now().day &&
+              date.month == DateTime.now().month &&
+              date.year == DateTime.now().year;
 
           return GestureDetector(
             onTap:
                 () => setState(() {
                   _selectedDate = date;
-                  _selectedTime = null; // reset time when changing date
+                  _selectedTime = null;
                 }),
             child: Container(
               width: 70,
