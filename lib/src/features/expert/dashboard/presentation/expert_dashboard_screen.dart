@@ -3,6 +3,7 @@ import 'package:da1/src/config/theme/typography.dart';
 import 'package:da1/src/core/bloc/auth/auth.dart';
 import 'package:da1/src/features/expert/dashboard/data/booking_model.dart';
 import 'package:da1/src/features/expert/dashboard/data/booking_repository.dart';
+import 'package:da1/src/features/expert/dashboard/data/wallet_repository.dart';
 import 'package:da1/src/features/expert/dashboard/presentation/widgets/expert_bottom_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -23,23 +24,30 @@ class _ExpertDashboardScreenState extends State<ExpertDashboardScreen> {
   String? _processingBookingId;
   List<BookingModel> _pendingBookings = [];
   List<BookingModel> _upcomingBookings = [];
+  String _walletBalance = "0";
 
   final BookingRepository _bookingRepository = BookingRepository();
+  final WalletRepository _walletRepository = WalletRepository();
 
   @override
   void initState() {
     super.initState();
-    _loadBookings();
+    _loadDashboardData();
   }
 
-  Future<void> _loadBookings() async {
+  Future<void> _loadDashboardData() async {
     setState(() => _isLoading = true);
 
     try {
-      final pendingData = await _bookingRepository.getPendingBookings();
+      final results = await Future.wait([
+        _bookingRepository.getPendingBookings(),
+        _walletRepository.getWalletBalance(),
+      ]);
 
       setState(() {
-        _pendingBookings = pendingData;
+        _pendingBookings = results[0] as List<BookingModel>;
+        _walletBalance = results[1] as String;
+
         _upcomingBookings = [];
         _isLoading = false;
       });
@@ -57,7 +65,7 @@ class _ExpertDashboardScreenState extends State<ExpertDashboardScreen> {
     setState(() => _processingBookingId = bookingId);
     try {
       await _bookingRepository.acceptBooking(bookingId);
-      await _loadBookings();
+      await _loadDashboardData();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -73,7 +81,7 @@ class _ExpertDashboardScreenState extends State<ExpertDashboardScreen> {
     setState(() => _processingBookingId = bookingId);
     try {
       await _bookingRepository.declineBooking(bookingId);
-      await _loadBookings();
+      await _loadDashboardData();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -94,7 +102,7 @@ class _ExpertDashboardScreenState extends State<ExpertDashboardScreen> {
       child: Scaffold(
         backgroundColor: AppColors.backgroundLight,
         body: RefreshIndicator(
-          onRefresh: _loadBookings,
+          onRefresh: _loadDashboardData,
           child: CustomScrollView(
             slivers: [
               SliverToBoxAdapter(child: _buildHeader(context)),
@@ -316,8 +324,8 @@ class _ExpertDashboardScreenState extends State<ExpertDashboardScreen> {
               Text.rich(
                 TextSpan(
                   children: [
-                    const TextSpan(
-                      text: '2,450 ',
+                    TextSpan(
+                      text: _walletBalance,
                       style: TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 32,
@@ -325,7 +333,7 @@ class _ExpertDashboardScreenState extends State<ExpertDashboardScreen> {
                       ),
                     ),
                     TextSpan(
-                      text: 'Tokens',
+                      text: ' Tokens',
                       style: TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 16,
