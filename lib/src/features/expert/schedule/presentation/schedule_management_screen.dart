@@ -1,4 +1,5 @@
 import 'package:da1/src/config/theme/app_colors.dart';
+import 'package:da1/src/config/theme/typography.dart';
 import 'package:da1/src/core/bloc/auth/auth.dart';
 import 'package:da1/src/features/expert/dashboard/data/booking_model.dart';
 import 'package:da1/src/features/expert/dashboard/data/booking_repository.dart';
@@ -44,6 +45,46 @@ class _ScheduleManagementScreenState extends State<ScheduleManagementScreen> {
       });
     } catch (e) {
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleAcceptBooking(String bookingId) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+    try {
+      await _bookingRepository.acceptBooking(bookingId);
+      if (mounted) Navigator.pop(context);
+      await _loadAllBookings();
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+      }
+    }
+  }
+
+  Future<void> _handleDeclineBooking(String bookingId) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+    try {
+      await _bookingRepository.declineBooking(bookingId);
+      if (mounted) Navigator.pop(context);
+      await _loadAllBookings();
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+      }
     }
   }
 
@@ -181,9 +222,11 @@ class _ScheduleManagementScreenState extends State<ScheduleManagementScreen> {
                             padding: const EdgeInsets.only(bottom: 12),
                             child: GestureDetector(
                               onTap: () {
-                                if (slot['status'] != 'Available') {
-                                  // TODO: Mở BottomSheet khi bấm vào lịch có người đặt
-                                  // _showBookingDetailsBottomSheet(slot['bookingData']);
+                                if (slot['status'] != 'Available' &&
+                                    slot['bookingData'] != null) {
+                                  _showBookingDetailsBottomSheet(
+                                    slot['bookingData'],
+                                  );
                                 }
                               },
                               child: ScheduleTimeSlotCard(
@@ -239,5 +282,225 @@ class _ScheduleManagementScreenState extends State<ScheduleManagementScreen> {
       'Dec',
     ];
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
+  }
+
+  Future<void> _showBookingDetailsBottomSheet(BookingModel booking) async {
+    final localTime = booking.scheduledAt.toLocal();
+    final timeStr =
+        "${localTime.hour.toString().padLeft(2, '0')}:${localTime.minute.toString().padLeft(2, '0')}";
+    final dateStr =
+        "${localTime.day.toString().padLeft(2, '0')}/${localTime.month.toString().padLeft(2, '0')}/${localTime.year}";
+    final isPending = booking.status == 'pending';
+
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(24),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Booking Details',
+                      style: AppTypography.headline.copyWith(fontSize: 20),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color:
+                            isPending
+                                ? Colors.orange.shade100
+                                : Colors.blue.shade100,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        isPending ? 'Pending' : 'Confirmed',
+                        style: TextStyle(
+                          color:
+                              isPending
+                                  ? Colors.orange.shade800
+                                  : Colors.blue.shade800,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 24,
+                      backgroundColor: Colors.grey[200],
+                      backgroundImage:
+                          booking.clientAvatar.isNotEmpty
+                              ? NetworkImage(booking.clientAvatar)
+                              : null,
+                      child:
+                          booking.clientAvatar.isEmpty
+                              ? const Icon(Icons.person, color: Colors.grey)
+                              : null,
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            booking.clientName,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                booking.callType == 'video'
+                                    ? Icons.videocam
+                                    : Icons.call,
+                                size: 16,
+                                color: Colors.grey,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                '$timeStr • $dateStr',
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Divider(),
+                ),
+
+                const Text(
+                  'Client Notes:',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey[200]!),
+                  ),
+                  child: Text(
+                    (booking.clientNote == null ||
+                            booking.clientNote!.trim().isEmpty)
+                        ? 'No notes available.'
+                        : booking.clientNote!,
+                    style: TextStyle(
+                      color: Colors.grey[800],
+                      fontSize: 14,
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context, 'decline'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          foregroundColor: Colors.red,
+                          side: const BorderSide(color: Colors.red),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(isPending ? 'Decline' : 'Cancel Booking'),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (isPending) {
+                            Navigator.pop(context, 'accept');
+                          } else {
+                            // TODO: Điều hướng vào Room Call
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Connecting to Call room...'),
+                              ),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor:
+                              isPending ? Colors.green : AppColors.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          isPending ? 'Accept' : 'Join Call',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (action == 'accept') {
+      _handleAcceptBooking(booking.id);
+    } else if (action == 'decline') {
+      _handleDeclineBooking(booking.id);
+    }
   }
 }
