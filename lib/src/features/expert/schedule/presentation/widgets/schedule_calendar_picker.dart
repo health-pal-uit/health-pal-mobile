@@ -1,13 +1,16 @@
+import 'package:da1/src/features/expert/dashboard/data/booking_model.dart';
 import 'package:flutter/material.dart';
 
 class ScheduleCalendarPicker extends StatefulWidget {
   final DateTime selectedDate;
   final Function(DateTime) onDateSelected;
+  final List<BookingModel> allBookings;
 
   const ScheduleCalendarPicker({
     super.key,
     required this.selectedDate,
     required this.onDateSelected,
+    required this.allBookings,
   });
 
   @override
@@ -148,6 +151,19 @@ class _ScheduleCalendarPickerState extends State<ScheduleCalendarPicker> {
                 day,
               );
 
+              bool hasPending = false;
+              bool hasConfirmed = false;
+
+              for (var booking in widget.allBookings) {
+                final localTime = booking.scheduledAt.toLocal();
+                if (localTime.year == date.year &&
+                    localTime.month == date.month &&
+                    localTime.day == date.day) {
+                  if (booking.status == 'pending') hasPending = true;
+                  if (booking.status == 'confirmed') hasConfirmed = true;
+                }
+              }
+
               return GestureDetector(
                 onTap: () {
                   widget.onDateSelected(date);
@@ -163,17 +179,54 @@ class _ScheduleCalendarPickerState extends State<ScheduleCalendarPicker> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: Center(
-                    child: Text(
-                      '$day',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color:
-                            isSelected ? Colors.white : const Color(0xFF0A0A0A),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '$day',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color:
+                              isSelected
+                                  ? Colors.white
+                                  : const Color(0xFF0A0A0A),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                        ),
                       ),
-                    ),
+                      if (hasPending || hasConfirmed) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (hasConfirmed)
+                              Container(
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 1.5,
+                                ),
+                                width: 4,
+                                height: 4,
+                                decoration: const BoxDecoration(
+                                  color: Colors.blue,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            if (hasPending)
+                              Container(
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 1.5,
+                                ),
+                                width: 4,
+                                height: 4,
+                                decoration: const BoxDecoration(
+                                  color: Colors.orange,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               );

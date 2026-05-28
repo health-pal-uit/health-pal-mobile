@@ -164,6 +164,7 @@ class _ScheduleManagementScreenState extends State<ScheduleManagementScreen> {
                       children: [
                         ScheduleCalendarPicker(
                           selectedDate: _selectedDate,
+                          allBookings: _allBookings,
                           onDateSelected: (date) {
                             setState(() {
                               _selectedDate = date;
