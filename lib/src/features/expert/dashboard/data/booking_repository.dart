@@ -53,6 +53,25 @@ class BookingRepository {
     }
   }
 
+  Future<List<BookingModel>> getAllBookings() async {
+    try {
+      final response = await _dio.get('/bookings/me');
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data != null && data['data'] is List) {
+          return (data['data'] as List)
+              .map((e) => BookingModel.fromJson(e as Map<String, dynamic>))
+              .toList();
+        }
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Error fetching all bookings: $e');
+      return [];
+    }
+  }
+
   Future<bool> acceptBooking(String bookingId) async {
     try {
       final response = await _dio.patch('/bookings/me/$bookingId/verify');

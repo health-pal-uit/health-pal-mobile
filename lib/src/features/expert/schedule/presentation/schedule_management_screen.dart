@@ -1,5 +1,7 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/core/bloc/auth/auth.dart';
+import 'package:da1/src/features/expert/dashboard/data/booking_model.dart';
+import 'package:da1/src/features/expert/dashboard/data/booking_repository.dart';
 import 'package:da1/src/features/expert/dashboard/presentation/widgets/expert_bottom_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,21 +20,82 @@ class ScheduleManagementScreen extends StatefulWidget {
 
 class _ScheduleManagementScreenState extends State<ScheduleManagementScreen> {
   late DateTime _selectedDate;
-  int _bottomNavIndex = 1; // Schedule is at index 1
+  int _bottomNavIndex = 1;
+
+  bool _isLoading = true;
+  List<BookingModel> _allBookings = [];
+
+  final BookingRepository _bookingRepository = BookingRepository();
 
   @override
   void initState() {
     super.initState();
-    _selectedDate = DateTime.now().add(const Duration(days: 5));
+    _selectedDate = DateTime.now();
+    _loadAllBookings();
+  }
+
+  Future<void> _loadAllBookings() async {
+    setState(() => _isLoading = true);
+    try {
+      final data = await _bookingRepository.getAllBookings();
+      setState(() {
+        _allBookings = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  List<Map<String, dynamic>> _generateTimeSlotsForSelectedDate() {
+    final List<Map<String, dynamic>> slots = [];
+
+    for (int hour = 8; hour <= 16; hour++) {
+      final bookingInSlot =
+          _allBookings.where((b) {
+            final localTime = b.scheduledAt.toLocal();
+            return localTime.year == _selectedDate.year &&
+                localTime.month == _selectedDate.month &&
+                localTime.day == _selectedDate.day &&
+                localTime.hour == hour;
+          }).firstOrNull;
+
+      String status = 'Available';
+      String? name;
+
+      if (bookingInSlot != null) {
+        name = bookingInSlot.clientName;
+        if (bookingInSlot.status == 'pending') {
+          status = 'Requested';
+        } else if (bookingInSlot.status == 'confirmed') {
+          status = 'Booked';
+        }
+      }
+
+      final startStr = "${hour.toString().padLeft(2, '0')}:00";
+      final endStr = "${(hour + 1).toString().padLeft(2, '0')}:00";
+
+      slots.add({
+        'time': '$startStr - $endStr',
+        'status': status,
+        'name': name,
+        'bookingData': bookingInSlot,
+      });
+    }
+    return slots;
   }
 
   @override
   Widget build(BuildContext context) {
+    final slotsToday = _generateTimeSlotsForSelectedDate();
+    final pendingCount =
+        slotsToday.where((s) => s['status'] == 'Requested').length;
+    final bookedCount = slotsToday.where((s) => s['status'] == 'Booked').length;
+    final totalSlotsCount = slotsToday.length;
+
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
-        if (state is Unauthenticated) {
-          context.go('/welcome');
-        }
+        if (state is Unauthenticated) context.go('/welcome');
       },
       child: Scaffold(
         backgroundColor: Colors.white,
@@ -43,163 +106,109 @@ class _ScheduleManagementScreenState extends State<ScheduleManagementScreen> {
           automaticallyImplyLeading: false,
           title: const Text(
             'Schedule Management',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w400,
-            ),
+            style: TextStyle(color: Colors.white, fontSize: 20),
           ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Container(
-                width: 36,
-                height: 32,
-                decoration: ShapeDecoration(
-                  color: Colors.white.withValues(alpha: 0.20),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Icon(
-                  Icons.more_vert,
-                  color: Colors.white,
-                  size: 16,
-                ),
-              ),
-            ),
-          ],
         ),
-        body: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Calendar Picker
-                ScheduleCalendarPicker(
-                  selectedDate: _selectedDate,
-                  onDateSelected: (date) {
-                    setState(() {
-                      _selectedDate = date;
-                    });
-                  },
-                ),
-                const SizedBox(height: 24),
-
-                // Statistics Cards
-                Row(
-                  children: [
-                    Expanded(
-                      child: ScheduleStatisticsCard(
-                        icon: Icons.check_circle,
-                        iconColor: const Color(0xFFDCFCE7),
-                        iconBgColor: const Color(0xFF00A63E),
-                        count: '3',
-                        label: 'Available',
-                      ),
+        body:
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 24,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ScheduleStatisticsCard(
-                        icon: Icons.calendar_today,
-                        iconColor: const Color(0xFFDBEAFE),
-                        iconBgColor: const Color(0xFF155DFC),
-                        count: '3',
-                        label: 'Booked',
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ScheduleStatisticsCard(
-                        icon: Icons.view_week,
-                        iconColor: const Color(0xFFF3E8FF),
-                        iconBgColor: const Color(0xFFA855F7),
-                        count: '6',
-                        label: 'Total Slots',
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // Slots for Date
-                Text(
-                  'Slots for ${_formatDate(_selectedDate)}',
-                  style: const TextStyle(
-                    color: Color(0xFF364153),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // Time Slots List
-                ..._buildTimeSlots(),
-
-                const SizedBox(height: 24),
-
-                // Tip Box
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFF9FAFB),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        width: 1.25,
-                        color: Colors.black.withValues(alpha: 0.10),
-                      ),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: RichText(
-                    text: const TextSpan(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        TextSpan(
-                          text: '💡 ',
-                          style: TextStyle(
-                            color: Color(0xFF4A5565),
-                            fontSize: 12,
+                        ScheduleCalendarPicker(
+                          selectedDate: _selectedDate,
+                          onDateSelected: (date) {
+                            setState(() {
+                              _selectedDate = date;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 24),
+
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ScheduleStatisticsCard(
+                                icon: Icons.pending_actions,
+                                iconColor: const Color(0xFFFFF7ED),
+                                iconBgColor: const Color(0xFFEA580C),
+                                count: pendingCount.toString(),
+                                label: 'Pending',
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ScheduleStatisticsCard(
+                                icon: Icons.event_available,
+                                iconColor: const Color(0xFFDBEAFE),
+                                iconBgColor: const Color(0xFF155DFC),
+                                count: bookedCount.toString(),
+                                label: 'Booked',
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ScheduleStatisticsCard(
+                                icon: Icons.view_week,
+                                iconColor: const Color(0xFFF3E8FF),
+                                iconBgColor: const Color(0xFFA855F7), // Tím
+                                count: totalSlotsCount.toString(),
+                                label: 'Total Slots',
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+
+                        Text(
+                          'Slots for ${_formatDate(_selectedDate)}',
+                          style: const TextStyle(
+                            color: Color(0xFF364153),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
                           ),
                         ),
-                        TextSpan(
-                          text: 'Tip: ',
-                          style: TextStyle(
-                            color: Color(0xFF4A5565),
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        TextSpan(
-                          text:
-                              'Keep your availability updated to receive more consultation requests. Patients can book available slots or request instant calls when you\'re online.',
-                          style: TextStyle(
-                            color: Color(0xFF4A5565),
-                            fontSize: 12,
-                          ),
-                        ),
+                        const SizedBox(height: 12),
+
+                        ...slotsToday.map((slot) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: GestureDetector(
+                              onTap: () {
+                                if (slot['status'] != 'Available') {
+                                  // TODO: Mở BottomSheet khi bấm vào lịch có người đặt
+                                  // _showBookingDetailsBottomSheet(slot['bookingData']);
+                                }
+                              },
+                              child: ScheduleTimeSlotCard(
+                                time: slot['time'] as String,
+                                status: slot['status'] as String,
+                                name: slot['name'] as String?,
+                              ),
+                            ),
+                          );
+                        }),
+
+                        const SizedBox(height: 24),
                       ],
                     ),
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
         bottomNavigationBar: ExpertBottomNav(
           currentIndex: _bottomNavIndex,
           onTap: (index) {
-            setState(() {
-              _bottomNavIndex = index;
-            });
-            // Handle navigation
+            setState(() => _bottomNavIndex = index);
             switch (index) {
               case 0:
                 context.go('/expert/dashboard');
                 break;
               case 1:
-                // Already on schedule
                 break;
               case 2:
                 context.go('/expert/wallet');
@@ -216,70 +225,19 @@ class _ScheduleManagementScreenState extends State<ScheduleManagementScreen> {
 
   String _formatDate(DateTime date) {
     final months = [
-      'January',
-      'February',
-      'March',
-      'April',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
       'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
-  }
-
-  List<Widget> _buildTimeSlots() {
-    final slots = [
-      {
-        'time': '09:00 AM - 10:00 AM',
-        'status': 'Available',
-        'isAvailable': true,
-      },
-      {
-        'time': '10:00 AM - 11:00 AM',
-        'status': 'Booked',
-        'isAvailable': false,
-        'name': 'Sarah Johnson',
-      },
-      {
-        'time': '11:30 AM - 12:30 PM',
-        'status': 'Booked',
-        'isAvailable': false,
-        'name': 'Michael Chen',
-      },
-      {
-        'time': '02:00 PM - 03:00 PM',
-        'status': 'Booked',
-        'isAvailable': false,
-        'name': 'Emily Davis',
-      },
-      {
-        'time': '03:00 PM - 04:00 PM',
-        'status': 'Available',
-        'isAvailable': true,
-      },
-      {
-        'time': '04:00 PM - 05:00 PM',
-        'status': 'Available',
-        'isAvailable': true,
-      },
-    ];
-
-    return List.generate(slots.length, (index) {
-      final slot = slots[index];
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: ScheduleTimeSlotCard(
-          time: slot['time'] as String,
-          status: slot['status'] as String,
-          isAvailable: slot['isAvailable'] as bool,
-          name: slot['name'] as String?,
-        ),
-      );
-    });
   }
 }
