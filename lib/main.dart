@@ -90,6 +90,7 @@ void main() async {
     BaseOptions(
       baseUrl: ApiConfig.baseUrl,
       connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 30),
     ),
   );
   dio.interceptors.add(
@@ -315,6 +316,9 @@ void main() async {
   runApp(
     MultiRepositoryProvider(
       providers: [
+        RepositoryProvider<AuthLocalDataSource>(
+          create: (context) => localDataSource,
+        ),
         RepositoryProvider<FitnessGoalRepository>(
           create: (context) => fitnessGoalRepository,
         ),

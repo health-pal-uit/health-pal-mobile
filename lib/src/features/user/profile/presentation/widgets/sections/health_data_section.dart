@@ -28,8 +28,8 @@ class HealthDataSection extends StatelessWidget {
         ),
         ProfileItem(
           icon: Icons.sync,
-          text: "Sync with Google Fit",
-          onTap: () => context.push('/google-fit-sync'),
+          text: "Sync with Health Connect",
+          onTap: () => context.push('/health-connect'),
         ),
         ProfileItem(
           icon: LucideIcons.calculator,

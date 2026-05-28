@@ -102,13 +102,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final hasToken = await authRepository.hasValidToken();
       if (hasToken) {
         final result = await authRepository.getCurrentUser();
-        result.fold((failure) {
-          if (failure.message.toLowerCase().contains('unauthorized') ||
-              failure.message.toLowerCase().contains('expired') ||
-              failure.message.toLowerCase().contains('invalid')) {
-            emit(Unauthenticated());
-          }
-        }, (user) => emit(Authenticated(user)));
+        result.fold(
+          (failure) {
+            if (failure.message.toLowerCase().contains('unauthorized') ||
+                failure.message.toLowerCase().contains('expired') ||
+                failure.message.toLowerCase().contains('invalid')) {
+              emit(Unauthenticated());
+            }
+          },
+          (user) {
+            emit(Authenticated(user));
+          },
+        );
       } else {
         emit(Unauthenticated());
       }

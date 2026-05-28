@@ -1,6 +1,10 @@
 import 'package:da1/src/features/expert/auth/presentation/expert_pending_screen.dart';
 import 'package:da1/src/features/expert/auth/presentation/expert_registration_screen.dart';
 import 'package:da1/src/features/expert/dashboard/presentation/expert_dashboard_screen.dart';
+import 'package:da1/src/features/expert/schedule/presentation/schedule_management_screen.dart';
+import 'package:da1/src/features/expert/wallet/presentation/expert_wallet_screen.dart';
+import 'package:da1/src/features/expert/settings/presentation/expert_settings_screen.dart';
+import 'package:da1/src/features/user/advisor/domain/expert.dart';
 import 'package:da1/src/features/user/advisor/presentation/advisor_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/email_verification_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/forgot_password_screen.dart';
@@ -15,6 +19,9 @@ import 'package:da1/src/features/shared/auth/presentation/auth/onboarding/onboar
 import 'package:da1/src/features/shared/auth/presentation/auth/signup_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/expert_signup_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/welcome/welcome_scroll_screen.dart';
+import 'package:da1/src/features/user/advisor/presentation/booking_advisor_screen.dart';
+import 'package:da1/src/features/user/advisor/presentation/advisor_detail_screen.dart';
+import 'package:da1/src/features/user/advisor/presentation/my_appointments_screen.dart';
 import 'package:da1/src/features/user/community/presentation/community_screen.dart';
 import 'package:da1/src/features/user/community/presentation/personal_profile_screen.dart';
 import 'package:da1/src/features/user/home/presentation/diet/food_search_screen.dart';
@@ -22,9 +29,12 @@ import 'package:da1/src/features/user/home/presentation/diet/meal_scan_screen.da
 import 'package:da1/src/features/user/home/presentation/exercise/activity_analytics_screen.dart';
 import 'package:da1/src/features/user/home/presentation/exercise/add_activity_screen.dart';
 import 'package:da1/src/features/user/notifications/presentation/notifications_screen.dart';
-import 'package:da1/src/features/user/profile/presentation/integrations/google_fit_sync_screen.dart';
+import 'package:da1/src/features/user/profile/bloc/health_sync_bloc.dart';
+import 'package:da1/src/features/user/profile/data/fitness_sync_api.dart';
+import 'package:da1/src/features/user/profile/data/health_connect_service.dart';
 import 'package:da1/src/features/user/community/data/post_model.dart';
 import 'package:da1/src/features/user/home/presentation/step/steps_screen.dart';
+import 'package:da1/src/features/user/profile/presentation/integrations/health_connect_screen.dart';
 import 'package:da1/src/features/user/profile/presentation/profile_screen.dart';
 import 'package:da1/src/features/user/home/presentation/home_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/login_screen.dart';
@@ -32,7 +42,9 @@ import 'package:da1/src/features/shared/auth/presentation/auth/expert_login_scre
 import 'package:da1/src/features/user/home/presentation/widgets/custom_bottom_nav.dart';
 import 'package:da1/src/features/user/profile/data/fitness_profile_repository.dart';
 import 'package:da1/src/features/user/profile/data/google_fit_repository.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:async';
 import 'package:da1/src/core/bloc/auth/auth_bloc.dart';
@@ -77,8 +89,6 @@ class AppRoutes {
             isOnExpertLoginPage ||
             isOnSignupPage ||
             isOnExpertSignupPage ||
-            isOnExpertRegistrationPage ||
-            isOnExpertPendingPage ||
             state.matchedLocation.startsWith('/email-verification') ||
             state.matchedLocation.startsWith('/forgot-password') ||
             state.matchedLocation.startsWith('/password-reset') ||
@@ -94,17 +104,26 @@ class AppRoutes {
           return '/';
         }
 
-        // ✅ Force pendingExpert users to pending screen
+        if (isOnExpertRegistrationPage) {
+          return null;
+        }
+
         if (isAuthenticated &&
             role == UserRole.pendingExpert &&
             !isOnExpertPendingPage) {
           return '/expert/pending';
         }
 
+        if (isAuthenticated && role == UserRole.expert) {
+          final isOnExpertRoute = state.matchedLocation.startsWith('/expert/');
+          if (!isOnExpertRoute) {
+            return '/expert/dashboard';
+          }
+        }
+
         final isExpertRoute = state.matchedLocation.startsWith('/expert');
         final isExpertLoginPage = state.matchedLocation == '/expert/login';
 
-        // ✅ Expert routes that don't require expert role
         if (isExpertRoute &&
             !isExpertLoginPage &&
             !isOnExpertSignupPage &&
@@ -312,17 +331,63 @@ class AppRoutes {
           builder: (context, state) => const NotificationsScreen(),
         ),
         GoRoute(
-          path: '/google-fit-sync',
-          name: 'google-fit-sync',
-          builder:
-              (context, state) =>
-                  GoogleFitSyncScreen(googleFitRepository: googleFitRepo),
+          path: '/health-connect',
+          name: 'health-connect',
+          builder: (context, state) {
+            return BlocProvider(
+              create:
+                  (context) => HealthSyncBloc(
+                    healthService: HealthConnectService(),
+                    apiService: FitnessSyncApi(
+                      Dio(),
+                      baseUrl: 'http://10.0.2.2:3001',
+                    ),
+                  ),
+              child: const HealthConnectScreen(),
+            );
+          },
+        ),
+        GoRoute(
+          path: '/advisor/detail',
+          name: 'advisor-detail',
+          builder: (context, state) {
+            final expert = state.extra as Expert;
+            return AdvisorDetailScreen(expert: expert);
+          },
+        ),
+        GoRoute(
+          path: '/bookings/me',
+          name: 'my-appointments',
+          builder: (context, state) => const MyAppointmentsScreen(),
+        ),
+        GoRoute(
+          path: '/bookings/new',
+          name: 'booking-form',
+          builder: (context, state) {
+            final expert = state.extra as Expert;
+            return AdvisorBookingScreen(expert: expert);
+          },
         ),
 
         GoRoute(
           path: '/expert/dashboard',
           name: 'expert-dashboard',
           builder: (context, state) => const ExpertDashboardScreen(),
+        ),
+        GoRoute(
+          path: '/expert/schedule',
+          name: 'expert-schedule',
+          builder: (context, state) => const ScheduleManagementScreen(),
+        ),
+        GoRoute(
+          path: '/expert/wallet',
+          name: 'expert-wallet',
+          builder: (context, state) => const ExpertWalletScreen(),
+        ),
+        GoRoute(
+          path: '/expert/settings',
+          name: 'expert-settings',
+          builder: (context, state) => const ExpertSettingsScreen(),
         ),
         GoRoute(
           path: '/expert/pending',
