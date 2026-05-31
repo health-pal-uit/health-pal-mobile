@@ -5,8 +5,10 @@ import 'package:da1/src/features/expert/dashboard/data/booking_model.dart';
 import 'package:da1/src/features/expert/dashboard/data/booking_repository.dart';
 import 'package:da1/src/features/expert/dashboard/data/wallet_repository.dart';
 import 'package:da1/src/features/expert/dashboard/presentation/widgets/expert_bottom_nav.dart';
+import 'package:da1/src/features/shared/auth/data/datasources/auth_local_data_source.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 
 class ExpertDashboardScreen extends StatefulWidget {
@@ -686,8 +688,35 @@ class _ExpertDashboardScreenState extends State<ExpertDashboardScreen> {
           ElevatedButton(
             onPressed:
                 canJoinCall
-                    ? () {
-                      // TODO: Điều hướng vào Room
+                    ? () async {
+                      final authState = context.read<AuthBloc>().state;
+
+                      if (authState is Authenticated) {
+                        final localDataSource = AuthLocalDataSourceImpl(
+                          storage: const FlutterSecureStorage(),
+                        );
+                        final token = await localDataSource.getToken() ?? '';
+
+                        if (mounted) {
+                          context.push(
+                            '/expert/video-call',
+                            extra: {
+                              'consultationId': booking.id,
+                              'userId': authState.user.id,
+                              'role': 'expert',
+                              'token': token,
+                            },
+                          );
+                        }
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'You must be logged in to join the call.',
+                            ),
+                          ),
+                        );
+                      }
                     }
                     : null,
             style: ElevatedButton.styleFrom(

@@ -1,8 +1,13 @@
 import 'package:da1/src/config/theme/app_colors.dart';
+import 'package:da1/src/features/shared/auth/data/datasources/auth_local_data_source.dart';
 import 'package:da1/src/features/user/advisor/data/booking_repository.dart';
 import 'package:da1/src/features/user/advisor/domain/booking.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:da1/src/core/bloc/auth/auth.dart';
 
 class MyAppointmentsScreen extends StatefulWidget {
   const MyAppointmentsScreen({super.key});
@@ -217,6 +222,10 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
     final dateStr = DateFormat('EEE, MMM d, yyyy').format(booking.scheduledAt);
     final timeStr = DateFormat('hh:mm a').format(booking.scheduledAt);
 
+    final localTime = booking.scheduledAt.toLocal();
+    final timeDifference = localTime.difference(DateTime.now()).inMinutes;
+    final canJoinCall = timeDifference <= 10 && timeDifference >= -60;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -347,27 +356,72 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
               ],
             ),
           ),
+
           if (booking.status == 'pending' || booking.status == 'confirmed') ...[
             const SizedBox(height: 16),
             Divider(height: 1, color: Colors.grey[200]),
             const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: () => _cancelBooking(booking),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.red,
-                  side: const BorderSide(color: Colors.red),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => _cancelBooking(booking),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red,
+                      side: const BorderSide(color: Colors.red),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: Text(
+                      booking.status == 'pending' ? 'Cancel Request' : 'Cancel',
+                    ),
                   ),
                 ),
-                child: Text(
-                  booking.status == 'pending'
-                      ? 'Cancel Request'
-                      : 'Cancel Appointment',
-                ),
-              ),
+                if (booking.status == 'confirmed') ...[
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed:
+                          canJoinCall
+                              ? () async {
+                                final authState =
+                                    context.read<AuthBloc>().state;
+                                if (authState is Authenticated) {
+                                  final localDataSource =
+                                      AuthLocalDataSourceImpl(
+                                        storage: const FlutterSecureStorage(),
+                                      );
+                                  final token =
+                                      await localDataSource.getToken() ?? '';
+                                  if (mounted) {
+                                    context.push(
+                                      '/video-call',
+                                      extra: {
+                                        'consultationId': booking.id,
+                                        'userId': authState.user.id,
+                                        'role': 'patient',
+                                        'token': token,
+                                      },
+                                    );
+                                  }
+                                }
+                              }
+                              : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            canJoinCall ? AppColors.primary : Colors.grey[300],
+                        foregroundColor:
+                            canJoinCall ? Colors.white : Colors.grey[600],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text('Join Call'),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ],
         ],

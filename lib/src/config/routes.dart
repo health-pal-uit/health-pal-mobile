@@ -42,6 +42,7 @@ import 'package:da1/src/features/shared/auth/presentation/auth/expert_login_scre
 import 'package:da1/src/features/user/home/presentation/widgets/custom_bottom_nav.dart';
 import 'package:da1/src/features/user/profile/data/fitness_profile_repository.dart';
 import 'package:da1/src/features/user/profile/data/google_fit_repository.dart';
+import 'package:da1/src/features/video_call/presentation/video_call_screen.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -366,6 +367,20 @@ class AppRoutes {
           builder: (context, state) {
             final expert = state.extra as Expert;
             return AdvisorBookingScreen(expert: expert);
+          },
+        ),
+
+        GoRoute(
+          path: '/expert/video-call',
+          name: 'video-call',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>;
+            return VideoCallScreen(
+              consultationId: extra['consultationId'],
+              userId: extra['userId'],
+              role: extra['role'],
+              token: extra['token'],
+            );
           },
         ),
 
