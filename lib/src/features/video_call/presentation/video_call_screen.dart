@@ -65,7 +65,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
 
     // 4. Kết nối tới Socket.IO (Thay IP Backend của bạn vào đây)
     _signaling.connectSignaling(
-      serverUrl: 'http://10.0.2.2:3001', // Đổi thành BaseURL thực tế
+      serverUrl: 'http://192.168.1.15:3001', // Đổi thành BaseURL thực tế
       token: widget.token,
       consultationId: widget.consultationId,
       userId: widget.userId,

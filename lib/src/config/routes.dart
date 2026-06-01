@@ -371,7 +371,7 @@ class AppRoutes {
         ),
 
         GoRoute(
-          path: '/expert/video-call',
+          path: '/video-call',
           name: 'video-call',
           builder: (context, state) {
             final extra = state.extra as Map<String, dynamic>;
@@ -380,6 +380,20 @@ class AppRoutes {
               userId: extra['userId'],
               role: extra['role'],
               token: extra['token'],
+            );
+          },
+        ),
+
+        GoRoute(
+          path: '/expert/video-call',
+          name: 'expert-video-call',
+          builder: (context, state) {
+            final extra = state.extra as Map;
+            return VideoCallScreen(
+              consultationId: extra['consultationId'].toString(),
+              userId: extra['userId'].toString(),
+              role: extra['role'].toString(),
+              token: extra['token'].toString(),
             );
           },
         ),

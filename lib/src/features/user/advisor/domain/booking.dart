@@ -6,6 +6,7 @@ class Booking {
   final String expertName;
   final String expertRole;
   final String? expertAvatarUrl;
+  final String? consultationId;
 
   Booking.fromJson(Map<String, dynamic> json)
     : id = json['id'] ?? '',
@@ -20,5 +21,7 @@ class Booking {
           json['expert']?['user']?['username'] ??
           'Expert',
       expertRole = json['expert']?['expert_role']?['name'] ?? 'Advisor',
-      expertAvatarUrl = json['expert']?['user']?['avatar_url'];
+      expertAvatarUrl = json['expert']?['user']?['avatar_url'],
+      consultationId =
+          json['consultation'] != null ? json['consultation']['id'] : null;
 }

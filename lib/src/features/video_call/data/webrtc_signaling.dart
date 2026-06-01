@@ -1,17 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
-import 'package:flutter/foundation.dart';
-
-typedef OnStreamCallback = void Function(MediaStream stream);
-typedef OnPeerDisconnected = void Function();
 
 class WebRTCSignaling {
-  final Map<String, dynamic> _iceServers = {
-    'iceServers': [
-      {'urls': 'stun:stun.l.google.com:19302'},
-    ],
-  };
-
   io.Socket? _socket;
   RTCPeerConnection? _peerConnection;
   MediaStream? _localStream;
@@ -20,11 +11,12 @@ class WebRTCSignaling {
   String? _consultationId;
   String? _userId;
   String? _role;
-  String? _targetPeerId; // ID của người đang gọi cùng
+  String? _targetPeerId;
+  String? _callId; // Lưu callId do Backend sinh ra
 
-  OnStreamCallback? onLocalStream;
-  OnStreamCallback? onRemoteStream;
-  OnPeerDisconnected? onPeerDisconnected;
+  Function(MediaStream stream)? onLocalStream;
+  Function(MediaStream stream)? onRemoteStream;
+  Function()? onPeerDisconnected;
 
   void connectSignaling({
     required String serverUrl,
@@ -37,99 +29,120 @@ class WebRTCSignaling {
     _userId = userId;
     _role = role;
 
+    // 1. Kết nối đúng namespace '/chat' & nhét Token vào Auth/Headers
     _socket = io.io(
-      '$serverUrl/video-calls',
-      io.OptionBuilder().setTransports(['websocket']).setExtraHeaders({
-        'Authorization': 'Bearer $token',
-      }).build(),
+      '$serverUrl/chat',
+      io.OptionBuilder()
+          .setTransports(['websocket'])
+          .setAuth({'token': token})
+          .setExtraHeaders({'Authorization': 'Bearer $token'})
+          .build(),
     );
 
     _socket!.onConnect((_) {
-      debugPrint('Signaling Connected');
-      _socket!.emit('join-video-call', {
-        'consultationId': consultationId,
-        'userId': userId,
-        'role': role,
-      });
+      debugPrint('🟢 [SOCKET] Đã kết nối tới Server thành công!');
+      // 2. Gửi sự kiện Join với đúng format backend cần
+      _socket!.emit('join-video-call', {'consultationId': _consultationId});
     });
 
+    // 3. Lắng nghe lỗi từ Backend (Sai ID, sai quyền...)
+    _socket!.on('error', (data) {
+      debugPrint('🔴 [BACKEND BÁO LỖI]: ${data['message']}');
+    });
+
+    // 4. Lấy Call ID khi tạo/join phòng thành công
+    _socket!.on('call-room-joined', (data) {
+      debugPrint('🟢 [SOCKET] Đã join Call Room. Call ID: ${data['callId']}');
+      _callId = data['callId'];
+    });
+
+    // 5. Bắt tín hiệu khi có người đối diện vào phòng
     _socket!.on('peer-joined', (data) {
-      if (data['userId'] != _userId) {
-        debugPrint('Peer joined: ${data['peerId']}');
+      debugPrint('🟢 [SOCKET] PEER-JOINED: $data');
+      if (data['peerId'] != _userId) {
         _targetPeerId = data['peerId'];
         if (_role == 'expert') {
+          debugPrint('🟢 [WEBRTC] Tôi là Expert, tiến hành tạo Offer...');
           _createOffer();
         }
       }
     });
 
+    // 6. Lắng nghe Offer/Answer/ICE (Đúng tên sự kiện của Backend)
     _socket!.on('webrtc-offer', (data) async {
-      _targetPeerId = data['fromPeerId'];
+      debugPrint('🟢 [SOCKET] Nhận được Offer!');
+      if (data['from'] != null) _targetPeerId = data['from'];
       await _handleReceiveOffer(data['offer']);
     });
 
     _socket!.on('webrtc-answer', (data) async {
+      debugPrint('🟢 [SOCKET] Nhận được Answer!');
       await _handleReceiveAnswer(data['answer']);
     });
 
     _socket!.on('ice-candidate', (data) async {
+      debugPrint('🟢 [SOCKET] Nhận được ICE Candidate');
       await _handleReceiveIceCandidate(data['candidate']);
     });
 
-    _socket!.on('call-ended', (_) {
+    // 7. Lắng nghe sự kiện cúp máy từ đối tác
+    _socket!.on('call-ended', (data) {
+      debugPrint('🟢 [SOCKET] Cuộc gọi đã bị kết thúc bởi đối tác');
       endCall();
     });
+
+    // Bắt các lỗi ngầm của Socket
+    _socket!.onConnectError(
+      (err) => debugPrint('🔴 [SOCKET] LỖI KẾT NỐI: $err'),
+    );
+    _socket!.onError((err) => debugPrint('🔴 [SOCKET] LỖI CHUNG: $err'));
+    _socket!.onDisconnect((_) => debugPrint('🔴 [SOCKET] ĐÃ NGẮT KẾT NỐI'));
   }
 
   Future<void> openUserMedia(
-    RTCVideoRenderer localRenderer,
-    RTCVideoRenderer remoteRenderer,
+    RTCVideoRenderer localVideo,
+    RTCVideoRenderer remoteVideo,
   ) async {
-    final Map<String, dynamic> mediaConstraints = {
+    final mediaConstraints = {
       'audio': true,
       'video': {'facingMode': 'user'},
     };
 
-    try {
-      _localStream = await navigator.mediaDevices.getUserMedia(
-        mediaConstraints,
-      );
-      localRenderer.srcObject = _localStream;
-      onLocalStream?.call(_localStream!);
+    _localStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
+    localVideo.srcObject = _localStream;
+    onLocalStream?.call(_localStream!);
 
-      _peerConnection = await createPeerConnection(_iceServers);
+    _peerConnection = await createPeerConnection({
+      'iceServers': [
+        {'urls': 'stun:stun.l.google.com:19302'},
+      ],
+    });
 
-      // Add local tracks to peer connection
-      _localStream!.getTracks().forEach((track) {
-        _peerConnection!.addTrack(track, _localStream!);
-      });
+    _localStream?.getTracks().forEach((track) {
+      _peerConnection?.addTrack(track, _localStream!);
+    });
 
-      // listen Track from remote peer
-      _peerConnection!.onTrack = (RTCTrackEvent event) {
-        if (event.streams.isNotEmpty) {
-          _remoteStream = event.streams[0];
-          remoteRenderer.srcObject = event.streams[0];
-          onRemoteStream?.call(event.streams[0]);
-        }
-      };
+    _peerConnection?.onIceCandidate = (RTCIceCandidate candidate) {
+      if (_targetPeerId != null && _callId != null) {
+        _socket!.emit('ice-candidate', {
+          'to': _targetPeerId,
+          'callId': _callId,
+          'candidate': {
+            'candidate': candidate.candidate,
+            'sdpMid': candidate.sdpMid,
+            'sdpMLineIndex': candidate.sdpMLineIndex,
+          },
+        });
+      }
+    };
 
-      // send ICE Candidate to peer
-      _peerConnection!.onIceCandidate = (RTCIceCandidate candidate) {
-        if (_targetPeerId != null) {
-          _socket!.emit('ice-candidate', {
-            'consultationId': _consultationId,
-            'targetPeerId': _targetPeerId,
-            'candidate': {
-              'candidate': candidate.candidate,
-              'sdpMid': candidate.sdpMid,
-              'sdpMLineIndex': candidate.sdpMLineIndex,
-            },
-          });
-        }
-      };
-    } catch (e) {
-      debugPrint("Lỗi khi mở Media: $e");
-    }
+    _peerConnection?.onTrack = (RTCTrackEvent event) {
+      if (event.streams.isNotEmpty) {
+        _remoteStream = event.streams[0];
+        remoteVideo.srcObject = _remoteStream;
+        onRemoteStream?.call(_remoteStream!);
+      }
+    };
   }
 
   Future<void> _createOffer() async {
@@ -137,46 +150,42 @@ class WebRTCSignaling {
     await _peerConnection!.setLocalDescription(offer);
 
     _socket!.emit('webrtc-offer', {
-      'consultationId': _consultationId,
-      'targetPeerId': _targetPeerId,
+      'to': _targetPeerId,
+      'callId': _callId,
       'offer': {'type': offer.type, 'sdp': offer.sdp},
     });
   }
 
-  Future<void> _handleReceiveOffer(Map<String, dynamic> offerMap) async {
-    RTCSessionDescription offer = RTCSessionDescription(
-      offerMap['sdp'],
-      offerMap['type'],
+  Future<void> _handleReceiveOffer(Map<String, dynamic> offerData) async {
+    await _peerConnection?.setRemoteDescription(
+      RTCSessionDescription(offerData['sdp'], offerData['type']),
     );
-    await _peerConnection!.setRemoteDescription(offer);
-
     RTCSessionDescription answer = await _peerConnection!.createAnswer();
     await _peerConnection!.setLocalDescription(answer);
 
     _socket!.emit('webrtc-answer', {
-      'consultationId': _consultationId,
-      'targetPeerId': _targetPeerId,
+      'to': _targetPeerId,
+      'callId': _callId,
       'answer': {'type': answer.type, 'sdp': answer.sdp},
     });
   }
 
-  Future<void> _handleReceiveAnswer(Map<String, dynamic> answerMap) async {
-    RTCSessionDescription answer = RTCSessionDescription(
-      answerMap['sdp'],
-      answerMap['type'],
+  Future<void> _handleReceiveAnswer(Map<String, dynamic> answerData) async {
+    await _peerConnection?.setRemoteDescription(
+      RTCSessionDescription(answerData['sdp'], answerData['type']),
     );
-    await _peerConnection!.setRemoteDescription(answer);
   }
 
   Future<void> _handleReceiveIceCandidate(
-    Map<String, dynamic> candidateMap,
+    Map<String, dynamic> candidateData,
   ) async {
-    RTCIceCandidate candidate = RTCIceCandidate(
-      candidateMap['candidate'],
-      candidateMap['sdpMid'],
-      candidateMap['sdpMLineIndex'],
+    await _peerConnection?.addCandidate(
+      RTCIceCandidate(
+        candidateData['candidate'],
+        candidateData['sdpMid'],
+        candidateData['sdpMLineIndex'],
+      ),
     );
-    await _peerConnection!.addCandidate(candidate);
   }
 
   void toggleMic(bool isMuted) {
@@ -192,15 +201,16 @@ class WebRTCSignaling {
   }
 
   void endCall() {
-    _socket?.emit('end-video-call', {
-      'callId': 'TODO_PASS_CALL_ID_HERE',
-      'consultationId': _consultationId,
-    });
+    if (_callId != null) {
+      _socket?.emit('end-video-call', {'callId': _callId});
+    }
 
     _localStream?.dispose();
     _remoteStream?.dispose();
     _peerConnection?.close();
     _socket?.disconnect();
+
+    // Gọi callback để UI tự động pop() màn hình
     onPeerDisconnected?.call();
   }
 }

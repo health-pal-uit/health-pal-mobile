@@ -29,6 +29,7 @@ class BookingModel {
   final DateTime scheduledAt;
   final String? clientNote;
   final BookingClient client;
+  final String? consultationId;
 
   BookingModel({
     required this.id,
@@ -38,6 +39,7 @@ class BookingModel {
     required this.scheduledAt,
     this.clientNote,
     required this.client,
+    this.consultationId,
   });
 
   String get clientName =>
@@ -53,6 +55,8 @@ class BookingModel {
       scheduledAt: DateTime.parse(json['scheduled_at']),
       clientNote: json['client_note'],
       client: BookingClient.fromJson(json['client'] ?? {}),
+      consultationId:
+          json['consultation'] != null ? json['consultation']['id'] : null,
     );
   }
 }

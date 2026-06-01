@@ -4,8 +4,10 @@ import 'package:da1/src/core/bloc/auth/auth.dart';
 import 'package:da1/src/features/expert/dashboard/data/booking_model.dart';
 import 'package:da1/src/features/expert/dashboard/data/booking_repository.dart';
 import 'package:da1/src/features/expert/dashboard/presentation/widgets/expert_bottom_nav.dart';
+import 'package:da1/src/features/shared/auth/data/datasources/auth_local_data_source.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'widgets/schedule_calendar_picker.dart';
 import 'widgets/schedule_statistics_card.dart';
@@ -56,14 +58,25 @@ class _ScheduleManagementScreenState extends State<ScheduleManagementScreen> {
     );
     try {
       await _bookingRepository.acceptBooking(bookingId);
+      await _bookingRepository.createConsultation(bookingId);
+
       if (mounted) Navigator.pop(context);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Consultation created successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
       await _loadAllBookings();
     } catch (e) {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -91,7 +104,7 @@ class _ScheduleManagementScreenState extends State<ScheduleManagementScreen> {
   List<Map<String, dynamic>> _generateTimeSlotsForSelectedDate() {
     final List<Map<String, dynamic>> slots = [];
 
-    for (int hour = 8; hour <= 16; hour++) {
+    for (int hour = 8; hour <= 22; hour++) {
       final bookingInSlot =
           _allBookings.where((b) {
             final localTime = b.scheduledAt.toLocal();
@@ -293,6 +306,9 @@ class _ScheduleManagementScreenState extends State<ScheduleManagementScreen> {
         "${localTime.day.toString().padLeft(2, '0')}/${localTime.month.toString().padLeft(2, '0')}/${localTime.year}";
     final isPending = booking.status == 'pending';
 
+    final timeDifference = localTime.difference(DateTime.now()).inMinutes;
+    final canJoinCall = timeDifference <= 10 && timeDifference >= -60;
+
     final action = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
@@ -458,31 +474,35 @@ class _ScheduleManagementScreenState extends State<ScheduleManagementScreen> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () {
-                          if (isPending) {
-                            Navigator.pop(context, 'accept');
-                          } else {
-                            // TODO: Điều hướng vào Room Call
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Connecting to Call room...'),
-                              ),
-                            );
-                          }
-                        },
+                        onPressed:
+                            (!isPending && !canJoinCall)
+                                ? null
+                                : () {
+                                  if (isPending) {
+                                    Navigator.pop(context, 'accept');
+                                  } else {
+                                    Navigator.pop(context, 'join');
+                                  }
+                                },
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           backgroundColor:
-                              isPending ? Colors.green : AppColors.primary,
+                              (!isPending && !canJoinCall)
+                                  ? Colors.grey[300]
+                                  : (isPending
+                                      ? Colors.green
+                                      : AppColors.primary),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                         child: Text(
                           isPending ? 'Accept' : 'Join Call',
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color:
+                                (!isPending && !canJoinCall)
+                                    ? Colors.grey[600]
+                                    : Colors.white,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
@@ -498,10 +518,31 @@ class _ScheduleManagementScreenState extends State<ScheduleManagementScreen> {
       },
     );
 
+    if (!mounted) return;
     if (action == 'accept') {
       _handleAcceptBooking(booking.id);
     } else if (action == 'decline') {
       _handleDeclineBooking(booking.id);
+    } else if (action == 'join') {
+      final authState = context.read<AuthBloc>().state;
+      if (authState is Authenticated) {
+        final localDataSource = AuthLocalDataSourceImpl(
+          storage: const FlutterSecureStorage(),
+        );
+        final token = await localDataSource.getToken() ?? '';
+
+        if (mounted) {
+          context.pushNamed(
+            'expert-video-call',
+            extra: <String, dynamic>{
+              'consultationId': booking.consultationId,
+              'userId': authState.user.id,
+              'role': 'expert',
+              'token': token,
+            },
+          );
+        }
+      }
     }
   }
 }

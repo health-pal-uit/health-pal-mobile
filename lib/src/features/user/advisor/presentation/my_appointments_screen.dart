@@ -398,7 +398,8 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
                                     context.push(
                                       '/video-call',
                                       extra: {
-                                        'consultationId': booking.id,
+                                        'consultationId':
+                                            booking.consultationId,
                                         'userId': authState.user.id,
                                         'role': 'patient',
                                         'token': token,

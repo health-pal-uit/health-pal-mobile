@@ -67,6 +67,7 @@ class _ExpertDashboardScreenState extends State<ExpertDashboardScreen> {
     setState(() => _processingBookingId = bookingId);
     try {
       await _bookingRepository.acceptBooking(bookingId);
+      await _bookingRepository.createConsultation(bookingId);
       await _loadDashboardData();
     } catch (e) {
       if (mounted) {
@@ -701,7 +702,7 @@ class _ExpertDashboardScreenState extends State<ExpertDashboardScreen> {
                           context.push(
                             '/expert/video-call',
                             extra: {
-                              'consultationId': booking.id,
+                              'consultationId': booking.consultationId,
                               'userId': authState.user.id,
                               'role': 'expert',
                               'token': token,
