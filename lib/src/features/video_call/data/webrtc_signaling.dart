@@ -17,6 +17,8 @@ class WebRTCSignaling {
   Function(MediaStream stream)? onLocalStream;
   Function(MediaStream stream)? onRemoteStream;
   Function()? onPeerDisconnected;
+  RTCDataChannel? _dataChannel;
+  Function(bool isCameraOn)? onRemoteCameraToggled;
 
   bool _isDisposed = false;
 
@@ -31,8 +33,12 @@ class WebRTCSignaling {
     _userId = userId;
     _role = role;
 
+    String safeUrl = serverUrl;
+    if (safeUrl.endsWith('/')) {
+      safeUrl = safeUrl.substring(0, safeUrl.length - 1);
+    }
     _socket = io.io(
-      '$serverUrl/chat',
+      '$safeUrl/chat',
       io.OptionBuilder()
           .setTransports(['websocket'])
           .setAuth({'token': token})
@@ -112,6 +118,17 @@ class WebRTCSignaling {
       ],
     });
 
+    _peerConnection?.onDataChannel = (RTCDataChannel channel) {
+      _dataChannel = channel;
+      _dataChannel?.onMessage = (RTCDataChannelMessage message) {
+        if (message.text == 'camera_off') {
+          onRemoteCameraToggled?.call(false);
+        } else if (message.text == 'camera_on') {
+          onRemoteCameraToggled?.call(true);
+        }
+      };
+    };
+
     _localStream?.getTracks().forEach((track) {
       _peerConnection?.addTrack(track, _localStream!);
     });
@@ -140,6 +157,15 @@ class WebRTCSignaling {
   }
 
   Future<void> _createOffer() async {
+    _dataChannel = await _peerConnection!.createDataChannel(
+      'cam-signal',
+      RTCDataChannelInit(),
+    );
+    _dataChannel!.onMessage = (RTCDataChannelMessage message) {
+      if (message.text == 'camera_off') onRemoteCameraToggled?.call(false);
+      if (message.text == 'camera_on') onRemoteCameraToggled?.call(true);
+    };
+
     RTCSessionDescription offer = await _peerConnection!.createOffer();
     await _peerConnection!.setLocalDescription(offer);
 
@@ -191,6 +217,12 @@ class WebRTCSignaling {
   void toggleCamera(bool isCameraOn) {
     if (_localStream != null) {
       _localStream!.getVideoTracks()[0].enabled = isCameraOn;
+
+      if (_dataChannel != null) {
+        _dataChannel!.send(
+          RTCDataChannelMessage(isCameraOn ? 'camera_on' : 'camera_off'),
+        );
+      }
     }
   }
 

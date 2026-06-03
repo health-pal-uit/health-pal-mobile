@@ -31,6 +31,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   bool _isMicMuted = false;
   bool _isCameraOff = false;
   bool _isConnecting = true;
+  bool _isRemoteCameraOn = true;
 
   @override
   void initState() {
@@ -68,6 +69,14 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       role: widget.role,
     );
 
+    _signaling.onRemoteCameraToggled = (isCameraOn) {
+      if (mounted) {
+        setState(() {
+          _isRemoteCameraOn = isCameraOn;
+        });
+      }
+    };
+
     await _signaling.openUserMedia(_localRenderer, _remoteRenderer);
   }
 
@@ -103,10 +112,44 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
             Positioned.fill(
               child:
                   _remoteRenderer.renderVideo
-                      ? RTCVideoView(
-                        _remoteRenderer,
-                        objectFit:
-                            RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+                      ? Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          RTCVideoView(
+                            _remoteRenderer,
+                            objectFit:
+                                RTCVideoViewObjectFit
+                                    .RTCVideoViewObjectFitCover,
+                          ),
+
+                          if (!_isRemoteCameraOn)
+                            Container(
+                              color: const Color(0xFF1E1E1E),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  CircleAvatar(
+                                    radius: 50,
+                                    backgroundColor: Colors.grey[800],
+                                    child: const Icon(
+                                      Icons.videocam_off,
+                                      size: 50,
+                                      color: Colors.white54,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  const Text(
+                                    'The other party has turned off their camera',
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
                       )
                       : const Center(
                         child: Text(
