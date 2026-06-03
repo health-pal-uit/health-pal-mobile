@@ -1,3 +1,4 @@
+import 'package:da1/src/config/env.dart';
 import 'package:da1/src/features/video_call/data/webrtc_signaling.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
@@ -38,14 +39,10 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   }
 
   Future<void> _initCall() async {
-    // 1. Xin quyền Camera và Mic trước khi làm bất cứ việc gì
     await [Permission.camera, Permission.microphone].request();
-
-    // 2. Khởi tạo UI khung hình
     await _localRenderer.initialize();
     await _remoteRenderer.initialize();
 
-    // 3. Setup các hàm callback từ WebRTCSignaling
     _signaling.onLocalStream = (stream) {
       if (mounted) setState(() => _isConnecting = false);
     };
@@ -58,21 +55,19 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Cuộc gọi đã kết thúc')));
-        context.pop(); // Thoát màn hình
+        ).showSnackBar(const SnackBar(content: Text('The call has ended')));
+        context.pop();
       }
     };
 
-    // 4. Kết nối tới Socket.IO (Thay IP Backend của bạn vào đây)
     _signaling.connectSignaling(
-      serverUrl: 'http://192.168.1.15:3001', // Đổi thành BaseURL thực tế
+      serverUrl: Env.backendApiUrl,
       token: widget.token,
       consultationId: widget.consultationId,
       userId: widget.userId,
       role: widget.role,
     );
 
-    // 5. Bật Camera/Mic
     await _signaling.openUserMedia(_localRenderer, _remoteRenderer);
   }
 
@@ -80,7 +75,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   void dispose() {
     _localRenderer.dispose();
     _remoteRenderer.dispose();
-    _signaling.endCall(); // Dọn dẹp kết nối khi thoát
+    _signaling.endCall();
     super.dispose();
   }
 
@@ -96,7 +91,6 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
 
   void _endCall() {
     _signaling.endCall();
-    context.pop(); // Trở về màn hình trước
   }
 
   @override
@@ -106,7 +100,6 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       body: SafeArea(
         child: Stack(
           children: [
-            // KHUNG HÌNH LỚN: REMOTE VIDEO (Người đối diện)
             Positioned.fill(
               child:
                   _remoteRenderer.renderVideo
@@ -117,13 +110,12 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                       )
                       : const Center(
                         child: Text(
-                          'Đang đợi đối tác kết nối...',
+                          'Waiting for the other party to join...',
                           style: TextStyle(color: Colors.white, fontSize: 16),
                         ),
                       ),
             ),
 
-            // KHUNG HÌNH NHỎ: LOCAL VIDEO (Camera của mình)
             Positioned(
               top: 20,
               right: 20,
@@ -153,7 +145,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                           )
                           : RTCVideoView(
                             _localRenderer,
-                            mirror: true, // Lật gương camera trước
+                            mirror: true,
                             objectFit:
                                 RTCVideoViewObjectFit
                                     .RTCVideoViewObjectFitCover,
@@ -162,7 +154,6 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
               ),
             ),
 
-            // LOADING OVERLAY
             if (_isConnecting)
               Container(
                 color: Colors.black.withValues(alpha: 0.7),
@@ -171,7 +162,6 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                 ),
               ),
 
-            // THANH CÔNG CỤ (BOTTOM CONTROLS)
             Positioned(
               bottom: 40,
               left: 0,
@@ -179,7 +169,6 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  // Nút Tắt/Mở Mic
                   _buildControlButton(
                     icon: _isMicMuted ? Icons.mic_off : Icons.mic,
                     color: _isMicMuted ? Colors.white : Colors.white24,
@@ -187,7 +176,6 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                     onTap: _toggleMic,
                   ),
 
-                  // Nút Cúp máy
                   _buildControlButton(
                     icon: Icons.call_end,
                     color: Colors.red,
@@ -196,7 +184,6 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                     onTap: _endCall,
                   ),
 
-                  // Nút Tắt/Mở Camera
                   _buildControlButton(
                     icon: _isCameraOff ? Icons.videocam_off : Icons.videocam,
                     color: _isCameraOff ? Colors.white : Colors.white24,

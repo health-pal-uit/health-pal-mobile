@@ -12,11 +12,13 @@ class WebRTCSignaling {
   String? _userId;
   String? _role;
   String? _targetPeerId;
-  String? _callId; // Lưu callId do Backend sinh ra
+  String? _callId;
 
   Function(MediaStream stream)? onLocalStream;
   Function(MediaStream stream)? onRemoteStream;
   Function()? onPeerDisconnected;
+
+  bool _isDisposed = false;
 
   void connectSignaling({
     required String serverUrl,
@@ -29,7 +31,6 @@ class WebRTCSignaling {
     _userId = userId;
     _role = role;
 
-    // 1. Kết nối đúng namespace '/chat' & nhét Token vào Auth/Headers
     _socket = io.io(
       '$serverUrl/chat',
       io.OptionBuilder()
@@ -41,22 +42,18 @@ class WebRTCSignaling {
 
     _socket!.onConnect((_) {
       debugPrint('🟢 [SOCKET] Đã kết nối tới Server thành công!');
-      // 2. Gửi sự kiện Join với đúng format backend cần
       _socket!.emit('join-video-call', {'consultationId': _consultationId});
     });
 
-    // 3. Lắng nghe lỗi từ Backend (Sai ID, sai quyền...)
     _socket!.on('error', (data) {
       debugPrint('🔴 [BACKEND BÁO LỖI]: ${data['message']}');
     });
 
-    // 4. Lấy Call ID khi tạo/join phòng thành công
     _socket!.on('call-room-joined', (data) {
       debugPrint('🟢 [SOCKET] Đã join Call Room. Call ID: ${data['callId']}');
       _callId = data['callId'];
     });
 
-    // 5. Bắt tín hiệu khi có người đối diện vào phòng
     _socket!.on('peer-joined', (data) {
       debugPrint('🟢 [SOCKET] PEER-JOINED: $data');
       if (data['peerId'] != _userId) {
@@ -68,7 +65,6 @@ class WebRTCSignaling {
       }
     });
 
-    // 6. Lắng nghe Offer/Answer/ICE (Đúng tên sự kiện của Backend)
     _socket!.on('webrtc-offer', (data) async {
       debugPrint('🟢 [SOCKET] Nhận được Offer!');
       if (data['from'] != null) _targetPeerId = data['from'];
@@ -85,13 +81,11 @@ class WebRTCSignaling {
       await _handleReceiveIceCandidate(data['candidate']);
     });
 
-    // 7. Lắng nghe sự kiện cúp máy từ đối tác
     _socket!.on('call-ended', (data) {
       debugPrint('🟢 [SOCKET] Cuộc gọi đã bị kết thúc bởi đối tác');
       endCall();
     });
 
-    // Bắt các lỗi ngầm của Socket
     _socket!.onConnectError(
       (err) => debugPrint('🔴 [SOCKET] LỖI KẾT NỐI: $err'),
     );
@@ -201,16 +195,20 @@ class WebRTCSignaling {
   }
 
   void endCall() {
+    if (_isDisposed) return;
+    _isDisposed = true;
+
     if (_callId != null) {
       _socket?.emit('end-video-call', {'callId': _callId});
     }
 
-    _localStream?.dispose();
-    _remoteStream?.dispose();
-    _peerConnection?.close();
-    _socket?.disconnect();
-
-    // Gọi callback để UI tự động pop() màn hình
     onPeerDisconnected?.call();
+
+    Future.delayed(const Duration(milliseconds: 500), () {
+      _localStream?.dispose();
+      _remoteStream?.dispose();
+      _peerConnection?.close();
+      _socket?.disconnect();
+    });
   }
 }
