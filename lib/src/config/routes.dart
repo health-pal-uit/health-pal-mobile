@@ -4,6 +4,8 @@ import 'package:da1/src/features/expert/dashboard/presentation/expert_dashboard_
 import 'package:da1/src/features/expert/schedule/presentation/schedule_management_screen.dart';
 import 'package:da1/src/features/expert/wallet/presentation/expert_wallet_screen.dart';
 import 'package:da1/src/features/expert/settings/presentation/expert_settings_screen.dart';
+import 'package:da1/src/features/shared/wallet/presentation/top_up_screen.dart';
+import 'package:da1/src/features/shared/wallet/presentation/wallet_screen.dart';
 import 'package:da1/src/features/user/advisor/domain/expert.dart';
 import 'package:da1/src/features/user/advisor/presentation/advisor_screen.dart';
 import 'package:da1/src/features/shared/auth/presentation/auth/email_verification_screen.dart';
@@ -369,7 +371,14 @@ class AppRoutes {
             return AdvisorBookingScreen(expert: expert);
           },
         ),
-
+        GoRoute(
+          path: '/wallet',
+          builder: (context, state) => const WalletScreen(),
+        ),
+        GoRoute(
+          path: '/topup',
+          builder: (context, state) => const TopUpScreen(),
+        ),
         GoRoute(
           path: '/video-call',
           name: 'video-call',

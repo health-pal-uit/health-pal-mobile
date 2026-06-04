@@ -22,7 +22,7 @@ class WalletRepository {
 
     _dio = Dio(
       BaseOptions(
-        baseUrl: '$safeUrl/api',
+        baseUrl: '$safeUrl/',
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
       ),
@@ -66,7 +66,7 @@ class WalletRepository {
       }
       return false;
     } on DioException catch (e) {
-      String errMsg = 'Lỗi hệ thống khi nạp Token.';
+      String errMsg = 'System error occurred. Please try again.';
       if (e.response?.data != null && e.response!.data['message'] != null) {
         errMsg = e.response!.data['message'].toString();
       }

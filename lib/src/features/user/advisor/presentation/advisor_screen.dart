@@ -1,6 +1,7 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/features/user/advisor/data/advisor_repository.dart';
 import 'package:da1/src/features/user/advisor/presentation/advisor_ai_chat_screen.dart';
+import 'package:da1/src/features/user/advisor/presentation/widgets/token_balance_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:da1/src/features/user/advisor/domain/expert.dart';
 import 'package:go_router/go_router.dart';
@@ -124,14 +125,20 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
                   color: Colors.white,
                 ),
               ),
-              IconButton(
-                onPressed: () => context.push('/bookings/me'),
-                icon: const Icon(
-                  Icons.calendar_month_rounded,
-                  color: Colors.white,
-                  size: 28,
-                ),
-                tooltip: 'My Appointments',
+
+              Row(
+                children: [
+                  const TokenBalanceChip(),
+                  IconButton(
+                    onPressed: () => context.push('/bookings/me'),
+                    icon: const Icon(
+                      Icons.calendar_month_rounded,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    tooltip: 'My Appointments',
+                  ),
+                ],
               ),
             ],
           ),
@@ -144,7 +151,6 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          // Search Bar
           TextField(
             onChanged: (value) => setState(() => _searchQuery = value),
             decoration: InputDecoration(
