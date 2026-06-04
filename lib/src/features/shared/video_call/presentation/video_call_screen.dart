@@ -1,5 +1,5 @@
 import 'package:da1/src/config/env.dart';
-import 'package:da1/src/features/video_call/data/webrtc_signaling.dart';
+import 'package:da1/src/features/shared/video_call/data/webrtc_signaling.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:go_router/go_router.dart';
