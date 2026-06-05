@@ -45,7 +45,10 @@ class WalletRepository {
     try {
       final response = await _dio.get('/wallets/balance');
       if (response.statusCode == 200 && response.data != null) {
-        return WalletModel.fromJson(response.data);
+        final Map<String, dynamic> responseData =
+            response.data['data'] = response.data['data'] ?? response.data;
+
+        return WalletModel.fromJson(responseData);
       }
       return null;
     } catch (e) {

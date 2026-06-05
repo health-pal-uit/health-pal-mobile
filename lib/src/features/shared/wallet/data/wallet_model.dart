@@ -10,10 +10,13 @@ class WalletModel {
   });
 
   factory WalletModel.fromJson(Map<String, dynamic> json) {
+    final balanceStr = json['balance']?.toString() ?? '0';
+    final parsedBalance = double.tryParse(balanceStr)?.toInt() ?? 0;
+
     return WalletModel(
-      address: json['address'] ?? '',
-      balance: int.tryParse(json['balance'].toString()) ?? 0,
-      balanceCache: json['balance_cache'] ?? 0,
+      address: json['address']?.toString() ?? '',
+      balance: parsedBalance,
+      balanceCache: (json['balance_cache'] as num?)?.toInt() ?? 0,
     );
   }
 }
