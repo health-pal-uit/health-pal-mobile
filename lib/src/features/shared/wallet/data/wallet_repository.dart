@@ -89,10 +89,10 @@ class WalletRepository {
         queryParameters: {'page': page, 'limit': limit},
       );
 
-      if (response.statusCode == 200) {
-        final data = response.data;
-        if (data != null && data['data'] is List) {
-          return (data['data'] as List)
+      if (response.statusCode == 200 && response.data != null) {
+        final responseData = response.data['data'];
+        if (responseData != null && responseData['data'] is List) {
+          return (responseData['data'] as List)
               .map((e) => TransactionModel.fromJson(e as Map<String, dynamic>))
               .toList();
         }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../data/wallet_repository.dart';
 import '../data/wallet_model.dart';
 import '../data/transaction_model.dart';
@@ -197,47 +199,83 @@ class _WalletScreenState extends State<WalletScreen> {
                           itemBuilder: (context, index) {
                             final tx = _transactions[index];
                             final isCredit = tx.type == 'credit';
+                            final isSuccess = tx.status == 'success';
                             final dateStr = DateFormat(
                               'dd/MM/yyyy HH:mm',
                             ).format(tx.createdAt);
 
                             return ListTile(
+                              onTap: () => _showTransactionDetails(tx),
                               contentPadding: EdgeInsets.zero,
+                              enabled: isSuccess,
                               leading: CircleAvatar(
                                 backgroundColor:
-                                    isCredit
-                                        ? Colors.green.shade50
-                                        : Colors.red.shade50,
+                                    isSuccess
+                                        ? (isCredit
+                                            ? Colors.green.shade50
+                                            : Colors.red.shade50)
+                                        : Colors.grey.shade200,
                                 child: Icon(
                                   isCredit
                                       ? Icons.arrow_downward
                                       : Icons.arrow_upward,
-                                  color: isCredit ? Colors.green : Colors.red,
+                                  color:
+                                      isSuccess
+                                          ? (isCredit
+                                              ? Colors.green
+                                              : Colors.red)
+                                          : Colors.grey,
                                 ),
                               ),
                               title: Text(
                                 tx.note ??
                                     (isCredit
-                                        ? 'Receive Tokens'
-                                        : 'Pay for Tokens'),
-                                style: const TextStyle(
+                                        ? 'Received Tokens'
+                                        : 'Paid Tokens'),
+                                style: TextStyle(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 14,
+                                  decoration:
+                                      isSuccess
+                                          ? TextDecoration.none
+                                          : TextDecoration.lineThrough,
+                                  color:
+                                      isSuccess ? Colors.black87 : Colors.grey,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              subtitle: Text(
-                                dateStr,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                ),
+                              subtitle: Row(
+                                children: [
+                                  Text(
+                                    dateStr,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  if (!isSuccess) ...[
+                                    const SizedBox(width: 8),
+                                    const Text(
+                                      '(Failed)',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.red,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
                               trailing: Text(
                                 '${isCredit ? '+' : '-'}${tx.amount}',
                                 style: TextStyle(
-                                  color: isCredit ? Colors.green : Colors.red,
+                                  color:
+                                      isSuccess
+                                          ? (isCredit
+                                              ? Colors.green
+                                              : Colors.red)
+                                          : Colors.grey,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
                                 ),
@@ -249,6 +287,150 @@ class _WalletScreenState extends State<WalletScreen> {
                   ),
                 ),
               ),
+    );
+  }
+
+  void _showTransactionDetails(TransactionModel tx) {
+    final isCredit = tx.type == 'credit';
+    final isSuccess = tx.status == 'success';
+    final dateStr = DateFormat('dd/MM/yyyy HH:mm:ss').format(tx.createdAt);
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder:
+          (context) => Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 48,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Icon(
+                  isSuccess ? Icons.check_circle : Icons.error,
+                  color: isSuccess ? Colors.green : Colors.red,
+                  size: 64,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  '${isCredit ? '+' : '-'}${tx.amount} HPT',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color:
+                        isSuccess
+                            ? (isCredit ? Colors.green : Colors.red)
+                            : Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  isSuccess ? 'Transaction Successful' : 'Transaction Failed',
+                  style: TextStyle(
+                    color: isSuccess ? Colors.green : Colors.red,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Divider(height: 32),
+                _buildDetailRow('Time', dateStr),
+                _buildDetailRow('Description', tx.note ?? 'No description'),
+                _buildDetailRow(
+                  'Transaction Type',
+                  isCredit ? 'Received Tokens' : 'Paid Tokens',
+                ),
+
+                if (tx.txHash != null) ...[
+                  const Divider(height: 32),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Blockchain Tx Hash',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            '${tx.txHash!.substring(0, 6)}...${tx.txHash!.substring(tx.txHash!.length - 4)}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.copy,
+                              size: 16,
+                              color: Colors.blue,
+                            ),
+                            onPressed: () {
+                              Clipboard.setData(
+                                ClipboardData(text: tx.txHash!),
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Hash copied!')),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        final url = Uri.parse(
+                          'https://sepolia.etherscan.io/tx/${tx.txHash}',
+                        );
+                        if (await canLaunchUrl(url)) {
+                          await launchUrl(
+                            url,
+                            mode: LaunchMode.externalApplication,
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.open_in_browser),
+                      label: const Text('View on Etherscan'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2563EB),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.grey)),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
