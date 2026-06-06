@@ -1,5 +1,6 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/features/shared/auth/data/datasources/auth_local_data_source.dart';
+import 'package:da1/src/features/shared/wallet/data/wallet_repository.dart';
 import 'package:da1/src/features/user/advisor/data/booking_repository.dart';
 import 'package:da1/src/features/user/advisor/domain/booking.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +19,7 @@ class MyAppointmentsScreen extends StatefulWidget {
 
 class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
   final BookingRepository _repository = BookingRepository();
+  final WalletRepository _walletRepository = WalletRepository();
 
   bool _isLoading = true;
   List<Booking> _upcomingBookings = [];
@@ -118,6 +120,59 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(e.toString().replaceAll('Exception: ', '')),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleJoinCallClick(Booking booking) async {
+    final int requiredTokenPerMinute = 6;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (_) => const Center(
+            child: CircularProgressIndicator(color: Colors.orange),
+          ),
+    );
+
+    try {
+      final wallet = await _walletRepository.getWalletBalance();
+
+      if (!mounted) return;
+      Navigator.pop(context);
+
+      final currentBalance = wallet?.balance ?? 0;
+
+      if (currentBalance < requiredTokenPerMinute) {
+        _showInsufficientFundsDialog(currentBalance, requiredTokenPerMinute);
+      } else {
+        final authState = context.read<AuthBloc>().state;
+        if (authState is Authenticated) {
+          final localDataSource = AuthLocalDataSourceImpl(
+            storage: const FlutterSecureStorage(),
+          );
+          final token = await localDataSource.getToken() ?? '';
+          if (mounted) {
+            context.push(
+              '/video-call',
+              extra: {
+                'consultationId': booking.consultationId,
+                'userId': authState.user.id,
+                'role': 'patient',
+                'token': token,
+              },
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error checking balance: $e'),
           backgroundColor: Colors.red,
         ),
       );
@@ -384,30 +439,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
                     child: ElevatedButton(
                       onPressed:
                           canJoinCall
-                              ? () async {
-                                final authState =
-                                    context.read<AuthBloc>().state;
-                                if (authState is Authenticated) {
-                                  final localDataSource =
-                                      AuthLocalDataSourceImpl(
-                                        storage: const FlutterSecureStorage(),
-                                      );
-                                  final token =
-                                      await localDataSource.getToken() ?? '';
-                                  if (mounted) {
-                                    context.push(
-                                      '/video-call',
-                                      extra: {
-                                        'consultationId':
-                                            booking.consultationId,
-                                        'userId': authState.user.id,
-                                        'role': 'patient',
-                                        'token': token,
-                                      },
-                                    );
-                                  }
-                                }
-                              }
+                              ? () => _handleJoinCallClick(booking)
                               : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
@@ -427,6 +459,83 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
           ],
         ],
       ),
+    );
+  }
+
+  void _showInsufficientFundsDialog(int currentBalance, int requiredToken) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: const Column(
+              children: [
+                Icon(
+                  Icons.account_balance_wallet_outlined,
+                  size: 48,
+                  color: Colors.orange,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Tokens not enough!',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                ),
+              ],
+            ),
+            content: Text(
+              'You currently have $currentBalance Token.\n\nTo call this expert, your wallet needs at least $requiredToken Token (equivalent to 1 minute of consultation).\n\nPlease top up to continue.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 15, color: Colors.black87),
+            ),
+            actionsAlignment: MainAxisAlignment.center,
+            actionsPadding: const EdgeInsets.only(
+              bottom: 20,
+              left: 20,
+              right: 20,
+            ),
+            actions: [
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        foregroundColor: Colors.grey.shade700,
+                      ),
+                      child: const Text(
+                        'Later',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        context.push('/topup');
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Top Up Now',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
     );
   }
 }
