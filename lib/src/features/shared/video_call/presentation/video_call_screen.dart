@@ -1,6 +1,10 @@
 import 'package:da1/src/config/env.dart';
+import 'package:da1/src/features/shared/auth/data/datasources/auth_local_data_source.dart';
+import 'package:da1/src/features/shared/video_call/data/consultation_repository.dart';
 import 'package:da1/src/features/shared/video_call/data/webrtc_signaling.dart';
+import 'package:da1/src/features/shared/video_call/presentation/widget/expert_end_call_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -98,8 +102,64 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     _signaling.toggleCamera(!_isCameraOff);
   }
 
-  void _endCall() {
+  void _endCall() async {
     _signaling.endCall();
+    final int durationMinutes = 45;
+    final int tokenPerMin = 6;
+    final int totalTokens = durationMinutes * tokenPerMin;
+
+    if (widget.role == 'expert') {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder:
+            (dialogContext) => ExpertEndCallDialog(
+              durationMinutes: durationMinutes,
+              estimatedTokens: totalTokens,
+              onSubmit: (resultText) async {
+                try {
+                  final localDataSource = AuthLocalDataSourceImpl(
+                    storage: const FlutterSecureStorage(),
+                  );
+                  final repo = ConsultationRepository(
+                    localDataSource: localDataSource,
+                  );
+
+                  await repo.endConsultation(
+                    consultationId: widget.consultationId,
+                    durationMinutes: durationMinutes,
+                    tokensCharged: totalTokens,
+                    resultText: resultText,
+                  );
+
+                  if (!dialogContext.mounted) return;
+                  Navigator.pop(dialogContext);
+
+                  if (!mounted) return;
+                  context.pop();
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Consultation completed successfully!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } catch (e) {
+                  if (!mounted) return;
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(e.toString().replaceAll('Exception: ', '')),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+            ),
+      );
+    } else {
+      context.pop();
+    }
   }
 
   @override
