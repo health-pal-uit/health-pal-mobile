@@ -5,6 +5,7 @@ import 'package:da1/src/features/expert/dashboard/data/booking_model.dart';
 import 'package:da1/src/features/expert/dashboard/data/booking_repository.dart';
 import 'package:da1/src/features/expert/dashboard/presentation/widgets/expert_bottom_nav.dart';
 import 'package:da1/src/features/shared/auth/data/datasources/auth_local_data_source.dart';
+import 'package:da1/src/features/shared/video_call/data/consultation_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -29,6 +30,8 @@ class _ScheduleManagementScreenState extends State<ScheduleManagementScreen> {
   List<BookingModel> _allBookings = [];
 
   final BookingRepository _bookingRepository = BookingRepository();
+  final ConsultationRepository _consultationRepository =
+      ConsultationRepository();
 
   @override
   void initState() {
@@ -58,7 +61,7 @@ class _ScheduleManagementScreenState extends State<ScheduleManagementScreen> {
     );
     try {
       await _bookingRepository.acceptBooking(bookingId);
-      await _bookingRepository.createConsultation(bookingId);
+      await _consultationRepository.createConsultation(bookingId);
 
       if (mounted) Navigator.pop(context);
 
@@ -96,7 +99,7 @@ class _ScheduleManagementScreenState extends State<ScheduleManagementScreen> {
         Navigator.pop(context);
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }

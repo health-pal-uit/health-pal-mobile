@@ -6,6 +6,7 @@ import 'package:da1/src/features/expert/dashboard/data/booking_repository.dart';
 import 'package:da1/src/features/expert/dashboard/data/wallet_repository.dart';
 import 'package:da1/src/features/expert/dashboard/presentation/widgets/expert_bottom_nav.dart';
 import 'package:da1/src/features/shared/auth/data/datasources/auth_local_data_source.dart';
+import 'package:da1/src/features/shared/video_call/data/consultation_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -30,6 +31,8 @@ class _ExpertDashboardScreenState extends State<ExpertDashboardScreen> {
 
   final BookingRepository _bookingRepository = BookingRepository();
   final WalletRepository _walletRepository = WalletRepository();
+  final ConsultationRepository _consultationRepository =
+      ConsultationRepository();
 
   @override
   void initState() {
@@ -67,7 +70,7 @@ class _ExpertDashboardScreenState extends State<ExpertDashboardScreen> {
     setState(() => _processingBookingId = bookingId);
     try {
       await _bookingRepository.acceptBooking(bookingId);
-      await _bookingRepository.createConsultation(bookingId);
+      await _consultationRepository.createConsultation(bookingId);
       await _loadDashboardData();
     } catch (e) {
       if (mounted) {

@@ -109,27 +109,4 @@ class BookingRepository {
       throw Exception(e.toString());
     }
   }
-
-  Future<bool> createConsultation(String bookingId) async {
-    try {
-      final response = await _dio.post(
-        '/consultations/me',
-        data: {'booking_id': bookingId},
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return true;
-      }
-      return false;
-    } on DioException catch (e) {
-      String errMsg =
-          'System error while creating consultation, please try again.';
-      if (e.response?.data != null && e.response!.data['message'] != null) {
-        errMsg = e.response!.data['message'].toString();
-      }
-      throw Exception(errMsg);
-    } catch (e) {
-      throw Exception(e.toString());
-    }
-  }
 }
