@@ -3,6 +3,7 @@ import 'package:da1/src/features/shared/auth/data/datasources/auth_local_data_so
 import 'package:da1/src/features/shared/video_call/data/consultation_repository.dart';
 import 'package:da1/src/features/shared/video_call/data/webrtc_signaling.dart';
 import 'package:da1/src/features/shared/video_call/presentation/widget/expert_end_call_dialog.dart';
+import 'package:da1/src/features/shared/video_call/presentation/widget/user_post_call_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
@@ -158,7 +159,46 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
             ),
       );
     } else {
-      context.pop();
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder:
+            (dialogContext) => UserPostCallDialog(
+              durationMinutes: durationMinutes,
+              tokensCharged: totalTokens,
+              onSubmit: (rating, review) async {
+                try {
+                  // TODO: RatingRepository và gọi API gửi đánh giá
+                  // await ratingRepo.submitReview(widget.consultationId, rating, review);
+
+                  await Future.delayed(const Duration(seconds: 1));
+
+                  if (!dialogContext.mounted) return;
+                  Navigator.pop(dialogContext);
+                  if (!mounted) return;
+                  context.pop();
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Thank you for your feedback!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } catch (e) {
+                  if (!context.mounted) return;
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Failed to submit review. Please try again.',
+                      ),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+            ),
+      );
     }
   }
 
