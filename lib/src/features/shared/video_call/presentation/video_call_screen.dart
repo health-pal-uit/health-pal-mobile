@@ -4,6 +4,7 @@ import 'package:da1/src/features/shared/video_call/data/consultation_repository.
 import 'package:da1/src/features/shared/video_call/data/webrtc_signaling.dart';
 import 'package:da1/src/features/shared/video_call/presentation/widget/expert_end_call_dialog.dart';
 import 'package:da1/src/features/shared/video_call/presentation/widget/user_post_call_dialog.dart';
+import 'package:da1/src/features/user/advisor/data/rating_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
@@ -168,10 +169,12 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
               tokensCharged: totalTokens,
               onSubmit: (rating, review) async {
                 try {
-                  // TODO: RatingRepository và gọi API gửi đánh giá
-                  // await ratingRepo.submitReview(widget.consultationId, rating, review);
-
-                  await Future.delayed(const Duration(seconds: 1));
+                  final ratingRepo = RatingRepository();
+                  await ratingRepo.submitReview(
+                    consultationId: widget.consultationId,
+                    score: rating,
+                    comment: review,
+                  );
 
                   if (!dialogContext.mounted) return;
                   Navigator.pop(dialogContext);

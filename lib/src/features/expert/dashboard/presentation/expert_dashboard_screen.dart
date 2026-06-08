@@ -20,7 +20,6 @@ class ExpertDashboardScreen extends StatefulWidget {
 }
 
 class _ExpertDashboardScreenState extends State<ExpertDashboardScreen> {
-  bool _isOnline = false;
   int _bottomNavIndex = 0;
 
   bool _isLoading = true;
@@ -222,54 +221,6 @@ class _ExpertDashboardScreenState extends State<ExpertDashboardScreen> {
                 ],
               ),
               const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Consultation Status',
-                          style: TextStyle(
-                            color: const Color(0xFFFFEDD4),
-                            fontSize: 14,
-                            fontFamily: 'Poppins',
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _isOnline ? 'Online' : 'Offline',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Switch(
-                      value: _isOnline,
-                      onChanged: (value) {
-                        setState(() {
-                          _isOnline = value;
-                        });
-                      },
-                      activeThumbColor: Colors.greenAccent,
-                      inactiveThumbColor: Colors.white70,
-                      inactiveTrackColor: Colors.black26,
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
         );

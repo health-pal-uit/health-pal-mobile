@@ -1,6 +1,7 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/core/bloc/auth/auth.dart';
 import 'package:da1/src/features/expert/dashboard/presentation/widgets/expert_bottom_nav.dart';
+import 'package:da1/src/features/expert/settings/data/expert_settings_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -13,14 +14,104 @@ class ExpertSettingsScreen extends StatefulWidget {
 }
 
 class _ExpertSettingsScreenState extends State<ExpertSettingsScreen> {
-  int _bottomNavIndex = 3; // Settings is at index 3
+  final ExpertSettingsRepository _repository = ExpertSettingsRepository();
+  int _bottomNavIndex = 3;
+
+  bool _isLoading = true;
+  bool _isSaving = false;
+  String _expertId = '';
+  bool _isVerified = false;
+  String _roleName = 'Loading...';
+
+  // Controllers
+  final TextEditingController _fullnameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _bioController = TextEditingController();
   double _consultationRate = 5.0;
-  bool _offerFreeSessions = true;
-  int _freeSessions = 2;
-  final List<String> _uploadedDocs = [
-    'Medical_Degree_2018.pdf',
-    'Board_Certification.pdf',
-  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfileData();
+  }
+
+  @override
+  void dispose() {
+    _fullnameController.dispose();
+    _phoneController.dispose();
+    _bioController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadProfileData() async {
+    try {
+      final data = await _repository.getMyExpertProfile();
+      if (data != null && mounted) {
+        setState(() {
+          _expertId = data['id'] ?? '';
+          _isVerified = data['is_verified'] ?? false;
+
+          // Lấy token_per_minute, ép kiểu an toàn
+          final tokenVal = data['token_per_minute'] ?? 5;
+          _consultationRate = double.tryParse(tokenVal.toString()) ?? 5.0;
+
+          _roleName = data['expert_role']?['name'] ?? 'Expert';
+          _bioController.text = data['bio'] ?? '';
+
+          // Dùng toán tử ?? '' để tránh lỗi khi backend trả về null
+          _fullnameController.text = data['user']?['fullname'] ?? '';
+          _phoneController.text = data['user']?['phone'] ?? '';
+
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _saveSettings() async {
+    if (_expertId.isEmpty) return;
+
+    setState(() => _isSaving = true);
+    try {
+      await _repository.updateSettings(
+        expertId: _expertId,
+        fullname: _fullnameController.text.trim(),
+        phone: _phoneController.text.trim(),
+        bio: _bioController.text.trim(),
+        tokenPerMinute: _consultationRate.toInt(),
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Hồ sơ đã được lưu thành công!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,486 +123,275 @@ class _ExpertSettingsScreenState extends State<ExpertSettingsScreen> {
       },
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: SingleChildScrollView(
-          child: Column(
-            children: [
-              // Orange Header
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.only(left: 24, top: 16, bottom: 16),
-                decoration: const BoxDecoration(color: Color(0xFFFA9500)),
-                child: const Text(
-                  'Profile & Fee Settings',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ),
-              // Content
-              Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Verification Status
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF0FDF4),
-                        border: Border.all(
-                          color: const Color(0xFFB9F8CF),
-                          width: 1.25,
+        body:
+            _isLoading
+                ? const Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                )
+                : SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // Mảng màu Header
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.only(
+                          left: 24,
+                          top: 48,
+                          bottom: 16,
                         ),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.check_circle,
-                            color: Color(0xFF00A63E),
-                            size: 24,
-                          ),
-                          const SizedBox(width: 12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Text(
-                                'Professionally Verified ✓',
-                                style: TextStyle(
-                                  color: Color(0xFF0D542B),
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                'Your credentials have been verified',
-                                style: TextStyle(
-                                  color: Color(0xFF008236),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    // Professional Details Section
-                    const Text(
-                      'Professional Details',
-                      style: TextStyle(
-                        color: Color(0xFF101828),
-                        fontSize: 18,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildInputField(
-                      'Medical Specialty',
-                      'Cardiology',
-                      enabled: false,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildInputField(
-                      'Years of Experience',
-                      '12',
-                      enabled: false,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildInputField(
-                      'Current Workplace',
-                      'City General Hospital',
-                      enabled: false,
-                    ),
-                    const SizedBox(height: 24),
-                    // Consultation Fee Setup Section
-                    const Text(
-                      'Consultation Fee Setup',
-                      style: TextStyle(
-                        color: Color(0xFF101828),
-                        fontSize: 18,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [const Color(0xFFFFF7ED), Colors.white],
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFFA9500),
                         ),
-                        border: Border.all(
-                          color: const Color(0xFFFFEDD4),
-                          width: 1.25,
+                        child: const Text(
+                          'Profile & Fee Settings',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        borderRadius: BorderRadius.circular(14),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Consultation Rate (Tokens/Minute)',
-                            style: TextStyle(
-                              color: Color(0xFF364153),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Slider(
-                                  value: _consultationRate,
-                                  min: 1,
-                                  max: 10,
-                                  divisions: 9,
-                                  activeColor: const Color(0xFF030213),
-                                  inactiveColor: const Color(0xFFECECF0),
-                                  onChanged: (value) {
-                                    setState(() => _consultationRate = value);
-                                  },
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  '${_consultationRate.toInt()} T/min',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-                          const Text(
-                            'Patients will be charged 5 tokens per minute during video consultations.',
-                            style: TextStyle(
-                              color: Color(0xFF6A7282),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              border: Border(
-                                top: BorderSide(
-                                  color: const Color(0xFFFFEDD4),
+
+                      Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Badge Xác Thực (Verification Status)
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color:
+                                    _isVerified
+                                        ? const Color(0xFFF0FDF4)
+                                        : Colors.orange.shade50,
+                                border: Border.all(
+                                  color:
+                                      _isVerified
+                                          ? const Color(0xFFB9F8CF)
+                                          : Colors.orange.shade200,
                                   width: 1.25,
                                 ),
+                                borderRadius: BorderRadius.circular(14),
                               ),
-                            ),
-                            child: RichText(
-                              text: TextSpan(
+                              child: Row(
                                 children: [
-                                  const TextSpan(
-                                    text:
-                                        'Estimated earnings for 30-min consultation: ',
-                                    style: TextStyle(
-                                      color: Color(0xFF364153),
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                    ),
+                                  Icon(
+                                    _isVerified
+                                        ? Icons.check_circle
+                                        : Icons.pending_actions,
+                                    color:
+                                        _isVerified
+                                            ? const Color(0xFF00A63E)
+                                            : Colors.orange,
+                                    size: 24,
                                   ),
-                                  TextSpan(
-                                    text:
-                                        '${(_consultationRate * 30).toInt()} Tokens',
-                                    style: const TextStyle(
-                                      color: Color(0xFFFA9500),
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w400,
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          _isVerified
+                                              ? 'Professionally Verified ✓'
+                                              : 'Verification Pending',
+                                          style: TextStyle(
+                                            color:
+                                                _isVerified
+                                                    ? const Color(0xFF0D542B)
+                                                    : Colors.orange.shade800,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          _isVerified
+                                              ? 'Your credentials have been verified.'
+                                              : 'Your profile is under review by admin.',
+                                          style: TextStyle(
+                                            color:
+                                                _isVerified
+                                                    ? const Color(0xFF008236)
+                                                    : Colors.orange.shade700,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    // Free Sessions Section
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEFF6FF),
-                        border: Border.all(
-                          color: const Color(0xFFDBEAFE),
-                          width: 1.25,
-                        ),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: const [
-                                    Text(
-                                      'Offer Free Initial Sessions',
-                                      style: TextStyle(
-                                        color: Color(0xFF101828),
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                    ),
-                                    SizedBox(height: 4),
-                                    Text(
-                                      'Attract new patients with complimentary consultations',
-                                      style: TextStyle(
-                                        color: Color(0xFF4A5565),
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                            const SizedBox(height: 24),
+
+                            // Thông tin cá nhân
+                            const Text(
+                              'Personal & Professional Details',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
                               ),
-                              const SizedBox(width: 12),
-                              Switch(
-                                value: _offerFreeSessions,
-                                activeThumbColor: const Color(0xFF030213),
-                                onChanged: (value) {
-                                  setState(() => _offerFreeSessions = value);
-                                },
+                            ),
+                            const SizedBox(height: 16),
+
+                            _buildReadonlyField('Expert Role', _roleName),
+                            const SizedBox(height: 16),
+
+                            _buildEditableField(
+                              'Full Name',
+                              _fullnameController,
+                            ),
+                            const SizedBox(height: 16),
+                            _buildEditableField(
+                              'Phone Number',
+                              _phoneController,
+                              keyboardType: TextInputType.phone,
+                            ),
+                            const SizedBox(height: 16),
+                            _buildEditableField(
+                              'Professional Bio',
+                              _bioController,
+                              maxLines: 4,
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Setup Phí (Slider)
+                            const Text(
+                              'Consultation Fee Setup',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-                          if (_offerFreeSessions) ...[
+                            ),
+                            const SizedBox(height: 16),
                             Container(
-                              padding: const EdgeInsets.all(16),
+                              padding: const EdgeInsets.all(24),
                               decoration: BoxDecoration(
-                                border: Border(
-                                  top: BorderSide(
-                                    color: const Color(0xFFBEDBFF),
-                                    width: 1.25,
-                                  ),
+                                gradient: const LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [Color(0xFFFFF7ED), Colors.white],
                                 ),
+                                border: Border.all(
+                                  color: const Color(0xFFFFEDD4),
+                                  width: 1.25,
+                                ),
+                                borderRadius: BorderRadius.circular(14),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const Text(
-                                    'Number of Free Sessions',
+                                    'Consultation Rate (Tokens/Minute)',
                                     style: TextStyle(
-                                      color: Color(0xFF364153),
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 8,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFF3F3F5),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            '$_freeSessions',
-                                            style: const TextStyle(
-                                              color: Color(0xFF0A0A0A),
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w400,
-                                            ),
+                                  const SizedBox(height: 16),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Slider(
+                                          value: _consultationRate.clamp(
+                                            1,
+                                            50,
+                                          ), // Tránh lỗi crash nếu data vượt rào
+                                          min: 1,
+                                          max:
+                                              50, // Bạn có thể tăng giảm tùy limit hệ thống
+                                          divisions: 49,
+                                          activeColor: AppColors.primary,
+                                          inactiveColor: const Color(
+                                            0xFFECECF0,
+                                          ),
+                                          onChanged:
+                                              (value) => setState(
+                                                () => _consultationRate = value,
+                                              ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 8,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary,
+                                          borderRadius: BorderRadius.circular(
+                                            10,
                                           ),
                                         ),
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.remove,
-                                            size: 20,
+                                        child: Text(
+                                          '${_consultationRate.toInt()} T/min',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
                                           ),
-                                          onPressed: () {
-                                            if (_freeSessions > 1) {
-                                              setState(() => _freeSessions--);
-                                            }
-                                          },
                                         ),
-                                        IconButton(
-                                          icon: const Icon(Icons.add, size: 20),
-                                          onPressed: () {
-                                            setState(() => _freeSessions++);
-                                          },
-                                        ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(height: 12),
+                                  const SizedBox(height: 16),
                                   Text(
-                                    'New patients will receive $_freeSessions free consultation session(s)',
+                                    'Estimated earnings for a 30-min session: ${(_consultationRate * 30).toInt()} Tokens',
                                     style: const TextStyle(
-                                      color: Color(0xFF4A5565),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w400,
+                                      color: Color(0xFFFA9500),
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
+                            const SizedBox(height: 32),
+
+                            // Nút Lưu
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: _isSaving ? null : _saveSettings,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                child:
+                                    _isSaving
+                                        ? const SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                        : const Text(
+                                          'Save Profile Changes',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                              ),
+                            ),
                           ],
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    // Certificate Upload Section
-                    const Text(
-                      'Certificate Upload',
-                      style: TextStyle(
-                        color: Color(0xFF101828),
-                        fontSize: 18,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF9FAFB),
-                        border: Border.all(
-                          color: const Color(0xFFD1D5DC),
-                          width: 1.25,
-                        ),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Column(
-                        children: [
-                          const Icon(
-                            Icons.cloud_upload_outlined,
-                            size: 48,
-                            color: Color(0xFFD1D5DC),
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'Upload Medical Certificates',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Color(0xFF364153),
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Drag and drop files here or click to browse',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Color(0xFF6A7282),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: () {},
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: const Color(0xFF0A0A0A),
-                              side: BorderSide(
-                                color: Colors.black.withValues(alpha: 0.10),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            child: const Text(
-                              'Select Files',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    // Uploaded Documents
-                    const Text(
-                      'Uploaded Documents',
-                      style: TextStyle(
-                        color: Color(0xFF364153),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    ..._buildUploadedDocuments(),
-                    const SizedBox(height: 24),
-                    // Save Button
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Profile changes saved successfully!',
-                              ),
-                            ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'Save Profile Changes',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ),
         bottomNavigationBar: ExpertBottomNav(
           currentIndex: _bottomNavIndex,
           onTap: (index) {
-            setState(() {
-              _bottomNavIndex = index;
-            });
+            setState(() => _bottomNavIndex = index);
             _handleNavigation(context, index);
           },
         ),
@@ -519,7 +399,12 @@ class _ExpertSettingsScreenState extends State<ExpertSettingsScreen> {
     );
   }
 
-  Widget _buildInputField(String label, String value, {bool enabled = true}) {
+  Widget _buildEditableField(
+    String label,
+    TextEditingController controller, {
+    int maxLines = 1,
+    TextInputType? keyboardType,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -531,19 +416,29 @@ class _ExpertSettingsScreenState extends State<ExpertSettingsScreen> {
             fontWeight: FontWeight.w500,
           ),
         ),
-        const SizedBox(height: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF3F3F5),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            value,
-            style: const TextStyle(
-              color: Color(0xFF717182),
-              fontSize: 16,
-              fontWeight: FontWeight.w400,
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          maxLines: maxLines,
+          keyboardType: keyboardType,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: const Color(0xFFF9FAFB),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: AppColors.primary),
             ),
           ),
         ),
@@ -551,71 +446,34 @@ class _ExpertSettingsScreenState extends State<ExpertSettingsScreen> {
     );
   }
 
-  List<Widget> _buildUploadedDocuments() {
-    return _uploadedDocs.map((doc) {
-      return Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFFF7ED),
-          border: Border.all(color: const Color(0xFFFFEDD4), width: 1.25),
-          borderRadius: BorderRadius.circular(14),
+  Widget _buildReadonlyField(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFF364153),
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Center(
-                child: Text(
-                  'PDF',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    doc,
-                    style: const TextStyle(
-                      color: Color(0xFF101828),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Uploaded successfully',
-                    style: TextStyle(
-                      color: Color(0xFF6A7282),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.close, size: 20),
-              onPressed: () {
-                setState(() => _uploadedDocs.remove(doc));
-              },
-            ),
-          ],
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF3F3F5),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Text(
+            value,
+            style: const TextStyle(color: Color(0xFF717182), fontSize: 16),
+          ),
         ),
-      );
-    }).toList();
+      ],
+    );
   }
 
   void _handleNavigation(BuildContext context, int index) {
@@ -630,7 +488,6 @@ class _ExpertSettingsScreenState extends State<ExpertSettingsScreen> {
         context.go('/expert/wallet');
         break;
       case 3:
-        // Already on settings
         break;
     }
   }
