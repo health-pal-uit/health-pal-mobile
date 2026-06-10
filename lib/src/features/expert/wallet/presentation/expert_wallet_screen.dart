@@ -1,6 +1,9 @@
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/core/bloc/auth/auth.dart';
 import 'package:da1/src/features/expert/dashboard/presentation/widgets/expert_bottom_nav.dart';
+import 'package:da1/src/features/shared/wallet/data/wallet_repository.dart';
+import 'package:da1/src/features/shared/wallet/data/transaction_model.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -13,8 +16,71 @@ class ExpertWalletScreen extends StatefulWidget {
 }
 
 class _ExpertWalletScreenState extends State<ExpertWalletScreen> {
-  int _bottomNavIndex = 2; // Wallet is at index 2
-  int _tabIndex = 0; // 0 for Earnings, 1 for Withdrawals
+  int _bottomNavIndex = 2;
+  int _tabIndex = 0;
+
+  final WalletRepository _walletRepo = WalletRepository();
+  bool _isLoading = true;
+  int _balance = 0;
+  List<TransactionModel> _transactions = [];
+
+  int _earningsThisMonth = 0;
+  int _earningsLastMonth = 0;
+  int _totalConsults = 0;
+  int _consultsThisWeek = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchWalletData();
+  }
+
+  Future<void> _fetchWalletData() async {
+    try {
+      final wallet = await _walletRepo.getWalletBalance();
+      final txs = await _walletRepo.getTransactions(limit: 100);
+
+      if (mounted) {
+        setState(() {
+          _balance = wallet?.balance ?? 0;
+          _transactions = txs;
+          _calculateStats();
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading wallet data: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _calculateStats() {
+    final now = DateTime.now();
+    for (var tx in _transactions) {
+      if (tx.type == 'credit' && tx.status == 'success') {
+        _totalConsults++;
+
+        if (tx.createdAt.month == now.month && tx.createdAt.year == now.year) {
+          _earningsThisMonth += tx.amount;
+        } else if (tx.createdAt.month ==
+                (now.month == 1 ? 12 : now.month - 1) &&
+            tx.createdAt.year == (now.month == 1 ? now.year - 1 : now.year)) {
+          _earningsLastMonth += tx.amount;
+        }
+
+        if (now.difference(tx.createdAt).inDays <= 7) {
+          _consultsThisWeek++;
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,284 +92,294 @@ class _ExpertWalletScreenState extends State<ExpertWalletScreen> {
       },
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: SingleChildScrollView(
-          child: Column(
-            children: [
-              // Header with orange gradient
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.only(
-                  top: 24,
-                  left: 24,
-                  right: 24,
-                  bottom: 24,
-                ),
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color(0xFFFA9500), Color(0xFFFF8C00)],
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Wallet & Income',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    // Balance Card
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Available Balance',
-                            style: TextStyle(
-                              color: Color(0xFFFFEDD4),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w400,
-                            ),
+        body:
+            _isLoading
+                ? const Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                )
+                : SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.only(
+                          top: 48,
+                          left: 24,
+                          right: 24,
+                          bottom: 24,
+                        ),
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Color(0xFFFA9500), Color(0xFFFF8C00)],
                           ),
-                          const SizedBox(height: 24),
-                          RichText(
-                            text: const TextSpan(
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Wallet & Income',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.10),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Available Balance',
+                                    style: TextStyle(
+                                      color: Color(0xFFFFEDD4),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 24),
+                                  RichText(
+                                    text: TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text:
+                                              '${NumberFormat('#,###').format(_balance)} ',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 36,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                        const TextSpan(
+                                          text: 'Tokens',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 32),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'This Month',
+                                            style: TextStyle(
+                                              color: Color(0xFFFFEDD4),
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            '+${NumberFormat('#,###').format(_earningsThisMonth)} T',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'Last Month',
+                                            style: TextStyle(
+                                              color: Color(0xFFFFEDD4),
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            '+${NumberFormat('#,###').format(_earningsLastMonth)} T',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Content
+                      Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Statistics Cards (Đã bỏ thẻ USD, chỉ giữ 2 thẻ thống kê)
+                            Row(
                               children: [
-                                TextSpan(
-                                  text: '2,450 ',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 36,
-                                    fontWeight: FontWeight.w700,
+                                Expanded(
+                                  child: _buildStatCard(
+                                    '📞',
+                                    '$_totalConsults',
+                                    'Consults',
                                   ),
                                 ),
-                                TextSpan(
-                                  text: 'Tokens',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w700,
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _buildStatCard(
+                                    '📅',
+                                    '$_consultsThisWeek',
+                                    'This Week',
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                          const SizedBox(height: 32),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'This Month',
-                                    style: TextStyle(
-                                      color: Color(0xFFFFEDD4),
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w400,
+                            const SizedBox(height: 24),
+                            // Withdraw Button
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Tính năng rút tiền đang được phát triển!',
+                                      ),
                                     ),
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
                                   ),
-                                  const SizedBox(height: 4),
-                                  const Text(
-                                    '+675 T',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w400,
-                                    ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
-                                ],
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Last Month',
-                                    style: TextStyle(
-                                      color: Color(0xFFFFEDD4),
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  const Text(
-                                    '+1,850 T',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Content
-              Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Statistics Cards
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildStatCard('💵', '\$245', 'USD Value'),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(child: _buildStatCard('📞', '42', 'Consults')),
-                        const SizedBox(width: 12),
-                        Expanded(child: _buildStatCard('📅', '8', 'This Week')),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    // Withdraw Button
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'Withdraw Tokens',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    // Tabs
-                    Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFECECF0),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () => setState(() => _tabIndex = 0),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
                                 ),
-                                decoration: BoxDecoration(
-                                  color:
-                                      _tabIndex == 0
-                                          ? Colors.white
-                                          : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Center(
-                                  child: Text(
-                                    'Earnings',
-                                    style: TextStyle(
-                                      color: Color(0xFF0A0A0A),
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                    ),
+                                child: const Text(
+                                  'Withdraw Tokens',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () => setState(() => _tabIndex = 1),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color:
-                                      _tabIndex == 1
-                                          ? Colors.white
-                                          : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Center(
-                                  child: Text(
-                                    'Withdrawals',
-                                    style: TextStyle(
-                                      color: Color(0xFF0A0A0A),
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
+                            const SizedBox(height: 24),
+                            // Tabs
+                            Container(
+                              padding: const EdgeInsets.all(3),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFECECF0),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap:
+                                          () => setState(() => _tabIndex = 0),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 8,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color:
+                                              _tabIndex == 0
+                                                  ? Colors.white
+                                                  : Colors.transparent,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: const Center(
+                                          child: Text(
+                                            'Earnings',
+                                            style: TextStyle(
+                                              color: Color(0xFF0A0A0A),
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                   ),
-                                ),
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap:
+                                          () => setState(() => _tabIndex = 1),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 8,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color:
+                                              _tabIndex == 1
+                                                  ? Colors.white
+                                                  : Colors.transparent,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: const Center(
+                                          child: Text(
+                                            'Withdrawals',
+                                            style: TextStyle(
+                                              color: Color(0xFF0A0A0A),
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    // Recent Consultations
-                    const Text(
-                      'Recent Consultations',
-                      style: TextStyle(
-                        color: Color(0xFF364153),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    ..._buildConsultationsList(),
-                    const SizedBox(height: 24),
-                    // Token Rate Info
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF9FAFB),
-                        border: Border.all(
-                          width: 1.25,
-                          color: Colors.black.withValues(alpha: 0.10),
-                        ),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: const Text(
-                        'Current Rate: 1 Token = \$0.10 USD • Updated daily',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Color(0xFF4A5565),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
+                            const SizedBox(height: 24),
+                            // Recent Consultations
+                            Text(
+                              _tabIndex == 0
+                                  ? 'Recent Earnings'
+                                  : 'Recent Withdrawals',
+                              style: const TextStyle(
+                                color: Color(0xFF364153),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            ..._buildConsultationsList(),
+                          ],
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ),
         bottomNavigationBar: ExpertBottomNav(
           currentIndex: _bottomNavIndex,
           onTap: (index) {
@@ -360,16 +436,40 @@ class _ExpertWalletScreenState extends State<ExpertWalletScreen> {
   }
 
   List<Widget> _buildConsultationsList() {
-    final consultations = [
-      ('Sarah Johnson', 'Mar 8, 2026', '+125 T', '25 min', '≈ \$12.50 USD'),
-      ('Michael Chen', 'Mar 7, 2026', '+150 T', '30 min', '≈ \$15.00 USD'),
-      ('Emily Davis', 'Mar 7, 2026', '+100 T', '20 min', '≈ \$10.00 USD'),
-      ('James Wilson', 'Mar 6, 2026', '+225 T', '45 min', '≈ \$22.50 USD'),
-      ('Lisa Brown', 'Mar 6, 2026', '+75 T', '15 min', '≈ \$7.50 USD'),
-    ];
+    final targetType = _tabIndex == 0 ? 'credit' : 'debit';
+    final filteredTxs =
+        _transactions.where((tx) => tx.type == targetType).toList();
 
-    return List.generate(consultations.length, (index) {
-      final (name, date, tokens, duration, usdValue) = consultations[index];
+    if (filteredTxs.isEmpty) {
+      return [
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 32),
+          child: Center(
+            child: Text(
+              'No transactions found.',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ),
+        ),
+      ];
+    }
+
+    return List.generate(filteredTxs.length, (index) {
+      final tx = filteredTxs[index];
+
+      final isCredit = tx.type == 'credit';
+      final isSuccess = tx.status == 'success';
+      final title =
+          tx.note?.isNotEmpty == true
+              ? tx.note!
+              : (isCredit ? 'Consultation' : 'Withdrawal');
+      final dateStr = DateFormat('MMM d, yyyy • HH:mm').format(tx.createdAt);
+      final tokensStr = '${isCredit ? '+' : '-'}${tx.amount} T';
+      final color =
+          isSuccess
+              ? (isCredit ? const Color(0xFF00A63E) : Colors.red)
+              : Colors.grey;
+
       return Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
@@ -384,6 +484,7 @@ class _ExpertWalletScreenState extends State<ExpertWalletScreen> {
           ),
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -395,10 +496,16 @@ class _ExpertWalletScreenState extends State<ExpertWalletScreen> {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFEDD4),
+                          color:
+                              isCredit
+                                  ? const Color(0xFFFFEDD4)
+                                  : Colors.red.shade50,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.person, color: Colors.white),
+                        child: Icon(
+                          isCredit ? Icons.video_call : Icons.account_balance,
+                          color: isCredit ? Colors.orange : Colors.red,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -406,19 +513,25 @@ class _ExpertWalletScreenState extends State<ExpertWalletScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              name,
-                              style: const TextStyle(
-                                color: Color(0xFF101828),
+                              title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: const Color(0xFF101828),
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
+                                decoration:
+                                    isSuccess
+                                        ? TextDecoration.none
+                                        : TextDecoration.lineThrough,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              date,
+                              dateStr,
                               style: const TextStyle(
                                 color: Color(0xFF6A7282),
-                                fontSize: 14,
+                                fontSize: 13,
                                 fontWeight: FontWeight.w400,
                               ),
                             ),
@@ -432,20 +545,24 @@ class _ExpertWalletScreenState extends State<ExpertWalletScreen> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      tokens,
-                      style: const TextStyle(
-                        color: Color(0xFF00A63E),
+                      tokensStr,
+                      style: TextStyle(
+                        color: color,
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
+                        decoration:
+                            isSuccess
+                                ? TextDecoration.none
+                                : TextDecoration.lineThrough,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      duration,
-                      style: const TextStyle(
-                        color: Color(0xFF6A7282),
+                      isSuccess ? 'Success' : 'Failed',
+                      style: TextStyle(
+                        color: isSuccess ? const Color(0xFF6A7282) : Colors.red,
                         fontSize: 12,
-                        fontWeight: FontWeight.w400,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
@@ -453,10 +570,11 @@ class _ExpertWalletScreenState extends State<ExpertWalletScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            Divider(color: const Color(0xFFF3F4F6), thickness: 1),
+            const Divider(color: Color(0xFFF3F4F6), thickness: 1),
             const SizedBox(height: 12),
+            // Đã dọn dẹp Row này chỉ còn badge trạng thái, loại bỏ hoàn toàn text usdValue
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -464,24 +582,22 @@ class _ExpertWalletScreenState extends State<ExpertWalletScreen> {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF0FDF4),
+                    color:
+                        isSuccess
+                            ? const Color(0xFFF0FDF4)
+                            : Colors.grey.shade100,
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: const Text(
-                    'Completed',
+                  child: Text(
+                    isSuccess ? 'Completed' : 'Failed',
                     style: TextStyle(
-                      color: Color(0xFF00A63E),
+                      color:
+                          isSuccess
+                              ? const Color(0xFF00A63E)
+                              : Colors.grey.shade600,
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
                     ),
-                  ),
-                ),
-                Text(
-                  usdValue,
-                  style: const TextStyle(
-                    color: Color(0xFF6A7282),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
                   ),
                 ),
               ],
@@ -501,7 +617,6 @@ class _ExpertWalletScreenState extends State<ExpertWalletScreen> {
         context.go('/expert/schedule');
         break;
       case 2:
-        // Already on wallet
         break;
       case 3:
         context.go('/expert/settings');
