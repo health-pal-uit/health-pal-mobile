@@ -52,13 +52,24 @@ class ExpertSettingsRepository {
     required String phone,
     required String bio,
     required int tokenPerMinute,
+    String? avatarPath,
   }) async {
     try {
-      final userFormData = FormData.fromMap({
-        if (fullname.isNotEmpty) 'fullname': fullname,
-        if (phone.isNotEmpty) 'phone': phone,
-      });
-      await _dio.patch('/users/me', data: userFormData);
+      final mapData = <String, dynamic>{};
+      if (fullname.isNotEmpty) mapData['fullname'] = fullname;
+      if (phone.isNotEmpty) mapData['phone'] = phone;
+
+      if (avatarPath != null && avatarPath.isNotEmpty) {
+        mapData['image'] = await MultipartFile.fromFile(avatarPath);
+      }
+
+      final userFormData = FormData.fromMap(mapData);
+
+      await _dio.patch(
+        '/users/me',
+        data: userFormData,
+        options: Options(contentType: 'multipart/form-data'),
+      );
 
       await _dio.patch(
         '/experts/$expertId',

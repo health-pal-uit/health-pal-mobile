@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/core/bloc/auth/auth.dart';
 import 'package:da1/src/features/expert/dashboard/presentation/widgets/expert_bottom_nav.dart';
@@ -5,6 +7,7 @@ import 'package:da1/src/features/expert/settings/data/expert_settings_repository
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ExpertSettingsScreen extends StatefulWidget {
   const ExpertSettingsScreen({super.key});
@@ -22,6 +25,8 @@ class _ExpertSettingsScreenState extends State<ExpertSettingsScreen> {
   String _expertId = '';
   bool _isVerified = false;
   String _roleName = 'Loading...';
+  String? _currentAvatarUrl;
+  File? _newAvatarFile;
 
   // Controllers
   final TextEditingController _fullnameController = TextEditingController();
@@ -61,6 +66,7 @@ class _ExpertSettingsScreenState extends State<ExpertSettingsScreen> {
           // Dùng toán tử ?? '' để tránh lỗi khi backend trả về null
           _fullnameController.text = data['user']?['fullname'] ?? '';
           _phoneController.text = data['user']?['phone'] ?? '';
+          _currentAvatarUrl = data['user']?['avatar_url'];
 
           _isLoading = false;
         });
@@ -71,6 +77,33 @@ class _ExpertSettingsScreenState extends State<ExpertSettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    try {
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        setState(() {
+          _newAvatarFile = File(image.path);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to pick image: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -89,12 +122,13 @@ class _ExpertSettingsScreenState extends State<ExpertSettingsScreen> {
         phone: _phoneController.text.trim(),
         bio: _bioController.text.trim(),
         tokenPerMinute: _consultationRate.toInt(),
+        avatarPath: _newAvatarFile?.path,
       );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Hồ sơ đã được lưu thành công!'),
+            content: Text('Profile updated successfully!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -131,7 +165,6 @@ class _ExpertSettingsScreenState extends State<ExpertSettingsScreen> {
                 : SingleChildScrollView(
                   child: Column(
                     children: [
-                      // Mảng màu Header
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.only(
@@ -157,7 +190,6 @@ class _ExpertSettingsScreenState extends State<ExpertSettingsScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Badge Xác Thực (Verification Status)
                             Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
@@ -235,6 +267,73 @@ class _ExpertSettingsScreenState extends State<ExpertSettingsScreen> {
                               ),
                             ),
                             const SizedBox(height: 16),
+
+                            Center(
+                              child: Stack(
+                                children: [
+                                  Container(
+                                    width: 100,
+                                    height: 100,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade200,
+                                      shape: BoxShape.circle,
+                                      image:
+                                          _newAvatarFile != null
+                                              ? DecorationImage(
+                                                image: FileImage(
+                                                  _newAvatarFile!,
+                                                ),
+                                                fit: BoxFit.cover,
+                                              )
+                                              : (_currentAvatarUrl != null &&
+                                                      _currentAvatarUrl!
+                                                          .isNotEmpty
+                                                  ? DecorationImage(
+                                                    image: NetworkImage(
+                                                      _currentAvatarUrl!,
+                                                    ),
+                                                    fit: BoxFit.cover,
+                                                  )
+                                                  : null),
+                                    ),
+                                    child:
+                                        (_newAvatarFile == null &&
+                                                (_currentAvatarUrl == null ||
+                                                    _currentAvatarUrl!.isEmpty))
+                                            ? Icon(
+                                              Icons.person,
+                                              size: 50,
+                                              color: Colors.grey.shade400,
+                                            )
+                                            : null,
+                                  ),
+                                  Positioned(
+                                    bottom: 0,
+                                    right: 0,
+                                    child: GestureDetector(
+                                      onTap: _pickImage,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: Colors.white,
+                                            width: 2,
+                                          ),
+                                        ),
+                                        child: const Icon(
+                                          Icons.camera_alt,
+                                          color: Colors.white,
+                                          size: 16,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 24),
 
                             _buildReadonlyField('Expert Role', _roleName),
                             const SizedBox(height: 16),
