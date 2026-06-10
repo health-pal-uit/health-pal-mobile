@@ -45,7 +45,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         BlocListener<AuthBloc, AuthState>(
           listener: (context, state) {
             if (state is Unauthenticated) {
-              // Navigate to root, which will trigger router redirect to welcome
               Future.microtask(() {
                 if (context.mounted) {
                   context.go('/');
@@ -138,7 +137,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 16),
                     GestureDetector(
                       onTap: () {
-                        // Nhớ đảm bảo bạn đã khai báo route '/wallet' trong file GoRouter nhé
                         context.push('/wallet');
                       },
                       child: Container(

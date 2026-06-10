@@ -23,7 +23,6 @@ class ProfileHeader extends StatelessWidget {
   Future<void> _pickImage(BuildContext context) async {
     final ImagePicker picker = ImagePicker();
 
-    // Show bottom sheet to choose between camera or gallery
     final ImageSource? source = await showModalBottomSheet<ImageSource>(
       context: context,
       builder: (BuildContext context) {
@@ -66,10 +65,8 @@ class ProfileHeader extends StatelessWidget {
         return;
       }
     } else {
-      // For gallery, request photos permission
       hasPermission = await _requestPermission(Permission.photos);
       if (!hasPermission) {
-        // Try storage permission for older Android versions
         hasPermission = await _requestPermission(Permission.storage);
       }
       if (!hasPermission && context.mounted) {
@@ -144,7 +141,11 @@ class ProfileHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               GestureDetector(
-                onTap: () => context.push('/personal-profile'),
+                onTap:
+                    () => {
+                      if (user?.id != null)
+                        {context.push('/personal-profile/${user!.id}')},
+                    },
                 child: Text(
                   user?.fullName ?? user?.username ?? 'User',
                   style: AppTypography.body,
@@ -154,7 +155,11 @@ class ProfileHeader extends StatelessWidget {
               Text(user?.email ?? 'No email', style: AppTypography.caption),
               const SizedBox(height: 5),
               GestureDetector(
-                onTap: () => context.push('/personal-profile'),
+                onTap:
+                    () => {
+                      if (user?.id != null)
+                        {context.push('/personal-profile/${user!.id}')},
+                    },
                 child: Container(
                   decoration: BoxDecoration(
                     color: Theme.of(context).primaryColor,
