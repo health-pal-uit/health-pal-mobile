@@ -179,6 +179,193 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
     }
   }
 
+  Future<void> _handleSeeDetailClick(String consultationId) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final data = await _repository.fetchConsultationDetails(consultationId);
+      if (!mounted) return;
+      Navigator.pop(context);
+
+      _showConsultationBottomSheet(data);
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceAll('Exception: ', '')),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _showConsultationBottomSheet(Map<String, dynamic> data) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        final endedAtStr =
+            data['ended_at'] != null
+                ? DateFormat(
+                  'MMM d, yyyy - hh:mm a',
+                ).format(DateTime.parse(data['ended_at']).toLocal())
+                : 'N/A';
+        final rating = data['expert_rating'];
+
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'Consultation Details',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 24),
+
+                _buildDetailRow(
+                  'Status',
+                  data['status']?.toString().toUpperCase() ?? 'N/A',
+                  color:
+                      data['status'] == 'completed'
+                          ? Colors.green
+                          : Colors.black87,
+                ),
+                _buildDetailRow('Ended At', endedAtStr),
+                _buildDetailRow(
+                  'Duration',
+                  '${data['duration_minutes'] ?? 0} mins',
+                ),
+                _buildDetailRow(
+                  'Tokens Charged',
+                  '${data['tokens_charged'] ?? 0} tokens',
+                  color: AppColors.primary,
+                  isBold: true,
+                ),
+
+                const SizedBox(height: 8),
+                const Text(
+                  'Diagnosis / Result',
+                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey[200]!),
+                  ),
+                  child: Text(
+                    data['result']?.toString().isNotEmpty == true
+                        ? data['result']
+                        : 'No result provided.',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+
+                if (rating != null) ...[
+                  const SizedBox(height: 24),
+                  const Divider(),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Your Rating',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      ...List.generate(
+                        5,
+                        (index) => Icon(
+                          index < (rating['score'] as num).toInt()
+                              ? Icons.star
+                              : Icons.star_border,
+                          color: Colors.amber,
+                          size: 22,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (rating['comment']?.toString().isNotEmpty == true) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      '"${rating['comment']}"',
+                      style: TextStyle(
+                        color: Colors.grey[700],
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ],
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailRow(
+    String label,
+    String value, {
+    Color? color,
+    bool isBold = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 130,
+            child: Text(
+              label,
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+                fontSize: 15,
+                color: color ?? Colors.black87,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -412,6 +599,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
             ),
           ),
 
+          // --- LOGIC HIỂN THỊ NÚT CHO TỪNG TRẠNG THÁI ---
           if (booking.status == 'pending' || booking.status == 'confirmed') ...[
             const SizedBox(height: 16),
             Divider(height: 1, color: Colors.grey[200]),
@@ -455,6 +643,25 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
                   ),
                 ],
               ],
+            ),
+          ] else if (booking.status == 'completed' &&
+              booking.consultationId != null) ...[
+            const SizedBox(height: 16),
+            Divider(height: 1, color: Colors.grey[200]),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: () => _handleSeeDetailClick(booking.consultationId!),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  side: BorderSide(color: AppColors.primary),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text('See Detail'),
+              ),
             ),
           ],
         ],

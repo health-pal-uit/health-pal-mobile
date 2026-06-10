@@ -68,4 +68,23 @@ class BookingRepository {
       throw Exception(e.toString());
     }
   }
+
+  Future<Map<String, dynamic>> fetchConsultationDetails(
+    String consultationId,
+  ) async {
+    try {
+      final response = await _dio.get('/consultations/$consultationId');
+      if (response.statusCode == 200 && response.data != null) {
+        return response.data['data'] as Map<String, dynamic>;
+      }
+      throw Exception('Failed to parse consultation details.');
+    } on DioException catch (e) {
+      String errMsg =
+          e.response?.data?['message']?.toString() ??
+          'Failed to fetch consultation details.';
+      throw Exception(errMsg);
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
 }

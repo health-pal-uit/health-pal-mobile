@@ -19,7 +19,6 @@ class _AdvisorBookingScreenState extends State<AdvisorBookingScreen> {
 
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
-  String _selectedCallType = 'audio';
   final TextEditingController _noteController = TextEditingController();
   bool _isSubmitting = false;
 
@@ -38,10 +37,6 @@ class _AdvisorBookingScreenState extends State<AdvisorBookingScreen> {
   void initState() {
     super.initState();
     _generateDates();
-
-    if (!widget.expert.canDoVideo && _selectedCallType == 'video') {
-      _selectedCallType = 'audio';
-    }
   }
 
   void _generateDates() {
@@ -95,7 +90,7 @@ class _AdvisorBookingScreenState extends State<AdvisorBookingScreen> {
 
       final success = await _repository.createBooking(
         expertId: widget.expert.id,
-        callType: _selectedCallType,
+        callType: 'video', // Auto choose video here
         scheduledAt: scheduledAtUtc,
         clientNote: _noteController.text.trim(),
       );
@@ -157,11 +152,6 @@ class _AdvisorBookingScreenState extends State<AdvisorBookingScreen> {
                   _buildSectionTitle('Available Time'),
                   const SizedBox(height: 16),
                   _buildTimeSelector(),
-
-                  const SizedBox(height: 32),
-                  _buildSectionTitle('Communication Method'),
-                  const SizedBox(height: 16),
-                  _buildCallTypeSelector(),
 
                   const SizedBox(height: 32),
                   _buildSectionTitle('Notes for Expert (Optional)'),
@@ -391,98 +381,6 @@ class _AdvisorBookingScreenState extends State<AdvisorBookingScreen> {
               ),
             );
           }).toList(),
-    );
-  }
-
-  Widget _buildCallTypeSelector() {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildCallTypeOption(
-            'chat',
-            Icons.chat_bubble_outline,
-            'Chat',
-            true,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildCallTypeOption(
-            'audio',
-            Icons.call_outlined,
-            'Audio',
-            true,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildCallTypeOption(
-            'video',
-            Icons.videocam_outlined,
-            'Video',
-            widget.expert.canDoVideo,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCallTypeOption(
-    String type,
-    IconData icon,
-    String label,
-    bool isEnabled,
-  ) {
-    final isSelected = _selectedCallType == type;
-
-    return GestureDetector(
-      onTap:
-          isEnabled
-              ? () => setState(() => _selectedCallType = type)
-              : () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('This call type is not supported.'),
-                  ),
-                );
-              },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color:
-              isSelected
-                  ? AppColors.primary.withValues(alpha: 0.1)
-                  : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : Colors.grey[300]!,
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              color:
-                  isSelected
-                      ? AppColors.primary
-                      : (isEnabled ? Colors.grey[600] : Colors.grey[300]),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color:
-                    isSelected
-                        ? AppColors.primary
-                        : (isEnabled ? Colors.grey[800] : Colors.grey[400]),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
