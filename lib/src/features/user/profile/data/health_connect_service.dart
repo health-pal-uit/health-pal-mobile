@@ -20,7 +20,6 @@ class HealthConnectService {
     HealthDataType.WORKOUT,
   ];
 
-  // 1️⃣ Check Health Connect Availability
   Future<bool> isHealthConnectAvailable() async {
     try {
       bool isAvailable = await Health().isHealthConnectAvailable();

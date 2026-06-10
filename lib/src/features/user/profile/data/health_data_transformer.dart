@@ -22,7 +22,6 @@ class HealthDataTransformer {
 
   // Transform exercise to SyncFitnessRecordDto
   static SyncFitnessRecordDto transformExercise(HealthDataPoint point) {
-    // Phiên bản mới dùng WorkoutHealthValue thay vì Workout
     final workout = point.value as WorkoutHealthValue;
 
     return SyncFitnessRecordDto(

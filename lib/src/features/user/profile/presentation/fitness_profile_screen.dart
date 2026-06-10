@@ -3,7 +3,7 @@ import 'package:da1/src/config/theme/typography.dart';
 import 'package:da1/src/features/shared/auth/data/fitness_goal_repository.dart';
 import 'package:da1/src/features/user/home/data/user_repository.dart';
 import 'package:da1/src/features/user/profile/data/fitness_profile_repository.dart';
-import 'package:da1/src/features/user/profile/data/google_fit_repository.dart';
+import 'package:da1/src/features/user/profile/data/health_connect_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -21,7 +21,7 @@ class _FitnessProfileScreenState extends State<FitnessProfileScreen> {
   Map<String, dynamic>? _fitnessProfile;
   Map<String, dynamic>? _fitnessGoal;
   Map<String, dynamic>? _userData;
-  bool _isGoogleFitConnected = false;
+  bool _isHealthConnectConnected = false;
 
   @override
   void initState() {
@@ -35,16 +35,27 @@ class _FitnessProfileScreenState extends State<FitnessProfileScreen> {
       _errorMessage = null;
     });
 
-    await Future.wait([
-      _loadFitnessProfile(),
-      _loadFitnessGoal(),
-      _loadGoogleFitStatus(),
-      _loadUserData(),
-    ]);
-
-    setState(() {
-      _isLoading = false;
-    });
+    try {
+      await Future.wait([
+        _loadFitnessProfile(),
+        _loadFitnessGoal(),
+        _loadHealthConnectStatus(),
+        _loadUserData(),
+      ]);
+    } catch (e) {
+      debugPrint('Error loading data: $e');
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Error: ${e.toString()}';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> _loadFitnessProfile() async {
@@ -108,8 +119,8 @@ class _FitnessProfileScreenState extends State<FitnessProfileScreen> {
     }
   }
 
-  Future<void> _loadGoogleFitStatus() async {
-    final repository = context.read<GoogleFitRepository>();
+  Future<void> _loadHealthConnectStatus() async {
+    final repository = context.read<HealthConnectRepository>();
 
     try {
       final result = await repository.getConnectionStatus();
@@ -117,19 +128,19 @@ class _FitnessProfileScreenState extends State<FitnessProfileScreen> {
         (failure) {
           // Silent fail - assume not connected
           setState(() {
-            _isGoogleFitConnected = false;
+            _isHealthConnectConnected = false;
           });
         },
         (isConnected) {
           setState(() {
-            _isGoogleFitConnected = isConnected;
+            _isHealthConnectConnected = isConnected;
           });
         },
       );
     } catch (e) {
       // Silent fail - assume not connected
       setState(() {
-        _isGoogleFitConnected = false;
+        _isHealthConnectConnected = false;
       });
     }
   }
@@ -148,9 +159,9 @@ class _FitnessProfileScreenState extends State<FitnessProfileScreen> {
             _userData = userData['data'] as Map<String, dynamic>?;
             // Update Google Fit connection status from user data if available
             if (_userData != null &&
-                _userData!.containsKey('google_fit_connected_at')) {
-              _isGoogleFitConnected =
-                  _userData!['google_fit_connected_at'] != null;
+                _userData!.containsKey('health_connect_connected_at')) {
+              _isHealthConnectConnected =
+                  _userData!['health_connect_connected_at'] != null;
             }
           });
         },
@@ -886,7 +897,7 @@ class _FitnessProfileScreenState extends State<FitnessProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Google Fit',
+                      'Health Connect',
                       style: AppTypography.headline.copyWith(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -894,11 +905,11 @@ class _FitnessProfileScreenState extends State<FitnessProfileScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      _isGoogleFitConnected ? 'Connected' : 'Not connected',
+                      _isHealthConnectConnected ? 'Connected' : 'Not connected',
                       style: AppTypography.body.copyWith(
                         fontSize: 12,
                         color:
-                            _isGoogleFitConnected
+                            _isHealthConnectConnected
                                 ? Colors.green
                                 : AppColors.textSecondary,
                       ),
@@ -907,10 +918,10 @@ class _FitnessProfileScreenState extends State<FitnessProfileScreen> {
                 ),
               ),
               Icon(
-                _isGoogleFitConnected
+                _isHealthConnectConnected
                     ? LucideIcons.circleCheck
                     : LucideIcons.circle,
-                color: _isGoogleFitConnected ? Colors.green : Colors.grey,
+                color: _isHealthConnectConnected ? Colors.green : Colors.grey,
                 size: 20,
               ),
             ],

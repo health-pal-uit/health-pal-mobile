@@ -41,6 +41,7 @@ import 'package:da1/src/features/shared/notifications/data/datasources/device_re
 import 'package:da1/src/core/services/deep_link_service.dart';
 import 'package:da1/src/core/services/local_notification_service.dart';
 import 'package:da1/src/core/services/device_registration_service.dart';
+import 'package:da1/src/features/user/profile/data/health_connect_repository.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -359,6 +360,7 @@ void main() async {
         RepositoryProvider<GoogleFitRepository>(
           create: (context) => googleFitRepository,
         ),
+        RepositoryProvider(create: (context) => HealthConnectRepository()),
         RepositoryProvider<AuthRepository>(create: (context) => authRepository),
         RepositoryProvider<UserRepository>(create: (context) => userRepository),
         RepositoryProvider<ExpertRepository>(
