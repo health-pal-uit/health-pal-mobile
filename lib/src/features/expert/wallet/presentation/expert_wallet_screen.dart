@@ -7,6 +7,8 @@ import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/services.dart'; // Thêm import này cho Clipboard
+import 'package:url_launcher/url_launcher.dart'; // Thêm import này cho url_launcher
 
 class ExpertWalletScreen extends StatefulWidget {
   const ExpertWalletScreen({super.key});
@@ -234,7 +236,7 @@ class _ExpertWalletScreenState extends State<ExpertWalletScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Statistics Cards (Đã bỏ thẻ USD, chỉ giữ 2 thẻ thống kê)
+                            // Statistics Cards
                             Row(
                               children: [
                                 Expanded(
@@ -470,142 +472,293 @@ class _ExpertWalletScreenState extends State<ExpertWalletScreen> {
               ? (isCredit ? const Color(0xFF00A63E) : Colors.red)
               : Colors.grey;
 
-      return Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: ShapeDecoration(
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            side: BorderSide(
-              width: 1.25,
-              color: Colors.black.withValues(alpha: 0.10),
+      return GestureDetector(
+        onTap: () => _showTransactionDetails(tx),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: ShapeDecoration(
+            color: Colors.white,
+            shape: RoundedRectangleBorder(
+              side: BorderSide(
+                width: 1.25,
+                color: Colors.black.withValues(alpha: 0.10),
+              ),
+              borderRadius: BorderRadius.circular(14),
             ),
-            borderRadius: BorderRadius.circular(14),
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color:
-                              isCredit
-                                  ? const Color(0xFFFFEDD4)
-                                  : Colors.red.shade50,
-                          shape: BoxShape.circle,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color:
+                                isCredit
+                                    ? const Color(0xFFFFEDD4)
+                                    : Colors.red.shade50,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            isCredit ? Icons.video_call : Icons.account_balance,
+                            color: isCredit ? Colors.orange : Colors.red,
+                          ),
                         ),
-                        child: Icon(
-                          isCredit ? Icons.video_call : Icons.account_balance,
-                          color: isCredit ? Colors.orange : Colors.red,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: const Color(0xFF101828),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  decoration:
+                                      isSuccess
+                                          ? TextDecoration.none
+                                          : TextDecoration.lineThrough,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                dateStr,
+                                style: const TextStyle(
+                                  color: Color(0xFF6A7282),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        tokensStr,
+                        style: TextStyle(
+                          color: color,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          decoration:
+                              isSuccess
+                                  ? TextDecoration.none
+                                  : TextDecoration.lineThrough,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: const Color(0xFF101828),
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                decoration:
-                                    isSuccess
-                                        ? TextDecoration.none
-                                        : TextDecoration.lineThrough,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              dateStr,
-                              style: const TextStyle(
-                                color: Color(0xFF6A7282),
-                                fontSize: 13,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                          ],
+                      const SizedBox(height: 4),
+                      Text(
+                        isSuccess ? 'Success' : 'Failed',
+                        style: TextStyle(
+                          color:
+                              isSuccess ? const Color(0xFF6A7282) : Colors.red,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
                   ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      tokensStr,
-                      style: TextStyle(
-                        color: color,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        decoration:
-                            isSuccess
-                                ? TextDecoration.none
-                                : TextDecoration.lineThrough,
-                      ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const Divider(color: Color(0xFFF3F4F6), thickness: 1),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      isSuccess ? 'Success' : 'Failed',
-                      style: TextStyle(
-                        color: isSuccess ? const Color(0xFF6A7282) : Colors.red,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            const Divider(color: Color(0xFFF3F4F6), thickness: 1),
-            const SizedBox(height: 12),
-            // Đã dọn dẹp Row này chỉ còn badge trạng thái, loại bỏ hoàn toàn text usdValue
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color:
-                        isSuccess
-                            ? const Color(0xFFF0FDF4)
-                            : Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    isSuccess ? 'Completed' : 'Failed',
-                    style: TextStyle(
+                    decoration: BoxDecoration(
                       color:
                           isSuccess
-                              ? const Color(0xFF00A63E)
-                              : Colors.grey.shade600,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
+                              ? const Color(0xFFF0FDF4)
+                              : Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      isSuccess ? 'Completed' : 'Failed',
+                      style: TextStyle(
+                        color:
+                            isSuccess
+                                ? const Color(0xFF00A63E)
+                                : Colors.grey.shade600,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       );
     });
+  }
+
+  void _showTransactionDetails(TransactionModel tx) {
+    final isCredit = tx.type == 'credit';
+    final isSuccess = tx.status == 'success';
+    final dateStr = DateFormat('dd/MM/yyyy HH:mm:ss').format(tx.createdAt);
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder:
+          (context) => Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 48,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Icon(
+                  isSuccess ? Icons.check_circle : Icons.error,
+                  color: isSuccess ? Colors.green : Colors.red,
+                  size: 64,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  '${isCredit ? '+' : '-'}${tx.amount} T',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color:
+                        isSuccess
+                            ? (isCredit ? Colors.green : Colors.red)
+                            : Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  isSuccess ? 'Transaction Successful' : 'Transaction Failed',
+                  style: TextStyle(
+                    color: isSuccess ? Colors.green : Colors.red,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Divider(height: 32),
+                _buildDetailRow('Time', dateStr),
+                _buildDetailRow(
+                  'Description',
+                  tx.note ??
+                      (isCredit ? 'Consultation Earnings' : 'Withdrawal'),
+                ),
+                _buildDetailRow(
+                  'Transaction Type',
+                  isCredit ? 'Received Tokens' : 'Withdrawn Tokens',
+                ),
+
+                if (tx.txHash != null) ...[
+                  const Divider(height: 32),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Blockchain Tx Hash',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            '${tx.txHash!.substring(0, 6)}...${tx.txHash!.substring(tx.txHash!.length - 4)}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.copy,
+                              size: 16,
+                              color: Colors.blue,
+                            ),
+                            onPressed: () {
+                              Clipboard.setData(
+                                ClipboardData(text: tx.txHash!),
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Hash copied!')),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        final url = Uri.parse(
+                          'https://sepolia.etherscan.io/tx/${tx.txHash}',
+                        );
+                        if (await canLaunchUrl(url)) {
+                          await launchUrl(
+                            url,
+                            mode: LaunchMode.externalApplication,
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.open_in_browser),
+                      label: const Text('View on Etherscan'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2563EB),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.grey)),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _handleNavigation(BuildContext context, int index) {
