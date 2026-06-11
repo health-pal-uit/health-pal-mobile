@@ -352,8 +352,6 @@ class _ExpertDashboardScreenState extends State<ExpertDashboardScreen> {
             children: [
               _buildStatItem('Total Consults', '1,245'),
               Container(width: 1, height: 40, color: Colors.grey.shade300),
-              _buildStatItem('Answer Rate', '98%'),
-              Container(width: 1, height: 40, color: Colors.grey.shade300),
               _buildStatItem('Avg Rating', '4.8', isRating: true),
             ],
           ),

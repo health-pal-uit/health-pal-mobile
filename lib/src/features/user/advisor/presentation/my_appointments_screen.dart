@@ -2,6 +2,7 @@ import 'package:da1/src/config/theme/app_colors.dart';
 import 'package:da1/src/features/shared/auth/data/datasources/auth_local_data_source.dart';
 import 'package:da1/src/features/shared/wallet/data/wallet_repository.dart';
 import 'package:da1/src/features/user/advisor/data/booking_repository.dart';
+import 'package:da1/src/features/user/advisor/data/rating_repository.dart';
 import 'package:da1/src/features/user/advisor/domain/booking.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -20,6 +21,7 @@ class MyAppointmentsScreen extends StatefulWidget {
 class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
   final BookingRepository _repository = BookingRepository();
   final WalletRepository _walletRepository = WalletRepository();
+  final RatingRepository _ratingRepo = RatingRepository();
 
   bool _isLoading = true;
   List<Booking> _upcomingBookings = [];
@@ -191,7 +193,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
       if (!mounted) return;
       Navigator.pop(context);
 
-      _showConsultationBottomSheet(data);
+      _showConsultationBottomSheet(data, consultationId);
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
@@ -204,7 +206,10 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
     }
   }
 
-  void _showConsultationBottomSheet(Map<String, dynamic> data) {
+  void _showConsultationBottomSheet(
+    Map<String, dynamic> data,
+    String consultationId,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -212,7 +217,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) {
+      builder: (sheetContext) {
         final endedAtStr =
             data['ended_at'] != null
                 ? DateFormat(
@@ -323,6 +328,33 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
                       ),
                     ),
                   ],
+                ] else ...[
+                  const SizedBox(height: 24),
+                  const Divider(),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed:
+                          () => _showRatingDialog(sheetContext, consultationId),
+                      icon: const Icon(Icons.star_rounded),
+                      label: const Text(
+                        'Rate Expert',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.amber,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
                 const SizedBox(height: 16),
               ],
@@ -331,6 +363,191 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
         );
       },
     );
+  }
+
+  void _showRatingDialog(BuildContext sheetContext, String consultationId) {
+    bool isSubmitting = false;
+    int currentRating = 5;
+    final reviewController = TextEditingController();
+
+    showDialog(
+      context: sheetContext,
+      barrierDismissible: false,
+      builder:
+          (dialogCtx) => StatefulBuilder(
+            builder:
+                (dialogCtx, setDialogState) => PopScope(
+                  canPop: false,
+                  child: AlertDialog(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    title: const Text(
+                      'Rate Your Expert',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            5,
+                            (i) => IconButton(
+                              icon: Icon(
+                                i < currentRating
+                                    ? Icons.star_rounded
+                                    : Icons.star_border_rounded,
+                                color: Colors.amber,
+                                size: 36,
+                              ),
+                              onPressed:
+                                  isSubmitting
+                                      ? null
+                                      : () => setDialogState(
+                                        () => currentRating = i + 1,
+                                      ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: reviewController,
+                          maxLines: 3,
+                          enabled: !isSubmitting,
+                          decoration: InputDecoration(
+                            hintText: 'Leave a review (Optional)...',
+                            hintStyle: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 13,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            contentPadding: const EdgeInsets.all(12),
+                          ),
+                        ),
+                      ],
+                    ),
+                    actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    actions: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed:
+                                  isSubmitting
+                                      ? null
+                                      : () => Navigator.pop(dialogCtx),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: const Text('Cancel'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed:
+                                  isSubmitting
+                                      ? null
+                                      : () async {
+                                        setDialogState(
+                                          () => isSubmitting = true,
+                                        );
+                                        try {
+                                          await _ratingRepo.submitReview(
+                                            consultationId: consultationId,
+                                            score: currentRating,
+                                            comment:
+                                                reviewController.text.trim(),
+                                          );
+                                          if (dialogCtx.mounted) {
+                                            Navigator.pop(dialogCtx);
+                                          }
+                                          if (sheetContext.mounted) {
+                                            Navigator.pop(sheetContext);
+                                          }
+                                          if (mounted) {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                  'Rating submitted successfully!',
+                                                ),
+                                                backgroundColor: Colors.green,
+                                                behavior:
+                                                    SnackBarBehavior.floating,
+                                              ),
+                                            );
+                                          }
+                                        } catch (e) {
+                                          setDialogState(
+                                            () => isSubmitting = false,
+                                          );
+                                          if (mounted) {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  e
+                                                      .toString()
+                                                      .replaceAll(
+                                                        'Exception: ',
+                                                        '',
+                                                      ),
+                                                ),
+                                                backgroundColor: Colors.red,
+                                                behavior:
+                                                    SnackBarBehavior.floating,
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child:
+                                  isSubmitting
+                                      ? const SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                      : const Text(
+                                        'Submit',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+          ),
+    ).then((_) => reviewController.dispose());
   }
 
   Widget _buildDetailRow(

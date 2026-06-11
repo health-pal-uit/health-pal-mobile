@@ -124,120 +124,143 @@ class _TopUpScreenState extends State<TopUpScreen> {
             ),
             const SizedBox(height: 16),
 
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 0.9,
-              ),
-              itemCount: _topUpPackages.length,
-              itemBuilder: (context, index) {
-                final package = _topUpPackages[index];
-                final hasBonus = package['bonus'] != null;
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final cardWidth = (constraints.maxWidth - 16) / 2;
+                final cardHeight = cardWidth / 0.85;
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    mainAxisExtent: cardHeight,
+                  ),
+                  itemCount: _topUpPackages.length,
+                  itemBuilder: (context, index) {
+                    final package = _topUpPackages[index];
+                    final hasBonus = package['bonus'] != null;
 
-                return InkWell(
-                  onTap: () => _handlePurchase(package['tokens'] as int),
-                  borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: hasBonus ? Colors.orange : Colors.grey.shade300,
-                        width: hasBonus ? 2 : 1,
-                      ),
+                    return InkWell(
+                      onTap: () => _handlePurchase(package['tokens'] as int),
                       borderRadius: BorderRadius.circular(16),
-                      color: hasBonus ? Colors.orange.shade50 : Colors.white,
-                    ),
-                    child: Stack(
-                      children: [
-                        if (hasBonus)
-                          Positioned(
-                            top: 0,
-                            right: 0,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
-                              decoration: const BoxDecoration(
-                                color: Colors.red,
-                                borderRadius: BorderRadius.only(
-                                  topRight: Radius.circular(14),
-                                  bottomLeft: Radius.circular(8),
-                                ),
-                              ),
-                              child: Text(
-                                package['bonus'],
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color:
+                                hasBonus
+                                    ? Colors.orange
+                                    : Colors.grey.shade300,
+                            width: hasBonus ? 2 : 1,
                           ),
-                        Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.orange.withValues(alpha: 0.1),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.monetization_on,
-                                  color: Colors.orange,
-                                  size: 36,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                '${package['tokens']}',
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                              const Text(
-                                'Tokens',
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color:
-                                      hasBonus
-                                          ? Colors.orange
-                                          : Colors.grey.shade800,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  package['price'],
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
+                          borderRadius: BorderRadius.circular(16),
+                          color:
+                              hasBonus ? Colors.orange.shade50 : Colors.white,
+                        ),
+                        child: Stack(
+                          children: [
+                            if (hasBonus)
+                              Positioned(
+                                top: 0,
+                                right: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.only(
+                                      topRight: Radius.circular(14),
+                                      bottomLeft: Radius.circular(8),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    package['bonus'],
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
+                            Center(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 12,
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: Colors.orange.withValues(
+                                            alpha: 0.1,
+                                          ),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.monetization_on,
+                                          color: Colors.orange,
+                                          size: 32,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        '${package['tokens']}',
+                                        style: const TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                      const Text(
+                                        'Tokens',
+                                        style: TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color:
+                                              hasBonus
+                                                  ? Colors.orange
+                                                  : Colors.grey.shade800,
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          package['price'],
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
                 );
               },
             ),
