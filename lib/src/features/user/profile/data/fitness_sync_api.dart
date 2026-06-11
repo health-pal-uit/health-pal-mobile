@@ -166,7 +166,7 @@ class SyncWrapperResponse {
 }
 
 // API Service
-@RestApi(baseUrl: "http://10.0.2.2:3001") // Dùng IP máy ảo Android
+@RestApi()
 abstract class FitnessSyncApi {
   factory FitnessSyncApi(Dio dio, {String? baseUrl}) = _FitnessSyncApi;
 

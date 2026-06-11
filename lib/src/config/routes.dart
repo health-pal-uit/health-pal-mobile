@@ -32,6 +32,7 @@ import 'package:da1/src/features/user/home/presentation/exercise/activity_analyt
 import 'package:da1/src/features/user/home/presentation/exercise/add_activity_screen.dart';
 import 'package:da1/src/features/user/notifications/presentation/notifications_screen.dart';
 import 'package:da1/src/features/user/profile/bloc/health_sync_bloc.dart';
+import 'package:da1/src/config/env.dart';
 import 'package:da1/src/features/user/profile/data/fitness_sync_api.dart';
 import 'package:da1/src/features/user/profile/data/health_connect_service.dart';
 import 'package:da1/src/features/user/community/data/post_model.dart';
@@ -343,7 +344,7 @@ class AppRoutes {
                     healthService: HealthConnectService(),
                     apiService: FitnessSyncApi(
                       Dio(),
-                      baseUrl: 'http://10.0.2.2:3001',
+                      baseUrl: Env.backendApiUrl,
                     ),
                   ),
               child: const HealthConnectScreen(),

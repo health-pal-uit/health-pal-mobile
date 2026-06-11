@@ -1,3 +1,4 @@
+import 'package:da1/src/config/env.dart';
 import 'package:da1/src/features/user/profile/data/fitness_sync_api.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart'; // Thêm để dùng debugPrint
@@ -10,13 +11,12 @@ void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     try {
       final healthService = HealthConnectService();
-      final apiService = FitnessSyncApi(
-        Dio(),
-        baseUrl: 'http://localhost:3001',
-      ); // Sửa lại baseUrl cho đúng
       final token = inputData?['token'] as String?;
+      final baseUrl = inputData?['baseUrl'] as String?;
 
-      if (token == null) return false;
+      if (token == null || baseUrl == null) return false;
+
+      final apiService = FitnessSyncApi(Dio(), baseUrl: baseUrl);
 
       // Không cần biến startDate nữa vì getAllActivityData đã tự tính
       final allData = await healthService.getAllActivityData(daysBack: 1);
@@ -47,7 +47,7 @@ class BackgroundSyncService {
       'health_sync_task', // Unique name
       'healthSync', // Task name
       frequency: const Duration(hours: 1),
-      inputData: {'token': token},
+      inputData: {'token': token, 'baseUrl': Env.backendApiUrl},
       constraints: Constraints(
         // Cập nhật các biến cho đúng với bản Workmanager mới nhất
         networkType: NetworkType.connected, // Yêu cầu có mạng

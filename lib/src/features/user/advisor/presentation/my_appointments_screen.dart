@@ -498,12 +498,10 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
                                             ).showSnackBar(
                                               SnackBar(
                                                 content: Text(
-                                                  e
-                                                      .toString()
-                                                      .replaceAll(
-                                                        'Exception: ',
-                                                        '',
-                                                      ),
+                                                  e.toString().replaceAll(
+                                                    'Exception: ',
+                                                    '',
+                                                  ),
                                                 ),
                                                 backgroundColor: Colors.red,
                                                 behavior:

@@ -149,9 +149,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
                         decoration: BoxDecoration(
                           border: Border.all(
                             color:
-                                hasBonus
-                                    ? Colors.orange
-                                    : Colors.grey.shade300,
+                                hasBonus ? Colors.orange : Colors.grey.shade300,
                             width: hasBonus ? 2 : 1,
                           ),
                           borderRadius: BorderRadius.circular(16),
